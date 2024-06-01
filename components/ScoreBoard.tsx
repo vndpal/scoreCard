@@ -1,8 +1,10 @@
 import { scorePerBall } from '@/types/scorePerBall';
+import { scorePerInning } from '@/types/scorePerInnig';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 
-const ScoreBoard = ({ totalScore, wickets, overs, balls, ballScores }: { totalScore: Number, wickets: Number, overs: Number, balls: Number, ballScores: scorePerBall[] }) => {
+const ScoreBoard = ({ totalScore, wickets, overs, balls, scorePerInning }: { totalScore: Number, wickets: Number, overs: Number, balls: Number, scorePerInning: scorePerInning }) => {
+    console.log(scorePerInning);
     return (
         <View style={styles.container}>
             <View style={styles.scoreContainer}>
@@ -10,20 +12,22 @@ const ScoreBoard = ({ totalScore, wickets, overs, balls, ballScores }: { totalSc
                 <Text style={styles.oversText}>{overs.toString()}.{balls.toString()}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.ballScoresContainer}>
-                    {ballScores.map((score, index) => (
-                        <View key={index}>
-                            {score.isOverEnd ? <View style={styles.overSummary}>
-                                <Text style={styles.ballScoreText}>{score.isNoBall ? 'NB + ' : score.isWideBall ? 'WD + ' : ''}{score.isWicket ? 'W + ' : ''}{score.run.toString()}</Text>
-                            </View>
-                                :
-                                <View style={styles.ballScore}>
-                                    <Text style={styles.ballScoreText}>{score.isNoBall ? 'NB + ' : score.isWideBall ? 'WD + ' : ''}{score.isWicket ? 'W + ' : ''}{score.run.toString()}</Text>
-                                </View>}
-
-
+                <View style={styles.inningsContainer}>
+                    {scorePerInning.map((overs, index) => (
+                        <View style={styles.oversContainer} key={index}>
+                            {overs.map((score: scorePerBall, ballIndex: number) => (
+                                <View style={styles.ballsContainer} key={ballIndex}>
+                                    {score.isOverEnd ?
+                                        <View style={styles.overSummary}>
+                                            <Text style={styles.ballScoreText}>{overs.reduce((sum, over) => sum + over.totalRun, 0)}</Text>
+                                        </View>
+                                        : ''}
+                                    <View key={ballIndex} style={styles.ballScore}>
+                                        <Text style={styles.ballScoreText}>{score.isNoBall ? 'NB + ' : score.isWideBall ? 'WD + ' : ''}{score.isWicket ? 'W + ' : ''}{score.run.toString()}</Text>
+                                    </View>
+                                </View>
+                            ))}
                         </View>
-
                     ))}
                 </View>
             </ScrollView>
@@ -56,7 +60,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'orange',
         padding: 5,
     },
-    ballScoresContainer: {
+    inningsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
     },
@@ -83,6 +87,14 @@ const styles = StyleSheet.create({
         marginLeft: 5,
         textAlign: 'center',
     },
+    oversContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    ballsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    }
 });
 
 export default ScoreBoard;

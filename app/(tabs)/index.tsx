@@ -7,6 +7,8 @@ import { ThemedView } from '@/components/ThemedView';
 import ScoreBoard from '@/components/ScoreBoard';
 import { useState } from 'react';
 import { scorePerBall } from '@/types/scorePerBall';
+import { scorePerOver } from '@/types/scorePerOver';
+import { scorePerInning } from '@/types/scorePerInnig';
 
 
 export default function HomeScreen() {
@@ -18,7 +20,9 @@ export default function HomeScreen() {
   const [isWideBall, setIsWideBall] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
 
-  const [totalScore, setTotalScore] = useState<scorePerBall[]>([]);
+  const [totalScore, setTotalScore] = useState<scorePerInning>([]);
+  const [scorePerOver, setScorePerOver] = useState<scorePerOver>([]);
+  const [scorePerBall, setScorePerBall] = useState<scorePerBall>();
   const [totalRuns, setTotalRuns] = useState<number>(0);
   const [totalWickets, setTotalWickets] = useState<number>(0);
 
@@ -62,14 +66,14 @@ export default function HomeScreen() {
       const totalRun = run + extra;
       setTotalRuns((prev) => prev + totalRun);
       setTotalWickets(totalWickets + (isWicket ? 1 : 0));
-      let isOverEnd = false;
+      let isValidBall = false;
       if (!isNoBall && !isWideBall) {
         increaseOver();
-        isOverEnd = true;
+        isValidBall = true;
       }
       else if (isNoBall && isWicket) {
         increaseOver();
-        isOverEnd = true;
+        isValidBall = true;
       }
 
       const scoreThisBall: scorePerBall = {
@@ -79,16 +83,32 @@ export default function HomeScreen() {
         isWicket: isWicket,
         isNoBall: isNoBall,
         isWideBall: isWideBall,
-        isOverEnd: isOverEnd && totalBalls === 5,
+        isOverEnd: isValidBall && totalBalls === 5,
       }
 
-      setTotalScore([scoreThisBall, ...totalScore]);
+      const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
+
+      if (scorePerOver.length === 0) {
+        setTotalScore([scoreThisOver, ...totalScore])
+      }
+      else {
+        const latestTotalScore = totalScore;
+        latestTotalScore[0] = scoreThisOver;
+        setTotalScore(latestTotalScore);
+      }
+      setScorePerOver(scoreThisOver);
+
+
       setIsConfirm(false);
       setRun(0);
       setIsWicket(false);
       setIsDotBall(false);
       setIsNoBall(false);
       setIsWideBall(false);
+
+      if (isValidBall && totalBalls === 5) {
+        setScorePerOver([]);
+      }
     }
 
     function increaseOver() {
@@ -105,7 +125,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScoreBoard totalScore={totalRuns} wickets={totalWickets} overs={totalOvers} balls={totalBalls} ballScores={totalScore} />
+      <ScoreBoard totalScore={totalRuns} wickets={totalWickets} overs={totalOvers} balls={totalBalls} scorePerInning={totalScore} />
       <View>
         <TouchableOpacity style={[styles.ConfirmationButton, { backgroundColor: isConfirm ? 'lightgreen' : '#ddd' }]} onPress={handleSubmit}>
           <Text style={styles.confirmationText}>{isNoBall ? 'NB + ' : isWideBall ? 'WD + ' : ''}{isWicket ? 'W + ' : ''}{run}</Text>

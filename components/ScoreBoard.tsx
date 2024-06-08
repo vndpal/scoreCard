@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 
 const ScoreBoard = ({ totalScore, wickets, overs, balls, scorePerInning }: { totalScore: Number, wickets: Number, overs: Number, balls: Number, scorePerInning: scorePerInning }) => {
-    console.log(scorePerInning);
+
     return (
         <View style={styles.container}>
             <View style={styles.scoreContainer}>
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     overSummary: {
         width: 40,
         height: 40,
-        backgroundColor: 'red',
+        backgroundColor: '#aca9a9',
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 5,

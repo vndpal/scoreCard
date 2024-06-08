@@ -5,11 +5,21 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ScoreBoard from '@/components/ScoreBoard';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { scorePerBall } from '@/types/scorePerBall';
 import { scorePerOver } from '@/types/scorePerOver';
 import { scorePerInning } from '@/types/scorePerInnig';
+import { match } from '@/types/match';
+import { getItem, setItem } from '@/utils/asyncStorage';
+import { useFocusEffect } from 'expo-router';
+import React from 'react';
 
+type currentTotalScore = {
+  totalRuns: number;
+  totalWickets: number;
+  totalOvers: number;
+  totalBalls: number;
+};
 
 export default function HomeScreen() {
 
@@ -20,14 +30,46 @@ export default function HomeScreen() {
   const [isWideBall, setIsWideBall] = useState(false);
   const [isConfirm, setIsConfirm] = useState(false);
 
+  const [isFirstInning, setIsFirstInning] = useState(true);
+
+  const [match, setMatch] = useState<match>({ team1: '', team2: '', team1score: [], team2score: [], tossWin: 'team1', choose: 'batting', winner: 'team1', overs: 0, status: 'completed' });
   const [totalScore, setTotalScore] = useState<scorePerInning>([]);
+  const [scoreSecondInnings, setScoreSecondInnings] = useState<scorePerInning>([]);
   const [scorePerOver, setScorePerOver] = useState<scorePerOver>([]);
   const [scorePerBall, setScorePerBall] = useState<scorePerBall>();
+
   const [totalRuns, setTotalRuns] = useState<number>(0);
   const [totalWickets, setTotalWickets] = useState<number>(0);
-
   const [totalOvers, setTotalOvers] = useState<number>(0);
   const [totalBalls, setTotalBalls] = useState<number>(0);
+
+  const [finalFirstInningsScore, setFinalFirstInningsScore] = useState<currentTotalScore>({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+  const [finalSecondInningsScore, setFinalSecondInningsScore] = useState<currentTotalScore>({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+
+  useEffect(() => {
+
+  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchMatch = async () => {
+        const isNewMatch = await getItem('isNewMatch');
+        if (isNewMatch) {
+          setTotalScore([]);
+          setScoreSecondInnings([]);
+          setFinalFirstInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+          setFinalSecondInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+          setIsFirstInning(true);
+          const matches = await getItem('matches');
+          if (matches) {
+            setMatch(matches[0]);
+          }
+          await setItem('isNewMatch', false);
+        }
+
+      }
+      fetchMatch();
+    }, [])
+  );
 
   const handleRunPress = (run: string) => {
     if (run === '.') {
@@ -56,7 +98,7 @@ export default function HomeScreen() {
     setIsConfirm(false);
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isConfirm) {
       setIsConfirm(true);
       return
@@ -64,8 +106,16 @@ export default function HomeScreen() {
     else {
       const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
       const totalRun = run + extra;
-      setTotalRuns((prev) => prev + totalRun);
-      setTotalWickets(totalWickets + (isWicket ? 1 : 0));
+      // setTotalRuns((prev) => prev + totalRun);
+      if (isFirstInning) {
+        setFinalFirstInningsScore((prev) => ({ ...prev, totalRuns: prev.totalRuns + totalRun }));
+        setFinalFirstInningsScore((prev) => ({ ...prev, totalWickets: prev.totalWickets + (isWicket ? 1 : 0) }));
+      }
+      else {
+        setFinalSecondInningsScore((prev) => ({ ...prev, totalRuns: prev.totalRuns + totalRun }));
+        setFinalSecondInningsScore((prev) => ({ ...prev, totalWickets: prev.totalWickets + (isWicket ? 1 : 0) }));
+      }
+      // setTotalWickets(totalWickets + (isWicket ? 1 : 0));
       let isValidBall = false;
       if (!isNoBall && !isWideBall) {
         increaseOver();
@@ -88,17 +138,44 @@ export default function HomeScreen() {
 
       const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
 
-      if (scorePerOver.length === 0) {
-        setTotalScore([scoreThisOver, ...totalScore])
+      if (isFirstInning) {
+        if (scorePerOver.length === 0) {
+          setTotalScore([scoreThisOver, ...totalScore])
+        }
+        else {
+          const latestTotalScore = totalScore;
+          latestTotalScore[0] = scoreThisOver;
+          setTotalScore(latestTotalScore);
+        }
       }
       else {
-        const latestTotalScore = totalScore;
-        latestTotalScore[0] = scoreThisOver;
-        setTotalScore(latestTotalScore);
+        if (scorePerOver.length === 0) {
+          setScoreSecondInnings([scoreThisOver, ...scoreSecondInnings])
+        }
+        else {
+          const latestTotalScore = scoreSecondInnings;
+          latestTotalScore[0] = scoreThisOver;
+          setScoreSecondInnings(latestTotalScore);
+        }
       }
+
+      const matches = await getItem('matches');
+      if (matches) {
+        const latestMatch = matches[0];
+        if (latestMatch) {
+          let updatedMatch;
+          if (isFirstInning) {
+            updatedMatch = { ...latestMatch, team1score: totalScore };
+          }
+          else {
+            updatedMatch = { ...latestMatch, team2score: scoreSecondInnings };
+          }
+          matches[0] = updatedMatch;
+          await setItem('matches', matches);
+        }
+      }
+
       setScorePerOver(scoreThisOver);
-
-
       setIsConfirm(false);
       setRun(0);
       setIsWicket(false);
@@ -108,16 +185,50 @@ export default function HomeScreen() {
 
       if (isValidBall && totalBalls === 5) {
         setScorePerOver([]);
+
+        if (isFirstInning && match.overs > 0 && finalFirstInningsScore.totalOvers + 1 == match.overs) {
+          console.log('First Inning Completed');
+          setIsFirstInning(false);
+        }
+        else if (!isFirstInning && finalSecondInningsScore.totalOvers + 1 == match.overs) {
+          console.log('Second Inning Completed');
+          let winner = 'team1';
+          if (finalSecondInningsScore.totalRuns >= finalFirstInningsScore.totalRuns) {
+            winner = 'team2';
+          }
+          setMatch({ ...match, status: 'completed' });
+          const matches = await getItem('matches');
+          if (matches) {
+            const latestMatch = matches[0];
+            if (latestMatch) {
+              const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
+              matches[0] = updatedMatch;
+              await setItem('matches', matches);
+            }
+          }
+        }
       }
     }
 
     function increaseOver() {
       const currentOverBalls = totalBalls + 1;
       if (currentOverBalls === 6) {
-        setTotalOvers(totalOvers + 1);
+        if (isFirstInning) {
+          setFinalFirstInningsScore((prev) => ({ ...prev, totalOvers: prev.totalOvers + 1, totalBalls: 0 }));
+        }
+        else {
+          setFinalSecondInningsScore((prev) => ({ ...prev, totalOvers: prev.totalOvers + 1, totalBalls: 0 }));
+        }
+        // setTotalOvers(totalOvers + 1);
         setTotalBalls(0);
       }
       else {
+        if (isFirstInning) {
+          setFinalFirstInningsScore((prev) => ({ ...prev, totalBalls: currentOverBalls }));
+        }
+        else {
+          setFinalSecondInningsScore((prev) => ({ ...prev, totalBalls: currentOverBalls }));
+        }
         setTotalBalls(currentOverBalls);
       }
     }
@@ -125,13 +236,22 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ScoreBoard totalScore={totalRuns} wickets={totalWickets} overs={totalOvers} balls={totalBalls} scorePerInning={totalScore} />
-      <View>
-        <TouchableOpacity style={[styles.ConfirmationButton, { backgroundColor: isConfirm ? 'lightgreen' : '#ddd' }]} onPress={handleSubmit}>
+      <View style={styles.scoreBoardcontainer}>
+        <ScoreBoard totalScore={finalFirstInningsScore.totalRuns} wickets={finalFirstInningsScore.totalWickets} overs={finalFirstInningsScore.totalOvers} balls={finalFirstInningsScore.totalBalls} scorePerInning={totalScore} />
+        <ScoreBoard totalScore={finalSecondInningsScore.totalRuns} wickets={finalSecondInningsScore.totalWickets} overs={finalSecondInningsScore.totalOvers} balls={finalSecondInningsScore.totalBalls} scorePerInning={scoreSecondInnings} />
+
+        {!isFirstInning ? <View style={styles.subContainer1}>
+          <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls</Text>
+        </View>
+          : ''}
+      </View>
+
+      <View style={styles.subContainer}>
+        <TouchableOpacity disabled={match.status == 'completed'} style={[styles.ConfirmationButton, { backgroundColor: isConfirm ? 'lightgreen' : '#ddd' }]} onPress={handleSubmit}>
           <Text style={styles.confirmationText}>{isNoBall ? 'NB + ' : isWideBall ? 'WD + ' : ''}{isWicket ? 'W + ' : ''}{run}</Text>
         </TouchableOpacity>
       </View>
-      <View>
+      <View style={styles.subContainer}>
         <View style={styles.scoreContainer}>
           {['.', '1', '2', '4'].map((score, index) => (
             <TouchableOpacity key={index} style={styles.bubbleButton} onPress={() => handleRunPress(score)}>
@@ -156,6 +276,10 @@ export default function HomeScreen() {
   );
 }
 
+import { Dimensions } from 'react-native';
+
+const windowWidth = Dimensions.get('window').width;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -179,9 +303,9 @@ const styles = StyleSheet.create({
   },
   bubbleButton: {
     margin: 5,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: windowWidth * 0.2,
+    height: windowWidth * 0.2,
+    borderRadius: windowWidth * 0.1,
     backgroundColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
@@ -191,14 +315,31 @@ const styles = StyleSheet.create({
   },
   ConfirmationButton: {
     margin: 5,
-    width: 300,
-    height: 300,
-    borderRadius: 150,
+    width: windowWidth * 0.8,
+    height: windowWidth * 0.8,
+    borderRadius: windowWidth * 0.8,
     backgroundColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
   },
   confirmationText: {
     fontSize: 50,
+  },
+  scoreBoardcontainer: {
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingVertical: 35
+  },
+  subContainer: {
+    flex: 1,
+    justifyContent: 'center'
+  },
+  subContainer1: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: 10,
+    alignContent: 'flex-start',
+    backgroundColor: 'white',
   }
 });

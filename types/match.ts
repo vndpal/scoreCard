@@ -10,6 +10,7 @@ type match = {
     winner: 'team1' | 'team2';
     overs: number;
     status: 'live' | 'completed';
+    isFirstInning: boolean;
 };
 
 export type { match };

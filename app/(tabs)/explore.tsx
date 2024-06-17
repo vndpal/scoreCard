@@ -5,8 +5,16 @@ import { red } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 import { getItem, setItem } from '@/utils/asyncStorage';
 import MatchHistory from '@/components/MatchHisoty';
 import { router, useFocusEffect } from 'expo-router';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 export default function TabTwoScreen() {
+
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [items, setItems] = useState([
+    { label: 'Apple', value: 'apple' },
+    { label: 'Banana', value: 'banana' }
+  ]);
 
   const [overs, setOvers] = useState('');
   const [team1, setTeam1] = useState('');
@@ -58,9 +66,9 @@ export default function TabTwoScreen() {
         alert('There is already a live match. Please complete it before starting a new match.');
         return;
       }
-      await setItem('matches', [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', status: 'live' }, ...matches])
+      await setItem('matches', [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', team1score: [], team2score: [], status: 'live', isFirstInning: true }, ...matches])
     } else {
-      await setItem('matches', [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', status: 'live' }])
+      await setItem('matches', [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', team1score: [], team2score: [], status: 'live', isFirstInning: true }])
     }
     await setItem('isNewMatch', true);
     Keyboard.dismiss();
@@ -102,6 +110,28 @@ export default function TabTwoScreen() {
           value={wickets}
           onChangeText={setWickets}
         />
+        {/* <DropDownPicker
+          open={open}
+          value={value}
+          items={items}
+          setOpen={setOpen}
+          setValue={setValue}
+          setItems={setItems}
+          textStyle={
+            {
+              color: 'white',
+            }
+          }
+          style={
+            {
+              borderColor: '#ddd',
+              borderWidth: 1,
+              marginBottom: 100,
+              borderRadius: 4,
+              backgroundColor: 'transparent',
+            }
+          }
+        /> */}
         <Button title="Create Match" onPress={handleSubmit} />
       </View>
       {!isKeyboardVisible && <MatchHistory matches={matches} />}
@@ -130,5 +160,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 4,
     color: 'white',
-  },
+  }
 });

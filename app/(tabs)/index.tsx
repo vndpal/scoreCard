@@ -32,7 +32,7 @@ export default function HomeScreen() {
 
   const [isFirstInning, setIsFirstInning] = useState(true);
 
-  const [match, setMatch] = useState<match>({ team1: '', team2: '', team1score: [], team2score: [], tossWin: 'team1', choose: 'batting', winner: 'team1', overs: 0, status: 'completed' });
+  const [match, setMatch] = useState<match>({ team1: '', team2: '', team1score: [], team2score: [], tossWin: 'team1', choose: 'batting', winner: 'team1', overs: 0, status: 'completed', isFirstInning: true });
   const [totalScore, setTotalScore] = useState<scorePerInning>([]);
   const [scoreSecondInnings, setScoreSecondInnings] = useState<scorePerInning>([]);
   const [scorePerOver, setScorePerOver] = useState<scorePerOver>([]);
@@ -47,8 +47,76 @@ export default function HomeScreen() {
   const [finalSecondInningsScore, setFinalSecondInningsScore] = useState<currentTotalScore>({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
 
   useEffect(() => {
+    const fetchMatch = async () => {
+      const isNewMatch = await getItem('isNewMatch');
+      if (!isNewMatch) {
+        const matches = await getItem('matches');
+        if (!matches) {
+          return;
+        }
+        const currentMatch = matches[0];
+        setMatch(currentMatch);
 
+        console.log('Match', currentMatch);
+        console.log('Match', JSON.stringify(currentMatch));
+        setIsFirstInning(currentMatch.isFirstInning);
+        setTotalScore(currentMatch.team1score);
+        if (currentMatch.team1score.length == 0) {
+          console.log('team1score is empty or not defined');
+          return;
+        }
+        const currnetInningstotalRuns = currentMatch.team1score.reduce((acc: any, subArray: any[]) => {
+          return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + ball.run + (ball.isNoBall || ball.isWideBall ? 1 : 0), 0);
+        }, 0);
+        let currnetInningstotalBalls = currentMatch.team1score[0].reduce((acc: any, score: scorePerBall) => acc + (score.isNoBall || score.isWideBall ? 0 : 1), 0);
+        let currnetInningstotalOvers = currentMatch.team1score.length - 1;
+        currnetInningstotalOvers = currnetInningstotalBalls === 6 ? currnetInningstotalOvers + 1 : currnetInningstotalOvers;
+        currnetInningstotalBalls = currnetInningstotalBalls === 6 ? 0 : currnetInningstotalBalls;
+        const currnetInningstotalWickets = currentMatch.team1score.reduce((acc: any, subArray: scorePerBall[]) => {
+          return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + (ball.isWicket ? 1 : 0), 0);
+        }, 0);
+
+        setFinalFirstInningsScore({ totalRuns: currnetInningstotalRuns, totalWickets: currnetInningstotalWickets, totalOvers: currnetInningstotalOvers, totalBalls: currnetInningstotalBalls });
+        if (currentMatch.isFirstInning) {
+          setTotalRuns(currnetInningstotalRuns);
+          setTotalBalls(currnetInningstotalBalls);
+          setTotalOvers(currnetInningstotalOvers);
+          setTotalWickets(currnetInningstotalWickets);
+          setScorePerOver(currentMatch.team1score[0]);
+        }
+
+
+        if (!currentMatch.isFirstInning) {
+          setScoreSecondInnings(currentMatch.team2score);
+          if (currentMatch.team2score.length === 0) {
+            console.log('team2score is empty or not defined');
+            return;
+          }
+          const currnetInningstotalRuns = currentMatch.team2score.reduce((acc: any, subArray: any[]) => {
+            return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + ball.run + (ball.isNoBall || ball.isWideBall ? 1 : 0), 0);
+          }, 0);
+          let currnetInningstotalBalls = currentMatch.team2score[0].reduce((acc: any, score: scorePerBall) => acc + (score.isNoBall || score.isWideBall ? 0 : 1), 0);
+          let currnetInningstotalOvers = currentMatch.team2score.length - 1;
+          currnetInningstotalOvers = currnetInningstotalBalls === 6 ? currnetInningstotalOvers + 1 : currnetInningstotalOvers;
+          currnetInningstotalBalls = currnetInningstotalBalls === 6 ? 0 : currnetInningstotalBalls;
+          const currnetInningstotalWickets = currentMatch.team2score.reduce((acc: any, subArray: scorePerBall[]) => {
+            return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + (ball.isWicket ? 1 : 0), 0);
+          }, 0);
+
+          setFinalSecondInningsScore({ totalRuns: currnetInningstotalRuns, totalWickets: currnetInningstotalWickets, totalOvers: currnetInningstotalOvers, totalBalls: currnetInningstotalBalls });
+          setTotalRuns(currnetInningstotalRuns);
+          setTotalBalls(currnetInningstotalBalls);
+          setTotalOvers(currnetInningstotalOvers);
+          setTotalWickets(currnetInningstotalWickets);
+          setScorePerOver(currentMatch.team2score[0]);
+
+        }
+
+      }
+    }
+    fetchMatch();
   }, []);
+
   useFocusEffect(
     React.useCallback(() => {
       const fetchMatch = async () => {
@@ -59,6 +127,7 @@ export default function HomeScreen() {
           setFinalFirstInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
           setFinalSecondInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
           setIsFirstInning(true);
+          setScorePerOver([]);
           const matches = await getItem('matches');
           if (matches) {
             setMatch(matches[0]);
@@ -121,10 +190,10 @@ export default function HomeScreen() {
         increaseOver();
         isValidBall = true;
       }
-      else if (isNoBall && isWicket) {
-        increaseOver();
-        isValidBall = true;
-      }
+      // else if (isNoBall && isWicket) {
+      //   increaseOver();
+      //   isValidBall = true;
+      // }
 
       const scoreThisBall: scorePerBall = {
         run: run,
@@ -189,6 +258,16 @@ export default function HomeScreen() {
         if (isFirstInning && match.overs > 0 && finalFirstInningsScore.totalOvers + 1 == match.overs) {
           console.log('First Inning Completed');
           setIsFirstInning(false);
+
+          const matches = await getItem('matches');
+          if (matches) {
+            const latestMatch = matches[0];
+            if (latestMatch) {
+              const updatedMatch = { ...latestMatch, isFirstInning: false };
+              matches[0] = updatedMatch;
+              await setItem('matches', matches);
+            }
+          }
         }
         else if (!isFirstInning && finalSecondInningsScore.totalOvers + 1 == match.overs) {
           console.log('Second Inning Completed');
@@ -253,7 +332,7 @@ export default function HomeScreen() {
       </View>
       <View style={styles.subContainer}>
         <View style={styles.scoreContainer}>
-          {['.', '1', '2', '4'].map((score, index) => (
+          {['.', '1', '2', '4', '6'].map((score, index) => (
             <TouchableOpacity key={index} style={styles.bubbleButton} onPress={() => handleRunPress(score)}>
               <Text style={styles.buttonText}>{score}</Text>
             </TouchableOpacity>
@@ -303,8 +382,8 @@ const styles = StyleSheet.create({
   },
   bubbleButton: {
     margin: 5,
-    width: windowWidth * 0.2,
-    height: windowWidth * 0.2,
+    width: windowWidth * 0.15,
+    height: windowWidth * 0.15,
     borderRadius: windowWidth * 0.1,
     backgroundColor: '#ddd',
     justifyContent: 'center',

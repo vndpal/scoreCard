@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Platform, View, TouchableOpacity, Text } from 'react-native';
+import { Image, StyleSheet, Platform, View, TouchableOpacity, Text, Alert } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -9,10 +9,11 @@ import { useEffect, useState } from 'react';
 import { scorePerBall } from '@/types/scorePerBall';
 import { scorePerOver } from '@/types/scorePerOver';
 import { scorePerInning } from '@/types/scorePerInnig';
-import { match } from '@/types/match';
+import { match, matchStatus } from '@/types/match';
 import { getItem, setItem } from '@/utils/asyncStorage';
 import { useFocusEffect } from 'expo-router';
 import React from 'react';
+import { Icon } from 'react-native-elements';
 
 type currentTotalScore = {
   totalRuns: number;
@@ -47,87 +48,92 @@ export default function HomeScreen() {
   const [finalSecondInningsScore, setFinalSecondInningsScore] = useState<currentTotalScore>({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
 
   useEffect(() => {
-    const fetchMatch = async () => {
-      const isNewMatch = await getItem('isNewMatch');
-      if (!isNewMatch) {
-        const matches = await getItem('matches');
-        if (!matches) {
-          return;
-        }
-        const currentMatch = matches[0];
-        setMatch(currentMatch);
+    fetchMatch();
+  }, []);
 
-        console.log('Match', currentMatch);
-        console.log('Match', JSON.stringify(currentMatch));
-        setIsFirstInning(currentMatch.isFirstInning);
-        setTotalScore(currentMatch.team1score);
-        if (currentMatch.team1score.length == 0) {
-          console.log('team1score is empty or not defined');
+  const fetchMatch = async () => {
+    const isNewMatch = await getItem('isNewMatch');
+    if (!isNewMatch) {
+      const matches = await getItem('matches');
+      if (!matches) {
+        return;
+      }
+      const currentMatch = matches[0];
+      setMatch(currentMatch);
+      setIsFirstInning(currentMatch.isFirstInning);
+      setTotalScore(currentMatch.team1score);
+      if (currentMatch.team1score.length == 0) {
+        clearAllState();
+        console.log('team1score is empty or not defined');
+        return;
+      }
+      else if (!currentMatch.isFirstInning && currentMatch.team2score.length == 0) {
+        setFinalSecondInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+        setScoreSecondInnings([]);
+        setScorePerOver([]);
+        setTotalRuns(0);
+        setTotalBalls(0);
+        setTotalOvers(0);
+        setTotalWickets(0);
+        console.log('team2score is empty or not defined');
+        return;
+      }
+      const currnetInningstotalRuns = currentMatch.team1score.reduce((acc: any, subArray: any[]) => {
+        return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + ball.run + (ball.isNoBall || ball.isWideBall ? 1 : 0), 0);
+      }, 0);
+      let currnetInningstotalBalls = currentMatch.team1score[0].reduce((acc: any, score: scorePerBall) => acc + (score.isNoBall || score.isWideBall ? 0 : 1), 0);
+      let currnetInningstotalOvers = currentMatch.team1score.length - 1;
+      currnetInningstotalOvers = currnetInningstotalBalls === 6 ? currnetInningstotalOvers + 1 : currnetInningstotalOvers;
+      currnetInningstotalBalls = currnetInningstotalBalls === 6 ? 0 : currnetInningstotalBalls;
+      const currnetInningstotalWickets = currentMatch.team1score.reduce((acc: any, subArray: scorePerBall[]) => {
+        return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + (ball.isWicket ? 1 : 0), 0);
+      }, 0);
+
+      setFinalFirstInningsScore({ totalRuns: currnetInningstotalRuns, totalWickets: currnetInningstotalWickets, totalOvers: currnetInningstotalOvers, totalBalls: currnetInningstotalBalls });
+      if (currentMatch.isFirstInning) {
+        setTotalRuns(currnetInningstotalRuns);
+        setTotalBalls(currnetInningstotalBalls);
+        setTotalOvers(currnetInningstotalOvers);
+        setTotalWickets(currnetInningstotalWickets);
+        setScorePerOver(currentMatch.team1score[0]);
+      }
+
+
+      if (!currentMatch.isFirstInning) {
+        setScoreSecondInnings(currentMatch.team2score);
+        if (currentMatch.team2score.length === 0) {
+          console.log('team2score is empty or not defined');
           return;
         }
-        const currnetInningstotalRuns = currentMatch.team1score.reduce((acc: any, subArray: any[]) => {
+        const currnetInningstotalRuns = currentMatch.team2score.reduce((acc: any, subArray: any[]) => {
           return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + ball.run + (ball.isNoBall || ball.isWideBall ? 1 : 0), 0);
         }, 0);
-        let currnetInningstotalBalls = currentMatch.team1score[0].reduce((acc: any, score: scorePerBall) => acc + (score.isNoBall || score.isWideBall ? 0 : 1), 0);
-        let currnetInningstotalOvers = currentMatch.team1score.length - 1;
+        let currnetInningstotalBalls = currentMatch.team2score[0].reduce((acc: any, score: scorePerBall) => acc + (score.isNoBall || score.isWideBall ? 0 : 1), 0);
+        let currnetInningstotalOvers = currentMatch.team2score.length - 1;
         currnetInningstotalOvers = currnetInningstotalBalls === 6 ? currnetInningstotalOvers + 1 : currnetInningstotalOvers;
         currnetInningstotalBalls = currnetInningstotalBalls === 6 ? 0 : currnetInningstotalBalls;
-        const currnetInningstotalWickets = currentMatch.team1score.reduce((acc: any, subArray: scorePerBall[]) => {
+        const currnetInningstotalWickets = currentMatch.team2score.reduce((acc: any, subArray: scorePerBall[]) => {
           return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + (ball.isWicket ? 1 : 0), 0);
         }, 0);
 
-        setFinalFirstInningsScore({ totalRuns: currnetInningstotalRuns, totalWickets: currnetInningstotalWickets, totalOvers: currnetInningstotalOvers, totalBalls: currnetInningstotalBalls });
-        if (currentMatch.isFirstInning) {
-          setTotalRuns(currnetInningstotalRuns);
-          setTotalBalls(currnetInningstotalBalls);
-          setTotalOvers(currnetInningstotalOvers);
-          setTotalWickets(currnetInningstotalWickets);
-          setScorePerOver(currentMatch.team1score[0]);
-        }
-
-
-        if (!currentMatch.isFirstInning) {
-          setScoreSecondInnings(currentMatch.team2score);
-          if (currentMatch.team2score.length === 0) {
-            console.log('team2score is empty or not defined');
-            return;
-          }
-          const currnetInningstotalRuns = currentMatch.team2score.reduce((acc: any, subArray: any[]) => {
-            return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + ball.run + (ball.isNoBall || ball.isWideBall ? 1 : 0), 0);
-          }, 0);
-          let currnetInningstotalBalls = currentMatch.team2score[0].reduce((acc: any, score: scorePerBall) => acc + (score.isNoBall || score.isWideBall ? 0 : 1), 0);
-          let currnetInningstotalOvers = currentMatch.team2score.length - 1;
-          currnetInningstotalOvers = currnetInningstotalBalls === 6 ? currnetInningstotalOvers + 1 : currnetInningstotalOvers;
-          currnetInningstotalBalls = currnetInningstotalBalls === 6 ? 0 : currnetInningstotalBalls;
-          const currnetInningstotalWickets = currentMatch.team2score.reduce((acc: any, subArray: scorePerBall[]) => {
-            return acc + subArray.reduce((subAcc, ball: scorePerBall) => subAcc + (ball.isWicket ? 1 : 0), 0);
-          }, 0);
-
-          setFinalSecondInningsScore({ totalRuns: currnetInningstotalRuns, totalWickets: currnetInningstotalWickets, totalOvers: currnetInningstotalOvers, totalBalls: currnetInningstotalBalls });
-          setTotalRuns(currnetInningstotalRuns);
-          setTotalBalls(currnetInningstotalBalls);
-          setTotalOvers(currnetInningstotalOvers);
-          setTotalWickets(currnetInningstotalWickets);
-          setScorePerOver(currentMatch.team2score[0]);
-
-        }
+        setFinalSecondInningsScore({ totalRuns: currnetInningstotalRuns, totalWickets: currnetInningstotalWickets, totalOvers: currnetInningstotalOvers, totalBalls: currnetInningstotalBalls });
+        setTotalRuns(currnetInningstotalRuns);
+        setTotalBalls(currnetInningstotalBalls);
+        setTotalOvers(currnetInningstotalOvers);
+        setTotalWickets(currnetInningstotalWickets);
+        setScorePerOver(currentMatch.team2score[0]);
 
       }
+
     }
-    fetchMatch();
-  }, []);
+  }
 
   useFocusEffect(
     React.useCallback(() => {
       const fetchMatch = async () => {
         const isNewMatch = await getItem('isNewMatch');
         if (isNewMatch) {
-          setTotalScore([]);
-          setScoreSecondInnings([]);
-          setFinalFirstInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
-          setFinalSecondInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
-          setIsFirstInning(true);
-          setScorePerOver([]);
+          clearAllState();
           const matches = await getItem('matches');
           if (matches) {
             setMatch(matches[0]);
@@ -139,6 +145,19 @@ export default function HomeScreen() {
       fetchMatch();
     }, [])
   );
+
+  const clearAllState = () => {
+    setTotalScore([]);
+    setScoreSecondInnings([]);
+    setFinalFirstInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+    setFinalSecondInningsScore({ totalRuns: 0, totalWickets: 0, totalOvers: 0, totalBalls: 0 });
+    setIsFirstInning(true);
+    setScorePerOver([]);
+    setTotalRuns(0);
+    setTotalBalls(0);
+    setTotalOvers(0);
+    setTotalWickets(0);
+  }
 
   const handleRunPress = (run: string) => {
     if (run === '.') {
@@ -209,7 +228,9 @@ export default function HomeScreen() {
 
       if (isFirstInning) {
         if (scorePerOver.length === 0) {
-          setTotalScore([scoreThisOver, ...totalScore])
+          const latestTotalScore = totalScore;
+          latestTotalScore.unshift(scoreThisOver);
+          setTotalScore(latestTotalScore);
         }
         else {
           const latestTotalScore = totalScore;
@@ -244,7 +265,7 @@ export default function HomeScreen() {
         }
       }
 
-      setScorePerOver(scoreThisOver);
+
       setIsConfirm(false);
       setRun(0);
       setIsWicket(false);
@@ -264,6 +285,7 @@ export default function HomeScreen() {
             const latestMatch = matches[0];
             if (latestMatch) {
               const updatedMatch = { ...latestMatch, isFirstInning: false };
+
               matches[0] = updatedMatch;
               await setItem('matches', matches);
             }
@@ -281,11 +303,15 @@ export default function HomeScreen() {
             const latestMatch = matches[0];
             if (latestMatch) {
               const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
+
               matches[0] = updatedMatch;
               await setItem('matches', matches);
             }
           }
         }
+      }
+      else {
+        setScorePerOver(scoreThisOver);
       }
     }
 
@@ -311,6 +337,76 @@ export default function HomeScreen() {
         setTotalBalls(currentOverBalls);
       }
     }
+  }
+
+  const handleUndoSubmit = () => {
+    Alert.alert(
+      "Undo Confirmation",
+      "Are you sure you want to undo the last action?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Undo Cancelled"),
+          style: "cancel"
+        },
+        { text: "OK", onPress: undoAction }
+      ],
+      { cancelable: false }
+    );
+  }
+
+  const undoAction = async () => {
+    const allMatches: match[] = await getItem('matches');
+    if (!allMatches || allMatches.length === 0) {
+      return;
+    }
+    const currentMath: match = allMatches[0];
+    console.clear();
+    console.log('before', JSON.stringify(currentMath));
+    const currentMatchTeam1Score: scorePerInning = currentMath.team1score;
+    const currentMatchTeam2Score: scorePerInning = currentMath.team2score;
+    if (currentMatchTeam1Score.length === 0 && currentMatchTeam2Score.length === 0) {
+      return;
+    }
+
+    if (currentMatchTeam2Score.length === 0 && !currentMath.isFirstInning) {
+      currentMath.isFirstInning = true;
+    }
+
+    if (currentMath.isFirstInning) {
+      if (currentMatchTeam1Score.length === 0) {
+        console.log('No ball to undo');
+        return;
+      }
+
+      currentMatchTeam1Score[0].shift();
+      if (currentMatchTeam1Score[0].length === 0) {
+        currentMatchTeam1Score.shift();
+      }
+
+      const updatedMatch = { ...currentMath, team1score: currentMatchTeam1Score };
+      allMatches[0] = updatedMatch;
+      console.log('after', JSON.stringify(updatedMatch));
+      await setItem('matches', allMatches);
+    }
+    else {
+      if (currentMatchTeam2Score.length === 0) {
+        console.log('No ball to undo');
+        return;
+      }
+
+      currentMatchTeam2Score[0].shift();
+      if (currentMatchTeam2Score[0].length === 0) {
+        currentMatchTeam2Score.shift();
+      }
+
+
+      const currentMatchStatus: matchStatus = currentMath.status == 'completed' ? 'live' : currentMath.status;
+      const updatedMatch = { ...currentMath, team2score: currentMatchTeam2Score, status: currentMatchStatus };
+      allMatches[0] = updatedMatch;
+      await setItem('matches', allMatches);
+    }
+    await fetchMatch();
   }
 
   return (
@@ -347,6 +443,14 @@ export default function HomeScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.bubbleButton} onPress={handleWideBall}>
             <Text style={styles.buttonText}>WB</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.bubbleButton} onPress={handleUndoSubmit}>
+            <Icon
+              name='arrow-undo'
+              type='ionicon'
+              color='black'
+              size={48}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -386,6 +490,15 @@ const styles = StyleSheet.create({
     height: windowWidth * 0.15,
     borderRadius: windowWidth * 0.1,
     backgroundColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bubbleButtonDisabled: {
+    margin: 5,
+    width: windowWidth * 0.15,
+    height: windowWidth * 0.15,
+    borderRadius: windowWidth * 0.1,
+    backgroundColor: 'gray',
     justifyContent: 'center',
     alignItems: 'center',
   },

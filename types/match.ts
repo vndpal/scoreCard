@@ -7,10 +7,12 @@ type match = {
     team2score: scorePerInning;
     tossWin: 'team1' | 'team2';
     choose: 'batting' | 'bowling';
-    winner: 'team1' | 'team2';
+    winner?: 'team1' | 'team2';
     overs: number;
-    status: 'live' | 'completed';
+    status: matchStatus;
     isFirstInning: boolean;
 };
 
-export type { match };
+type matchStatus = 'live' | 'completed';
+
+export type { match, matchStatus };

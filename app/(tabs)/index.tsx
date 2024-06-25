@@ -361,8 +361,6 @@ export default function HomeScreen() {
       return;
     }
     const currentMath: match = allMatches[0];
-    console.clear();
-    console.log('before', JSON.stringify(currentMath));
     const currentMatchTeam1Score: scorePerInning = currentMath.team1score;
     const currentMatchTeam2Score: scorePerInning = currentMath.team2score;
     if (currentMatchTeam1Score.length === 0 && currentMatchTeam2Score.length === 0) {
@@ -405,6 +403,7 @@ export default function HomeScreen() {
       const updatedMatch = { ...currentMath, team2score: currentMatchTeam2Score, status: currentMatchStatus };
       allMatches[0] = updatedMatch;
       await setItem('matches', allMatches);
+
     }
     await fetchMatch();
   }
@@ -416,7 +415,7 @@ export default function HomeScreen() {
         <ScoreBoard totalScore={finalSecondInningsScore.totalRuns} wickets={finalSecondInningsScore.totalWickets} overs={finalSecondInningsScore.totalOvers} balls={finalSecondInningsScore.totalBalls} scorePerInning={scoreSecondInnings} />
 
         {!isFirstInning ? <View style={styles.subContainer1}>
-          <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls</Text>
+          <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls | R.R. {(finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1) / (match.overs - finalSecondInningsScore.totalOvers)}</Text>
         </View>
           : ''}
       </View>
@@ -533,5 +532,6 @@ const styles = StyleSheet.create({
     padding: 10,
     alignContent: 'flex-start',
     backgroundColor: 'white',
+    width: windowWidth,
   }
 });

@@ -33,7 +33,7 @@ export default function HomeScreen() {
 
   const [isFirstInning, setIsFirstInning] = useState(true);
 
-  const [match, setMatch] = useState<match>({ team1: '', team2: '', team1score: [], team2score: [], tossWin: 'team1', choose: 'batting', winner: 'team1', overs: 0, status: 'completed', isFirstInning: true });
+  const [match, setMatch] = useState<match>({ team1: '', team2: '', team1score: [], team2score: [], tossWin: 'team1', choose: 'batting', overs: 0, status: 'completed', isFirstInning: true });
   const [totalScore, setTotalScore] = useState<scorePerInning>([]);
   const [scoreSecondInnings, setScoreSecondInnings] = useState<scorePerInning>([]);
   const [scorePerOver, setScorePerOver] = useState<scorePerOver>([]);
@@ -293,11 +293,11 @@ export default function HomeScreen() {
         }
         else if (!isFirstInning && finalSecondInningsScore.totalOvers + 1 == match.overs) {
           console.log('Second Inning Completed');
-          let winner = 'team1';
-          if (finalSecondInningsScore.totalRuns >= finalFirstInningsScore.totalRuns) {
+          let winner: 'team1' | 'team2' | undefined = 'team1';
+          if (finalSecondInningsScore.totalRuns + totalRun > finalFirstInningsScore.totalRuns) {
             winner = 'team2';
           }
-          setMatch({ ...match, status: 'completed' });
+          setMatch({ ...match, winner: winner, status: 'completed' });
           const matches = await getItem('matches');
           if (matches) {
             const latestMatch = matches[0];
@@ -308,10 +308,27 @@ export default function HomeScreen() {
               await setItem('matches', matches);
             }
           }
+          return;
         }
       }
       else {
         setScorePerOver(scoreThisOver);
+      }
+
+      if (!isFirstInning && finalSecondInningsScore.totalRuns + totalRun > finalFirstInningsScore.totalRuns) {
+        console.log('Second Inning Completed');
+        let winner = 'team2';
+        setMatch({ ...match, status: 'completed' });
+        const matches = await getItem('matches');
+        if (matches) {
+          const latestMatch = matches[0];
+          if (latestMatch) {
+            const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
+
+            matches[0] = updatedMatch;
+            await setItem('matches', matches);
+          }
+        }
       }
     }
 
@@ -415,7 +432,13 @@ export default function HomeScreen() {
         <ScoreBoard totalScore={finalSecondInningsScore.totalRuns} wickets={finalSecondInningsScore.totalWickets} overs={finalSecondInningsScore.totalOvers} balls={finalSecondInningsScore.totalBalls} scorePerInning={scoreSecondInnings} />
 
         {!isFirstInning ? <View style={styles.subContainer1}>
-          <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls | R.R. {(finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1) / (match.overs - finalSecondInningsScore.totalOvers)}</Text>
+          {
+            match.status == 'completed' ?
+              match.winner == 'team1' ? <Text>{match.team1} won by {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns} runs</Text> :
+                <Text>{match.team2} won by {match.wickets! - finalSecondInningsScore.totalWickets} wickets & {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls left</Text>
+              :
+              <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls | R.R. {(finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1) / (match.overs - finalSecondInningsScore.totalOvers)}</Text>
+          }
         </View>
           : ''}
       </View>

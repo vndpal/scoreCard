@@ -11,6 +11,7 @@ type match = {
     overs: number;
     status: matchStatus;
     isFirstInning: boolean;
+    wickets?: number;
 };
 
 type matchStatus = 'live' | 'completed';

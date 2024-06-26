@@ -6,8 +6,8 @@ const Card = ({ match }: { match: match }) => (
     <View style={styles.card}>
         <Text style={styles.title}>{match.team1} vs {match.team2}</Text>
         <Text>{match.tossWin == 'team1' ? match.team1 : match.team2} won the toss and choose {match.choose}</Text>
-        <Text>overs: {match.overs}</Text>
-        <Text>status: {match.status}</Text>
+        <Text>Overs: {match.overs}</Text>
+        <Text style={{ textTransform: 'capitalize' }}>Status: {match.status}</Text>
         {match.status == 'completed' ? <Text>Winner: {match.winner == 'team1' ? match.team1 : match.team2}</Text> : ''}
     </View>
 );

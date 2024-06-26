@@ -110,28 +110,6 @@ export default function TabTwoScreen() {
           value={wickets}
           onChangeText={setWickets}
         />
-        {/* <DropDownPicker
-          open={open}
-          value={value}
-          items={items}
-          setOpen={setOpen}
-          setValue={setValue}
-          setItems={setItems}
-          textStyle={
-            {
-              color: 'white',
-            }
-          }
-          style={
-            {
-              borderColor: '#ddd',
-              borderWidth: 1,
-              marginBottom: 100,
-              borderRadius: 4,
-              backgroundColor: 'transparent',
-            }
-          }
-        /> */}
         <Button title="Create Match" onPress={handleSubmit} />
       </View>
       {!isKeyboardVisible && <MatchHistory matches={matches} />}

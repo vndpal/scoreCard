@@ -31,6 +31,7 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="createMatch" options={{ headerTitle: "Create Match", animation: 'slide_from_right' }} />
       </Stack>
     </ThemeProvider>
   );

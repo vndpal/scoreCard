@@ -14,11 +14,14 @@ const Card = ({ match }: { match: match }) => (
 
 const MatchHistory = ({ matches }: { matches: match[] }) => {
     return (
-        <ScrollView style={styles.container}>
-            {matches && matches.map((item, index) => (
-                <Card key={index} match={item} />
-            ))}
-        </ScrollView>
+        <View style={styles.container}>
+            <Text style={styles.header}>Match History</Text>
+            <ScrollView >
+                {matches && matches.map((item, index) => (
+                    <Card key={index} match={item} />
+                ))}
+            </ScrollView>
+        </View>
     );
 };
 
@@ -26,7 +29,7 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
         backgroundColor: '#000', // Change background color to match dark theme
-        maxHeight: '50%',
+        maxHeight: '92%',
     },
     card: {
         backgroundColor: '#a09f9f', // Change card background color to match dark theme
@@ -44,6 +47,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 10,
     },
+    header: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: 'white',
+        marginBottom: 16,
+    }
 });
 
 export default MatchHistory;

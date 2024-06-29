@@ -431,15 +431,16 @@ export default function HomeScreen() {
         <ScoreBoard totalScore={finalFirstInningsScore.totalRuns} wickets={finalFirstInningsScore.totalWickets} overs={finalFirstInningsScore.totalOvers} balls={finalFirstInningsScore.totalBalls} scorePerInning={totalScore} />
         <ScoreBoard totalScore={finalSecondInningsScore.totalRuns} wickets={finalSecondInningsScore.totalWickets} overs={finalSecondInningsScore.totalOvers} balls={finalSecondInningsScore.totalBalls} scorePerInning={scoreSecondInnings} />
 
-        {!isFirstInning ? <View style={styles.subContainer1}>
-          {
-            match.status == 'completed' ?
-              match.winner == 'team1' ? <Text>{match.team1} won by {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns} runs</Text> :
-                <Text>{match.team2} won by {match.wickets! - finalSecondInningsScore.totalWickets} wickets & {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls left</Text>
-              :
-              <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls | R.R. {(finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1) / (match.overs - finalSecondInningsScore.totalOvers)}</Text>
-          }
-        </View>
+        {!isFirstInning ?
+          <View style={styles.statusBar}>
+            {
+              match.status == 'completed' ?
+                match.winner == 'team1' ? <Text>{match.team1} won by {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns} runs</Text> :
+                  <Text>{match.team2} won by {match.wickets! - finalSecondInningsScore.totalWickets} wickets & {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls left</Text>
+                :
+                <Text>{match.team2} need {finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1} runs in {(match.overs * 6) - ((finalSecondInningsScore.totalOvers * 6) + finalSecondInningsScore.totalBalls)} balls | R.R. {(finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1) / (match.overs - finalSecondInningsScore.totalOvers)}</Text>
+            }
+          </View>
           : ''}
       </View>
 
@@ -548,7 +549,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center'
   },
-  subContainer1: {
+  statusBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',

@@ -32,7 +32,7 @@ export const CreateMatch = () => {
         <View style={styles.formContainer}>
             <TextInput
                 style={styles.input}
-                placeholder="Team 1 name"
+                placeholder="Team 1"
                 placeholderTextColor={'white'}
                 keyboardType="default"
                 value={team1}
@@ -40,7 +40,7 @@ export const CreateMatch = () => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="Team 2 name"
+                placeholder="Team 2"
                 placeholderTextColor={'white'}
                 keyboardType="default"
                 value={team2}
@@ -48,7 +48,7 @@ export const CreateMatch = () => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="Number of overs"
+                placeholder="Overs"
                 placeholderTextColor={'white'}
                 keyboardType="numeric"
                 value={overs}
@@ -56,12 +56,13 @@ export const CreateMatch = () => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="Number of wickets"
+                placeholder="Wickets"
                 placeholderTextColor={'white'}
                 keyboardType="numeric"
                 value={wickets}
                 onChangeText={setWickets}
             />
+            <View style={{ flex: 1 }} />
             <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                 <Text style={styles.text}>Create Match</Text>
             </TouchableOpacity>
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
         height: 40,
         borderColor: '#ddd',
         borderWidth: 1,
-        marginBottom: 10,
+        marginBottom: 24,
         paddingHorizontal: 8,
         borderRadius: 15,
         color: 'white',

@@ -20,7 +20,8 @@
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.vndpal.ScoreCard"
+      "package": "com.vndpal.ScoreCard",
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro",

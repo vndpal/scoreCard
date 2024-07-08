@@ -1,7 +1,8 @@
 import { getItem, setItem } from '@/utils/asyncStorage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Button, Keyboard, TextInput, Text, View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { Keyboard, View, StyleSheet, Dimensions } from 'react-native';
+import { Button, TextInput } from 'react-native-paper';
 
 export const CreateMatch = () => {
 
@@ -32,23 +33,26 @@ export const CreateMatch = () => {
         <View style={styles.formContainer}>
             <TextInput
                 style={styles.input}
-                placeholder="Team 1"
+                label={'Batting team'}
                 placeholderTextColor={'white'}
                 keyboardType="default"
                 value={team1}
                 onChangeText={setTeam1}
+                mode='outlined'
             />
             <TextInput
                 style={styles.input}
-                placeholder="Team 2"
+                label={'Fielding team'}
                 placeholderTextColor={'white'}
                 keyboardType="default"
                 value={team2}
                 onChangeText={setTeam2}
+                mode='outlined'
             />
             <TextInput
                 style={styles.input}
-                placeholder="Overs"
+                mode='outlined'
+                label={'Overs'}
                 placeholderTextColor={'white'}
                 keyboardType="numeric"
                 value={overs}
@@ -56,16 +60,15 @@ export const CreateMatch = () => {
             />
             <TextInput
                 style={styles.input}
-                placeholder="Wickets"
+                mode='outlined'
+                label={'Wickets'}
                 placeholderTextColor={'white'}
                 keyboardType="numeric"
                 value={wickets}
                 onChangeText={setWickets}
             />
             <View style={{ flex: 1 }} />
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.text}>Create Match</Text>
-            </TouchableOpacity>
+            <Button textColor='white' buttonColor='#0c66e4' mode='contained' onPress={handleSubmit} >Create Match </Button>
         </View>
     );
 };
@@ -77,31 +80,12 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         padding: 10,
-        maxHeight: '100%',
         backgroundColor: 'transparent',
     },
     input: {
-        height: 40,
-        borderColor: '#ddd',
-        borderWidth: 1,
         marginBottom: 24,
         paddingHorizontal: 8,
-        borderRadius: 15,
         color: 'white',
     },
-    button: {
-        backgroundColor: '#0c66e4',
-        padding: 10,
-        color: 'black',
-        textAlign: 'center',
-        marginTop: 10,
-        width: 'auto',
-        height: 'auto',
-        borderRadius: 20,
-    },
-    text: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 20,
-    }
+
 });

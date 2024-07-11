@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { TouchableOpacity, View, useColorScheme, Text, StyleSheet } from 'react-native';
+import { Icon } from 'react-native-elements';
 import { Button } from 'react-native-elements/dist/buttons/Button';
 
 export const FloatingMenu: React.FC = () => {
@@ -34,6 +35,10 @@ export const FloatingMenu: React.FC = () => {
                         <Text style={styles.menuOptionText}>New Match</Text>
                     </TouchableOpacity>
 
+                    <View style={styles.horizontalLine} />
+                    <TouchableOpacity onPress={() => handleLinkPress('toss')} >
+                        <Text style={styles.menuOptionText}> 🪙 Toss</Text>
+                    </TouchableOpacity>
                     <View style={styles.horizontalLine} />
                     <Text style={styles.menuOptionText}>New Team</Text>
                 </View>

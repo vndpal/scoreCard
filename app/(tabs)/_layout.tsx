@@ -17,9 +17,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Track',
+          title: 'Scorecard',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'bar-chart' : 'bar-chart-outline'} color={color} />
+            <TabBarIcon name={focused ? 'clipboard' : 'clipboard-outline'} color={color} />
           ),
         }}
       />

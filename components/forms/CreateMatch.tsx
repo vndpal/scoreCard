@@ -1,20 +1,33 @@
 import { getItem, setItem } from '@/utils/asyncStorage';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Keyboard, View, StyleSheet, Dimensions, GestureResponderEvent } from 'react-native';
 import { Button, TextInput, HelperText } from 'react-native-paper';
 import { Formik, useFormik } from 'formik';
 import * as Yup from 'yup';
+import { match } from '@/types/match';
 
 const createMatchSchema = Yup.object().shape({
     team1: Yup.string().required('Batting team is required'),
     team2: Yup.string().required('Fielding team is required'),
     overs: Yup.number().required('Overs are required'),
-    wickets: Yup.number().required('Wickets are required'),
+    wickets: Yup.number()
 });
 
 export const CreateMatch = () => {
-
+    useEffect(() => {
+        (async () => {
+            const matches: match[] = await getItem('matches');
+            if (matches.length > 0) {
+                const lastMatch: match = matches[0];
+                if (lastMatch && lastMatch.status == 'completed') {
+                    const winner = lastMatch.winner == 'team1' ? lastMatch.team1 : lastMatch.team2;
+                    const looser = lastMatch.winner == 'team1' ? lastMatch.team2 : lastMatch.team1;
+                    formik.setValues({ team1: winner, team2: looser, overs: lastMatch.overs.toString(), wickets: lastMatch.wickets?.toString() ?? '' });
+                }
+            }
+        })();
+    }, []);
 
     const handleSubmit = async () => {
         console.log(`Creating a match with ${formik.values.overs} overs and ${formik.values.wickets} wickets.`);
@@ -57,10 +70,11 @@ export const CreateMatch = () => {
                 keyboardType="default"
                 value={formik.values.team1}
                 onChangeText={formik.handleChange('team1')}
+                onBlur={formik.handleBlur('team1')}
                 mode='outlined'
-                error={!!formik.errors.team1}
+                error={!!formik.errors.team1 && !!formik.touched.team1}
             />
-            <HelperText type="error" padding='none' visible={!!formik.errors.team1}>
+            <HelperText type="error" padding='none' visible={!!formik.errors.team1 && !!formik.touched.team1}>
                 {formik.errors.team1}
             </HelperText>
             <TextInput
@@ -70,10 +84,11 @@ export const CreateMatch = () => {
                 keyboardType="default"
                 value={formik.values.team2}
                 onChangeText={formik.handleChange('team2')}
+                onBlur={formik.handleBlur('team2')}
                 mode='outlined'
-                error={!!formik.errors.team2}
+                error={!!formik.errors.team2 && !!formik.touched.team2}
             />
-            <HelperText type="error" padding='none' visible={!!formik.errors.team2}>
+            <HelperText type="error" padding='none' visible={!!formik.errors.team2 && !!formik.touched.team2}>
                 {formik.errors.team2}
             </HelperText>
             <TextInput
@@ -84,9 +99,10 @@ export const CreateMatch = () => {
                 keyboardType="numeric"
                 value={formik.values.overs}
                 onChangeText={formik.handleChange('overs')}
-                error={!!formik.errors.overs}
+                onBlur={formik.handleBlur('overs')}
+                error={!!formik.errors.overs && !!formik.touched.overs}
             />
-            <HelperText type="error" padding='none' visible={!!formik.errors.overs}>
+            <HelperText type="error" padding='none' visible={!!formik.errors.overs && !!formik.touched.overs}>
                 {formik.errors.overs}
             </HelperText>
             <TextInput
@@ -97,9 +113,10 @@ export const CreateMatch = () => {
                 keyboardType="numeric"
                 value={formik.values.wickets}
                 onChangeText={formik.handleChange('wickets')}
-                error={!!formik.errors.wickets}
+                onBlur={formik.handleBlur('wickets')}
+                error={!!formik.errors.wickets && !!formik.touched.wickets}
             />
-            <HelperText type="error" padding='none' visible={!!formik.errors.wickets}>
+            <HelperText type="error" padding='none' visible={!!formik.errors.wickets && !!formik.touched.wickets}>
                 {formik.errors.wickets}
             </HelperText>
             <View style={{ flex: 1 }} />

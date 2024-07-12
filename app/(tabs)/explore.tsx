@@ -14,29 +14,6 @@ export default function TabTwoScreen() {
 
   const [matches, setMatches] = useState([]);
 
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
-        setKeyboardVisible(true); // Set the state to true when keyboard is visible
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
-        setKeyboardVisible(false); // Set the state to false when keyboard is hidden
-      }
-    );
-
-    // Cleanup function to remove the listeners
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       const fetchMatch = async () => {
@@ -49,10 +26,13 @@ export default function TabTwoScreen() {
 
 
   return (
-    <View style={styles.container}>
-      {!isKeyboardVisible && <MatchHistory matches={matches} />}
+    <>
+      <View style={styles.container}>
+        {<MatchHistory matches={matches} />}
+
+      </View>
       <FloatingMenu />
-    </View>
+    </>
   );
 }
 

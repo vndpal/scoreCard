@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { scorePerBall } from '@/types/scorePerBall';
 import { scorePerOver } from '@/types/scorePerOver';
 import { scorePerInning } from '@/types/scorePerInnig';
-import { match, matchStatus } from '@/types/match';
+import { match } from '@/types/match';
 import { getItem, setItem } from '@/utils/asyncStorage';
 import { useFocusEffect } from 'expo-router';
 import React from 'react';
@@ -416,7 +416,7 @@ export default function HomeScreen() {
       }
 
 
-      const currentMatchStatus: matchStatus = currentMath.status == 'completed' ? 'live' : currentMath.status;
+      const currentMatchStatus = currentMath.status == 'completed' ? 'live' : currentMath.status;
       const updatedMatch = { ...currentMath, team2score: currentMatchTeam2Score, status: currentMatchStatus };
       allMatches[0] = updatedMatch;
       await setItem('matches', allMatches);

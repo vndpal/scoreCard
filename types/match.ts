@@ -9,11 +9,9 @@ type match = {
     choose: 'batting' | 'bowling';
     winner?: 'team1' | 'team2';
     overs: number;
-    status: matchStatus;
+    status: 'live' | 'completed';
     isFirstInning: boolean;
     wickets?: number;
 };
 
-type matchStatus = 'live' | 'completed';
-
-export type { match, matchStatus };
+export type { match };

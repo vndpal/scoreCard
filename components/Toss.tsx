@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 
 const Toss: React.FC = () => {
-    const [coinSide, setCoinSide] = useState("H");
+    const [coinSide, setCoinSide] = useState("TOSS");
 
     const flipAnimation = useRef(new Animated.Value(0)).current;
 
@@ -26,7 +26,7 @@ const Toss: React.FC = () => {
     return (
         <View style={styles.container}>
             <TouchableOpacity onPress={flipCoin}>
-                {coinSide && (
+                {(
                     <Animated.View
                         style={[
                             styles.coinImage,
@@ -48,9 +48,9 @@ const Toss: React.FC = () => {
                             },
                         ]}
                     >
-                        <View style={[styles.coin, coinSide === "T" ? styles.tails : styles.heads]}>
+                        <View style={[styles.coin, coinSide === "T" ? styles.tails : coinSide === "H" ? styles.heads : styles.default]}>
                             <Text style={styles.coinBorder}></Text>
-                            <Text style={styles.coinText}>{coinSide}</Text>
+                            <Text style={coinSide === "TOSS" ? styles.defaultCoinText : styles.coinText}>{coinSide}</Text>
                         </View>
                     </Animated.View>
                 )}
@@ -82,8 +82,17 @@ const styles = StyleSheet.create({
     tails: {
         backgroundColor: 'lightblue',
     },
+    default: {
+        backgroundColor: 'white',
+    },
     coinText: {
         fontSize: 200,
+        fontWeight: 'bold',
+        color: 'black',
+    },
+    defaultCoinText: {
+        flexWrap: 'wrap',
+        fontSize: 70,
         fontWeight: 'bold',
         color: 'black',
     },

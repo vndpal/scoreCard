@@ -6,6 +6,7 @@ import { Button, TextInput, HelperText } from 'react-native-paper';
 import { Formik, useFormik } from 'formik';
 import * as Yup from 'yup';
 import { match } from '@/types/match';
+import { STORAGE_ITEMS } from '@/constants/StorageItems';
 
 const createMatchSchema = Yup.object().shape({
     team1: Yup.string().required('Batting team is required'),
@@ -17,7 +18,7 @@ const createMatchSchema = Yup.object().shape({
 export const CreateMatch = () => {
     useEffect(() => {
         (async () => {
-            const matches: match[] = await getItem('matches');
+            const matches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
             if (matches.length > 0) {
                 const lastMatch: match = matches[0];
                 if (lastMatch && lastMatch.status == 'completed') {
@@ -31,18 +32,18 @@ export const CreateMatch = () => {
 
     const handleSubmit = async () => {
         console.log(`Creating a match with ${formik.values.overs} overs and ${formik.values.wickets} wickets.`);
-        const matches = await getItem('matches');
+        const matches = await getItem(STORAGE_ITEMS.MATCHES);
         const { overs, wickets, team1, team2 } = formik.values;
         if (matches) {
             if (matches[0].status == 'live') {
                 alert('There is already a live match. Please complete it before starting a new match.');
                 return;
             }
-            await setItem('matches', [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', team1score: [], team2score: [], status: 'live', isFirstInning: true }, ...matches])
+            await setItem(STORAGE_ITEMS.MATCHES, [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', team1score: [], team2score: [], status: 'live', isFirstInning: true }, ...matches])
         } else {
-            await setItem('matches', [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', team1score: [], team2score: [], status: 'live', isFirstInning: true }])
+            await setItem(STORAGE_ITEMS.MATCHES, [{ overs, wickets, team1, team2, tossWin: 'team1', choose: 'batting', team1score: [], team2score: [], status: 'live', isFirstInning: true }])
         }
-        await setItem('isNewMatch', true);
+        await setItem(STORAGE_ITEMS.IS_NEW_MATCH, true);
         Keyboard.dismiss();
         router.push('/');
     };
@@ -120,7 +121,7 @@ export const CreateMatch = () => {
                 {formik.errors.wickets}
             </HelperText>
             <View style={{ flex: 1 }} />
-            <Button textColor='white' buttonColor='#0c66e4' mode='contained' onPress={formik.handleSubmit as (e?: GestureResponderEvent) => void} >Create Match </Button>
+            <Button textColor='white' buttonColor='#0c66e4' mode='contained' onPress={formik.handleSubmit as (e?: GestureResponderEvent) => void} >Start new match</Button>
         </View>
     );
 };

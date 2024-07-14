@@ -52,9 +52,9 @@ export default function HomeScreen() {
   }, []);
 
   const fetchMatch = async () => {
-    const isNewMatch = await getItem('isNewMatch');
+    const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
     if (!isNewMatch) {
-      const matches = await getItem('matches');
+      const matches = await getItem(STORAGE_ITEMS.MATCHES);
       if (!matches) {
         return;
       }
@@ -131,14 +131,14 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const fetchMatch = async () => {
-        const isNewMatch = await getItem('isNewMatch');
+        const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
         if (isNewMatch) {
           clearAllState();
-          const matches = await getItem('matches');
+          const matches = await getItem(STORAGE_ITEMS.MATCHES);
           if (matches) {
             setMatch(matches[0]);
           }
-          await setItem('isNewMatch', false);
+          await setItem(STORAGE_ITEMS.IS_NEW_MATCH, false);
         }
 
       }
@@ -249,7 +249,7 @@ export default function HomeScreen() {
         }
       }
 
-      const matches = await getItem('matches');
+      const matches = await getItem(STORAGE_ITEMS.MATCHES);
       if (matches) {
         const latestMatch = matches[0];
         if (latestMatch) {
@@ -261,7 +261,7 @@ export default function HomeScreen() {
             updatedMatch = { ...latestMatch, team2score: scoreSecondInnings };
           }
           matches[0] = updatedMatch;
-          await setItem('matches', matches);
+          await setItem(STORAGE_ITEMS.MATCHES, matches);
         }
       }
 
@@ -280,14 +280,14 @@ export default function HomeScreen() {
           console.log('First Inning Completed');
           setIsFirstInning(false);
 
-          const matches = await getItem('matches');
+          const matches = await getItem(STORAGE_ITEMS.MATCHES);
           if (matches) {
             const latestMatch = matches[0];
             if (latestMatch) {
               const updatedMatch = { ...latestMatch, isFirstInning: false };
 
               matches[0] = updatedMatch;
-              await setItem('matches', matches);
+              await setItem(STORAGE_ITEMS.MATCHES, matches);
             }
           }
         }
@@ -298,14 +298,14 @@ export default function HomeScreen() {
             winner = 'team2';
           }
           setMatch({ ...match, winner: winner, status: 'completed' });
-          const matches = await getItem('matches');
+          const matches = await getItem(STORAGE_ITEMS.MATCHES);
           if (matches) {
             const latestMatch = matches[0];
             if (latestMatch) {
               const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
 
               matches[0] = updatedMatch;
-              await setItem('matches', matches);
+              await setItem(STORAGE_ITEMS.MATCHES, matches);
             }
           }
           return;
@@ -319,14 +319,14 @@ export default function HomeScreen() {
         console.log('Second Inning Completed');
         let winner = 'team2';
         setMatch({ ...match, status: 'completed' });
-        const matches = await getItem('matches');
+        const matches = await getItem(STORAGE_ITEMS.MATCHES);
         if (matches) {
           const latestMatch = matches[0];
           if (latestMatch) {
             const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
 
             matches[0] = updatedMatch;
-            await setItem('matches', matches);
+            await setItem(STORAGE_ITEMS.MATCHES, matches);
           }
         }
       }
@@ -373,7 +373,7 @@ export default function HomeScreen() {
   }
 
   const undoAction = async () => {
-    const allMatches: match[] = await getItem('matches');
+    const allMatches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
     if (!allMatches || allMatches.length === 0) {
       return;
     }
@@ -402,7 +402,7 @@ export default function HomeScreen() {
       const updatedMatch = { ...currentMath, team1score: currentMatchTeam1Score };
       allMatches[0] = updatedMatch;
       console.log('after', JSON.stringify(updatedMatch));
-      await setItem('matches', allMatches);
+      await setItem(STORAGE_ITEMS.MATCHES, allMatches);
     }
     else {
       if (currentMatchTeam2Score.length === 0) {
@@ -419,7 +419,7 @@ export default function HomeScreen() {
       const currentMatchStatus = currentMath.status == 'completed' ? 'live' : currentMath.status;
       const updatedMatch = { ...currentMath, team2score: currentMatchTeam2Score, status: currentMatchStatus };
       allMatches[0] = updatedMatch;
-      await setItem('matches', allMatches);
+      await setItem(STORAGE_ITEMS.MATCHES, allMatches);
 
     }
     await fetchMatch();
@@ -483,6 +483,7 @@ export default function HomeScreen() {
 }
 
 import { Dimensions } from 'react-native';
+import { STORAGE_ITEMS } from '@/constants/StorageItems';
 
 const windowWidth = Dimensions.get('window').width;
 

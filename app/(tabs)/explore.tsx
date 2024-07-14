@@ -1,14 +1,11 @@
-import { StyleSheet, View, TextInput, Button, KeyboardAvoidingView, Keyboard } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { useCallback, useEffect, useState } from 'react';
-import { red } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
-import { getItem, setItem } from '@/utils/asyncStorage';
+import { useCallback, useState } from 'react';
+import { getItem } from '@/utils/asyncStorage';
 import MatchHistory from '@/components/MatchHisoty';
-import { router, useFocusEffect } from 'expo-router';
-import DropDownPicker from 'react-native-dropdown-picker';
+import { useFocusEffect } from 'expo-router';
 import { FloatingMenu } from '@/components/navigation/FloatingMenu';
-import { CreateMatch } from '@/components/forms/CreateMatch';
-import PopUpWindow from '@/components/forms/PopUpWindow';
+import { STORAGE_ITEMS } from '@/constants/StorageItems';
 
 export default function TabTwoScreen() {
 
@@ -17,7 +14,7 @@ export default function TabTwoScreen() {
   useFocusEffect(
     useCallback(() => {
       const fetchMatch = async () => {
-        const matches = await getItem('matches');
+        const matches = await getItem(STORAGE_ITEMS.MATCHES);
         setMatches(matches);
       }
       fetchMatch();

@@ -78,7 +78,7 @@ const MatchSettings = () => {
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.settingItem}>
-                    <Text style={styles.label}>Change Overs</Text>
+                    <Text style={styles.label}>Change overs</Text>
                     <TextInput
                         style={styles.input}
                         keyboardType="numeric"
@@ -89,7 +89,7 @@ const MatchSettings = () => {
                     />
                 </View>
                 <View style={styles.settingItem}>
-                    <Text style={styles.label}>Declare Innings</Text>
+                    <Text style={styles.label}>Declare innings</Text>
                     <Switch
                         value={declareInnings}
                         onValueChange={handleDeclareInningsToggle}

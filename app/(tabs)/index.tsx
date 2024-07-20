@@ -196,6 +196,7 @@ export default function HomeScreen() {
     else {
       const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
       const totalRun = run + extra;
+      let scoreSecondInningsLocalState;
       // setTotalRuns((prev) => prev + totalRun);
       if (isFirstInning) {
         setFinalFirstInningsScore((prev) => ({ ...prev, totalRuns: prev.totalRuns + totalRun }));
@@ -242,11 +243,13 @@ export default function HomeScreen() {
       }
       else {
         if (scorePerOver.length === 0) {
+          scoreSecondInningsLocalState = [scoreThisOver, ...scoreSecondInnings];
           setScoreSecondInnings([scoreThisOver, ...scoreSecondInnings])
         }
         else {
           const latestTotalScore = scoreSecondInnings;
           latestTotalScore[0] = scoreThisOver;
+          scoreSecondInningsLocalState = latestTotalScore;
           setScoreSecondInnings(latestTotalScore);
         }
       }
@@ -260,7 +263,7 @@ export default function HomeScreen() {
             updatedMatch = { ...latestMatch, team1score: totalScore };
           }
           else {
-            updatedMatch = { ...latestMatch, team2score: scoreSecondInnings };
+            updatedMatch = { ...latestMatch, team2score: scoreSecondInningsLocalState };
           }
           matches[0] = updatedMatch;
           await setItem(STORAGE_ITEMS.MATCHES, matches);
@@ -304,7 +307,7 @@ export default function HomeScreen() {
           if (matches) {
             const latestMatch = matches[0];
             if (latestMatch) {
-              const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
+              const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInningsLocalState, status: 'completed', winner: winner };
 
               matches[0] = updatedMatch;
               await setItem(STORAGE_ITEMS.MATCHES, matches);
@@ -325,7 +328,7 @@ export default function HomeScreen() {
         if (matches) {
           const latestMatch = matches[0];
           if (latestMatch) {
-            const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInnings, status: 'completed', winner: winner };
+            const updatedMatch = { ...latestMatch, team1score: totalScore, team2score: scoreSecondInningsLocalState, status: 'completed', winner: winner };
 
             matches[0] = updatedMatch;
             await setItem(STORAGE_ITEMS.MATCHES, matches);
@@ -389,7 +392,6 @@ export default function HomeScreen() {
     if (currentMatchTeam2Score.length === 0 && !currentMath.isFirstInning) {
       currentMath.isFirstInning = true;
     }
-
     if (currentMath.isFirstInning) {
       if (currentMatchTeam1Score.length === 0) {
         console.log('No ball to undo');
@@ -403,7 +405,6 @@ export default function HomeScreen() {
 
       const updatedMatch = { ...currentMath, team1score: currentMatchTeam1Score };
       allMatches[0] = updatedMatch;
-      console.log('after', JSON.stringify(updatedMatch));
       await setItem(STORAGE_ITEMS.MATCHES, allMatches);
     }
     else {

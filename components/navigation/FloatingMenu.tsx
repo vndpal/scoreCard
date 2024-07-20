@@ -43,6 +43,10 @@ export const FloatingMenu: React.FC = () => {
                     <TouchableOpacity onPress={() => handleLinkPress('createTeam')} >
                         <Text style={styles.menuOptionText}>🙌 New team</Text>
                     </TouchableOpacity>
+                    <View style={styles.horizontalLine} />
+                    <TouchableOpacity onPress={() => handleLinkPress('teamLineup')} >
+                        <Text style={styles.menuOptionText}>📋 Player draft</Text>
+                    </TouchableOpacity>
                 </View>
 
             )}
@@ -76,7 +80,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     horizontalLine: {
-        borderBottomColor: 'blue',
+        borderBottomColor: 'black',
         borderBottomWidth: 1,
     }
 });

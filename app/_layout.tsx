@@ -36,6 +36,7 @@ export default function RootLayout() {
           <Stack.Screen name="createMatch" options={{ headerTitle: "Create match", animation: 'slide_from_right' }} />
           <Stack.Screen name="toss" options={{ headerTitle: "Toss", animation: 'slide_from_right' }} />
           <Stack.Screen name="createTeam" options={{ headerTitle: "Create team", animation: 'slide_from_right' }} />
+          <Stack.Screen name="teamLineup" options={{ headerTitle: "Playing XI", animation: 'slide_from_right' }} />
         </Stack>
       </PaperProvider>
     </ThemeProvider>

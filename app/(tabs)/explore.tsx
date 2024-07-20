@@ -2,10 +2,10 @@ import { StyleSheet, View } from 'react-native';
 
 import { useCallback, useState } from 'react';
 import { getItem } from '@/utils/asyncStorage';
-import MatchHistory from '@/components/MatchHisoty';
 import { useFocusEffect } from 'expo-router';
 import { FloatingMenu } from '@/components/navigation/FloatingMenu';
 import { STORAGE_ITEMS } from '@/constants/StorageItems';
+import MatchHistory from '@/components/MatchHistory';
 
 export default function TabTwoScreen() {
 

@@ -11,7 +11,7 @@ import { scorePerOver } from '@/types/scorePerOver';
 import { scorePerInning } from '@/types/scorePerInnig';
 import { match } from '@/types/match';
 import { getItem, setItem } from '@/utils/asyncStorage';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React from 'react';
 import { Icon } from 'react-native-elements';
 
@@ -23,6 +23,8 @@ type currentTotalScore = {
 };
 
 export default function HomeScreen() {
+
+  const router = useRouter();
 
   const [run, setRun] = useState(0);
   const [isWicket, setIsWicket] = useState(false);
@@ -425,6 +427,10 @@ export default function HomeScreen() {
     await fetchMatch();
   }
 
+  const handleMatchSettings = () => {
+    router.push('matchSettings');
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.scoreBoardcontainer}>
@@ -472,7 +478,15 @@ export default function HomeScreen() {
               name='arrow-undo'
               type='ionicon'
               color='black'
-              size={48}
+              size={40}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.bubbleButton} onPress={handleMatchSettings}>
+            <Icon
+              name='settings'
+              type='ionicon'
+              color='black'
+              size={40}
             />
           </TouchableOpacity>
         </View>

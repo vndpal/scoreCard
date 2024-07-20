@@ -4,11 +4,18 @@ import { ScrollView, View, Text, StyleSheet } from 'react-native';
 
 const Card = ({ match }: { match: match }) => (
     <View style={styles.card}>
-        <Text style={styles.title}>{match.team1} vs {match.team2}</Text>
-        <Text>{match.tossWin == 'team1' ? match.team1 : match.team2} won the toss and choose {match.choose}</Text>
-        <Text>Overs: {match.overs}</Text>
-        <Text style={{ textTransform: 'capitalize' }}>Status: {match.status}</Text>
-        {match.status == 'completed' ? <Text>Winner: {match.winner == 'team1' ? match.team1 : match.team2}</Text> : ''}
+        <View style={styles.cardHeader}>
+            <Text style={styles.title}>{match.team1} vs {match.team2}</Text>
+            {match.status === 'completed' && (
+                <Text style={styles.winner}>
+                    Winner: {match.winner === 'team1' ? match.team1 : match.team2}
+                </Text>
+            )}
+        </View>
+        <View style={styles.cardBody}>
+            <Text style={styles.info}>Overs: {match.overs}</Text>
+            <Text style={styles.info}>Status: {match.status}</Text>
+        </View>
     </View>
 );
 
@@ -16,7 +23,7 @@ const MatchHistory = ({ matches }: { matches: match[] }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Match History</Text>
-            <ScrollView >
+            <ScrollView>
                 {matches && matches.map((item, index) => (
                     <Card key={index} match={item} />
                 ))}
@@ -28,30 +35,54 @@ const MatchHistory = ({ matches }: { matches: match[] }) => {
 const styles = StyleSheet.create({
     container: {
         padding: 16,
-        backgroundColor: '#000', // Change background color to match dark theme
-        maxHeight: '92%',
+        backgroundColor: '#1c1c1c', // Slightly lighter dark background
+        flex: 1,
     },
     card: {
-        backgroundColor: '#a09f9f', // Change card background color to match dark theme
-        borderRadius: 8,
+        backgroundColor: '#2e2e2e', // Calmer dark card background
+        borderRadius: 12,
         padding: 16,
         marginBottom: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 120,
+        elevation: 10,
+        borderWidth: 2, // Optional border for separation
+        borderColor: '#444', // Slightly lighter border color
+    },
+    cardHeader: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#444', // Border between header and body
+        paddingBottom: 8,
+        marginBottom: 8,
+    },
+    cardBody: {
+        paddingTop: 8,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
-        marginBottom: 10,
+        color: '#E0E0E0', // Light gray for better contrast
+    },
+    winner: {
+        fontSize: 16,
+        color: '#F7E7A6', // Lighter gold color for the winner
+        fontWeight: 'bold',
+        marginTop: 4,
+    },
+    info: {
+        fontSize: 16,
+        color: '#B0B0B0', // Softer gray for information text
+        marginBottom: 5,
     },
     header: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: 'white',
-        marginBottom: 16,
+        color: '#E0E0E0', // Matching header color with title
+        marginBottom: 15,
+        marginTop: 32,
+        textAlign: 'center',
     }
 });
 

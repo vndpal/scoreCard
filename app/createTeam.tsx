@@ -1,11 +1,8 @@
-import { CreateTeam } from '@/components/forms/CreateTeam';
-import React from 'react';
+import { CreateTeam } from "@/components/forms/CreateTeam";
+import React from "react";
 
 const CreateTeamScreen = () => {
-    return (
-        <CreateTeam />
-    );
+  return <CreateTeam />;
 };
-
 
 export default CreateTeamScreen;

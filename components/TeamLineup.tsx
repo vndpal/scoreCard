@@ -279,6 +279,8 @@ const TeamLineup: React.FC = () => {
       <PreviewTeam
         visible={previewTeamVisible}
         players={players}
+        team1={team1}
+        team2={team2}
         onSave={handleSaveAfterReview}
         onDismiss={() => setPreviewTeamVisible(false)}
       />

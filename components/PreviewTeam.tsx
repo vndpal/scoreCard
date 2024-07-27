@@ -1,3 +1,4 @@
+import { team } from "@/types/team";
 import React from "react";
 import {
   View,
@@ -16,6 +17,8 @@ type Player = {
 interface PreviewTeamProps {
   visible: boolean;
   players: Player[];
+  team1: team | undefined;
+  team2: team | undefined;
   onSave: () => void;
   onDismiss: () => void;
 }
@@ -23,6 +26,8 @@ interface PreviewTeamProps {
 const PreviewTeam: React.FC<PreviewTeamProps> = ({
   visible,
   players,
+  team1,
+  team2,
   onSave,
   onDismiss,
 }) => {
@@ -44,7 +49,9 @@ const PreviewTeam: React.FC<PreviewTeamProps> = ({
       <Dialog.Content>
         <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
           <View style={styles.column}>
-            <Title style={styles.title}>Team 1</Title>
+            <Title style={styles.title}>
+              {team1 ? team1.teamName : "Team 1"}
+            </Title>
             <Divider style={styles.columnDivider} />
             <ScrollView style={styles.playerList}>
               {team1Players.length ? (
@@ -58,7 +65,9 @@ const PreviewTeam: React.FC<PreviewTeamProps> = ({
           </View>
           <Divider style={styles.divider} />
           <View style={styles.column}>
-            <Title style={styles.title}>Team 2</Title>
+            <Title style={styles.title}>
+              {team2 ? team2.teamName : "Team 2"}
+            </Title>
             <Divider style={styles.columnDivider} />
             <ScrollView style={styles.playerList}>
               {team2Players.length ? (
@@ -72,7 +81,7 @@ const PreviewTeam: React.FC<PreviewTeamProps> = ({
           </View>
           <Divider style={styles.divider} />
           <View style={styles.column}>
-            <Title style={styles.title}>Unassigned Players</Title>
+            <Title style={styles.title}>Bench</Title>
             <Divider style={styles.columnDivider} />
             <ScrollView style={styles.playerList}>
               {unassignedPlayers.length ? (
@@ -80,7 +89,7 @@ const PreviewTeam: React.FC<PreviewTeamProps> = ({
                   <List.Item key={player.id} title={player.name} />
                 ))
               ) : (
-                <List.Item title="No unassigned players" />
+                <List.Item title="-" />
               )}
             </ScrollView>
           </View>

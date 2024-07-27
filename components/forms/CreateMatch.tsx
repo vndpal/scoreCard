@@ -34,7 +34,7 @@ export const CreateMatch = () => {
   useEffect(() => {
     (async () => {
       const matches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
-      if (matches.length > 0) {
+      if (matches && matches.length > 0) {
         const lastMatch: match = matches[0];
         if (lastMatch && lastMatch.status == "completed") {
           const winner =
@@ -93,6 +93,7 @@ export const CreateMatch = () => {
           team2score: [],
           status: "live",
           isFirstInning: true,
+          date: new Date().toString(),
         },
         ...matches,
       ]);
@@ -109,6 +110,7 @@ export const CreateMatch = () => {
           team2score: [],
           status: "live",
           isFirstInning: true,
+          date: new Date().toString(),
         },
       ]);
     }
@@ -125,9 +127,8 @@ export const CreateMatch = () => {
       wickets: "",
     },
     validationSchema: createMatchSchema,
-    onSubmit: async (values, { resetForm }) => {
+    onSubmit: async (values) => {
       await handleSubmit();
-      // resetForm();
     },
   });
 
@@ -141,17 +142,6 @@ export const CreateMatch = () => {
         mode="outlined"
         error={!!formik.errors.team1 && !!formik.touched.team1}
       />
-      {/* <TextInput
-        style={styles.input}
-        label={"Batting team"}
-        placeholderTextColor={"white"}
-        keyboardType="default"
-        value={formik.values.team1}
-        onChangeText={formik.handleChange("team1")}
-        onBlur={formik.handleBlur("team1")}
-        mode="outlined"
-        error={!!formik.errors.team1 && !!formik.touched.team1}
-      /> */}
       <HelperText
         type="error"
         padding="none"
@@ -167,17 +157,6 @@ export const CreateMatch = () => {
         mode="outlined"
         error={!!formik.errors.team2 && !!formik.touched.team2}
       />
-      {/* <TextInput
-        style={styles.input}
-        label={"Fielding team"}
-        placeholderTextColor={"white"}
-        keyboardType="default"
-        value={formik.values.team2}
-        onChangeText={formik.handleChange("team2")}
-        onBlur={formik.handleBlur("team2")}
-        mode="outlined"
-        error={!!formik.errors.team2 && !!formik.touched.team2}
-      /> */}
       <HelperText
         type="error"
         padding="none"

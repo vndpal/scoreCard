@@ -4,6 +4,7 @@ import { TextInput, Button, useTheme } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { player } from "@/types/player";
 
 export const CreatePlayer = () => {
   const { colors } = useTheme();
@@ -11,20 +12,20 @@ export const CreatePlayer = () => {
   const router = useRouter();
 
   const handleSave = async () => {
-    const players = await getItem(STORAGE_ITEMS.PLAYERS);
+    const players: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
     if (players && players.length > 0) {
       if (players.find((p: any) => p.name === name)) {
         alert("Player with this name already exists");
         return;
       }
-      players.push({ name, id: players.length + 1 });
+      players.push({ name, id: players[players.length - 1].id + 1 });
       await setItem(STORAGE_ITEMS.PLAYERS, players);
     } else {
       const newPlayer = [{ name, id: 1 }];
       await setItem(STORAGE_ITEMS.PLAYERS, newPlayer);
     }
 
-    router.push("/players");
+    router.back();
   };
 
   return (

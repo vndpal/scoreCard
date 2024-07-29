@@ -12,8 +12,8 @@ import * as Yup from "yup";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { team } from "@/types/team";
-import Dropdown from "./dropdown/dropdown";
 import teams from "@/interfaces/teams";
+import { Dropdown } from "react-native-paper-dropdown";
 
 // Define validation schema with Yup
 const teamSelectionSchema = Yup.object().shape({

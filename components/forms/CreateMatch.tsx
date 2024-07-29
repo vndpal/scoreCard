@@ -14,7 +14,7 @@ import * as Yup from "yup";
 import { match } from "@/types/match";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { team } from "@/types/team";
-import Dropdown from "../dropdown/dropdown";
+import { Dropdown } from "react-native-paper-dropdown";
 
 const createMatchSchema = Yup.object().shape({
   team1: Yup.string().required("Batting team is required"),

@@ -22,13 +22,10 @@ import { getItem, setItem } from "@/utils/asyncStorage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React from "react";
 import { Icon } from "react-native-elements";
-
-type currentTotalScore = {
-  totalRuns: number;
-  totalWickets: number;
-  totalOvers: number;
-  totalBalls: number;
-};
+import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { currentTotalScore } from "@/types/currentTotalScore";
+import { Dimensions } from "react-native";
+import MatchScoreBar from "@/components/MatchScoreBar";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -613,46 +610,11 @@ export default function HomeScreen() {
         />
 
         {!isFirstInning ? (
-          <View style={styles.statusBar}>
-            {match.status == "completed" ? (
-              match.winner == "team1" ? (
-                <Text>
-                  {match.team1} won by{" "}
-                  {finalFirstInningsScore.totalRuns -
-                    finalSecondInningsScore.totalRuns}{" "}
-                  runs
-                </Text>
-              ) : (
-                <Text>
-                  {match.team2} won by{" "}
-                  {match.wickets! - finalSecondInningsScore.totalWickets}{" "}
-                  wickets &{" "}
-                  {match.overs * 6 -
-                    (finalSecondInningsScore.totalOvers * 6 +
-                      finalSecondInningsScore.totalBalls)}{" "}
-                  balls left
-                </Text>
-              )
-            ) : (
-              <Text>
-                {match.team2} need{" "}
-                {finalFirstInningsScore.totalRuns -
-                  finalSecondInningsScore.totalRuns +
-                  1}{" "}
-                runs in{" "}
-                {match.overs * 6 -
-                  (finalSecondInningsScore.totalOvers * 6 +
-                    finalSecondInningsScore.totalBalls)}{" "}
-                balls | R.R.{" "}
-                {(
-                  (finalFirstInningsScore.totalRuns -
-                    finalSecondInningsScore.totalRuns +
-                    1) /
-                  (match.overs - finalSecondInningsScore.totalOvers)
-                ).toFixed(2)}
-              </Text>
-            )}
-          </View>
+          <MatchScoreBar
+            match={match}
+            finalFirstInningsScore={finalFirstInningsScore}
+            finalSecondInningsScore={finalSecondInningsScore}
+          />
         ) : (
           ""
         )}
@@ -716,9 +678,6 @@ export default function HomeScreen() {
     </View>
   );
 }
-
-import { Dimensions } from "react-native";
-import { STORAGE_ITEMS } from "@/constants/StorageItems";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -784,14 +743,5 @@ const styles = StyleSheet.create({
   subContainer: {
     flex: 1,
     justifyContent: "center",
-  },
-  statusBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    padding: 10,
-    alignContent: "flex-start",
-    backgroundColor: "white",
-    width: windowWidth,
   },
 });

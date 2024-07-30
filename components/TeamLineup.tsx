@@ -160,7 +160,6 @@ const TeamLineup: React.FC = () => {
 
     const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
     const updatedTeamPlayerMapping: teamPlayerMapping = {
-      ...teamPlayerMapping,
       [team1!.teamInitials]: playersInTeam1,
       [team2!.teamInitials]: playersInTeam2,
     };

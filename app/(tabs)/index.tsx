@@ -1,17 +1,4 @@
-import {
-  Image,
-  StyleSheet,
-  Platform,
-  View,
-  TouchableOpacity,
-  Text,
-  Alert,
-} from "react-native";
-
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
+import { StyleSheet, View, TouchableOpacity, Text, Alert } from "react-native";
 import ScoreBoard from "@/components/ScoreBoard";
 import { useEffect, useState } from "react";
 import { scorePerBall } from "@/types/scorePerBall";
@@ -78,6 +65,10 @@ export default function HomeScreen() {
       totalBalls: 0,
     });
 
+  const [batter1, setBatter1] = useState<string>("");
+  const [batter2, setBatter2] = useState<string>("");
+  const [bowler, setBowler] = useState<string>("");
+
   useEffect(() => {
     fetchMatch();
   }, []);
@@ -97,25 +88,8 @@ export default function HomeScreen() {
         clearAllState();
         console.log("team1score is empty or not defined");
         return;
-      } else if (
-        !currentMatch.isFirstInning &&
-        currentMatch.team2score.length == 0
-      ) {
-        setFinalSecondInningsScore({
-          totalRuns: 0,
-          totalWickets: 0,
-          totalOvers: 0,
-          totalBalls: 0,
-        });
-        setScoreSecondInnings([]);
-        setScorePerOver([]);
-        setTotalRuns(0);
-        setTotalBalls(0);
-        setTotalOvers(0);
-        setTotalWickets(0);
-        console.log("team2score is empty or not defined");
-        return;
       }
+
       const currnetInningstotalRuns = currentMatch.team1score.reduce(
         (acc: any, subArray: any[]) => {
           return (
@@ -169,6 +143,22 @@ export default function HomeScreen() {
       }
 
       if (!currentMatch.isFirstInning) {
+        if (currentMatch.team2score.length == 0) {
+          setFinalSecondInningsScore({
+            totalRuns: 0,
+            totalWickets: 0,
+            totalOvers: 0,
+            totalBalls: 0,
+          });
+          setScoreSecondInnings([]);
+          setScorePerOver([]);
+          setTotalRuns(0);
+          setTotalBalls(0);
+          setTotalOvers(0);
+          setTotalWickets(0);
+          console.log("team2score is empty or not defined");
+          return;
+        }
         setScoreSecondInnings(currentMatch.team2score);
         if (currentMatch.team2score.length === 0) {
           console.log("team2score is empty or not defined");

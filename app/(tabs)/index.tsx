@@ -589,9 +589,11 @@ export default function HomeScreen() {
           scoreThisBall.totalRun;
         playerMatchStatsLocalState[bowlerIndex].ballsBowled +=
           scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
-        playerMatchStatsLocalState[bowlerIndex].overs += scoreThisBall.isOverEnd
-          ? 1
-          : 0;
+
+        if (scoreThisBall.isOverEnd) {
+          playerMatchStatsLocalState[bowlerIndex].ballsBowled = 0;
+          playerMatchStatsLocalState[bowlerIndex].overs += 1;
+        }
         playerMatchStatsLocalState[bowlerIndex].extras += scoreThisBall.extra;
         playerMatchStatsLocalState[bowlerIndex].wickets +=
           scoreThisBall.isWicket ? 1 : 0;
@@ -672,9 +674,10 @@ export default function HomeScreen() {
           scoreThisBall.totalRun;
         playerMatchStatsLocalState[bowlerIndex].ballsBowled -=
           scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
-        playerMatchStatsLocalState[bowlerIndex].overs -= scoreThisBall.isOverEnd
-          ? 1
-          : 0;
+
+        if (scoreThisBall.isOverEnd) {
+          playerMatchStatsLocalState[bowlerIndex].overs -= 1;
+        }
         playerMatchStatsLocalState[bowlerIndex].extras -= scoreThisBall.extra;
         playerMatchStatsLocalState[bowlerIndex].wickets -=
           scoreThisBall.isWicket ? 1 : 0;
@@ -791,11 +794,20 @@ export default function HomeScreen() {
   };
 
   const handlePlayerPick = (value: player | undefined) => {
+    console.log("value", value);
     if (!bowler) {
       setBowler(value);
     } else if (!batter1) {
+      if (batter2 && value?.id == batter2.id) {
+        alert(`${value?.name} is already selected`);
+        return;
+      }
       setBatter1(value);
     } else if (!batter2) {
+      if (batter1 && value?.id == batter1.id) {
+        alert(`${value?.name} is already selected`);
+        return;
+      }
       setBatter2(value);
     }
   };

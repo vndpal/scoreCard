@@ -43,8 +43,7 @@ export const updatePlayerCareerStats = async (
         playerCareerStats[playerCareerStatIndex].ballsBowled +=
           playerMatchStat.ballsBowled;
         if (playerCareerStats[playerCareerStatIndex].ballsBowled > 5) {
-          playerCareerStats[playerCareerStatIndex].overs +=
-            playerCareerStats[playerCareerStatIndex].ballsBowled / 6;
+          playerCareerStats[playerCareerStatIndex].overs += 1;
           playerCareerStats[playerCareerStatIndex].ballsBowled =
             playerCareerStats[playerCareerStatIndex].ballsBowled % 6;
         }

@@ -112,13 +112,13 @@ const PlayerCareerSummary = () => {
   const data = [
     {
       id: "1",
-      title: "Batting Career Stats",
+      title: "Batting Records",
       data: battingStats,
       type: "batting",
     },
     {
       id: "2",
-      title: "Bowling Career Stats",
+      title: "Bowling Records",
       data: bowlingStats,
       type: "bowling",
     },

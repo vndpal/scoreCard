@@ -4,4 +4,5 @@ export const STORAGE_ITEMS = {
   TEAMS: "teams",
   PLAYERS: "players",
   TEAM_PLAYER_MAPPING: "teamPlayerMapping",
+  PLAYER_MATCH_STATS: "playerMatchStats",
 };

@@ -16,6 +16,8 @@ import { match } from "@/types/match";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { team } from "@/types/team";
 import { Dropdown } from "react-native-paper-dropdown";
+import { playerMatchStats } from "@/types/playerMatchStats";
+import { playerStats } from "@/types/playerStats";
 
 const createMatchSchema = Yup.object().shape({
   team1: Yup.string().required("Batting team is required"),
@@ -64,10 +66,6 @@ export const CreateMatch = () => {
   }, []);
 
   const handleSubmit = async () => {
-    console.log(
-      `Creating a match with ${formik.values.overs} overs and ${formik.values.wickets} wickets.`
-    );
-
     if (formik.values.team1 === formik.values.team2) {
       alert("Batting and fielding team should be different.");
       return;
@@ -76,6 +74,7 @@ export const CreateMatch = () => {
     const matches = await getItem(STORAGE_ITEMS.MATCHES);
     const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
     const { overs, wickets, team1, team2 } = formik.values;
+    let matchId = "1";
     if (matches) {
       if (matches[0].status == "live") {
         alert(
@@ -102,8 +101,13 @@ export const CreateMatch = () => {
         return;
       }
 
+      matchId = Number.isNaN(matches[0].matchId)
+        ? "1"
+        : (parseInt(matches[0].matchId) + 1).toString();
+
       await setItem(STORAGE_ITEMS.MATCHES, [
         {
+          matchId,
           overs,
           wickets,
           team1,
@@ -121,6 +125,7 @@ export const CreateMatch = () => {
     } else {
       await setItem(STORAGE_ITEMS.MATCHES, [
         {
+          matchId,
           overs,
           wickets,
           team1,
@@ -135,6 +140,53 @@ export const CreateMatch = () => {
         },
       ]);
     }
+
+    const playerStats: playerStats[] = [];
+    const playerIds: { playerId: string; team: string }[] = [];
+    teamPlayerMapping[team1].forEach((player: string) => {
+      playerIds.push({ playerId: player, team: team1 });
+    });
+    teamPlayerMapping[team2].forEach((player: string) => {
+      playerIds.push({ playerId: player, team: team2 });
+    });
+    playerIds.forEach((player: { playerId: string; team: string }) => {
+      playerStats.push({
+        playerId: player.playerId,
+        team: player.team,
+        runs: 0,
+        ballsFaced: 0,
+        fours: 0,
+        sixes: 0,
+        average: 0,
+        isOut: false,
+        strikeRate: 0,
+        wickets: 0,
+        ballsBowled: 0,
+        overs: 0,
+        runsConceded: 0,
+        maidens: 0,
+        bowlingEconomy: 0,
+        extras: 0,
+      });
+    });
+
+    const playerStatsInMatch: playerMatchStats = {
+      matchId,
+      playerMatchStats: playerStats,
+    };
+
+    const playerMatchStatsList = await getItem(
+      STORAGE_ITEMS.PLAYER_MATCH_STATS
+    );
+    if (playerMatchStatsList && playerMatchStatsList.length > 0) {
+      await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [
+        playerStatsInMatch,
+        ...playerMatchStatsList,
+      ]);
+    } else {
+      await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [playerStatsInMatch]);
+    }
+
     await setItem(STORAGE_ITEMS.IS_NEW_MATCH, true);
     Keyboard.dismiss();
     router.push("/");

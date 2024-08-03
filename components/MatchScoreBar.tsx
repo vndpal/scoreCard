@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { match } from "@/types/match";
 import { currentTotalScore } from "@/types/currentTotalScore";
+
+const windowWidth = Dimensions.get("window").width;
 
 const MatchScoreBar = ({
   match,
@@ -56,34 +58,30 @@ const MatchScoreBar = ({
 
 export default MatchScoreBar;
 
-import { Dimensions } from "react-native";
-
-const windowWidth = Dimensions.get("window").width;
-
 const styles = StyleSheet.create({
   statusBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 8, // Reduced padding
-    backgroundColor: "#f4f4f4",
+    padding: 10,
+    backgroundColor: "#282c34", // Dark background
     width: windowWidth,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    shadowColor: "#000",
+    borderBottomColor: "#444c56", // Subtle border color
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
   },
   resultText: {
-    fontSize: 15, // Reduced font size
-    fontWeight: "bold",
-    color: "#1b5e20",
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#cddc39", // Light lime green for completed results
   },
   inProgressText: {
-    fontSize: 15, // Reduced font size
-    color: "#0d47a1",
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#64b5f6", // Light blue for in-progress status
   },
 });

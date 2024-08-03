@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, GestureResponderEvent } from "react-native";
-import {
-  Button,
-  Dialog,
-  TextInput,
-  Paragraph,
-  HelperText,
-} from "react-native-paper";
-import { Formik, Field, Form, ErrorMessage, useFormik } from "formik";
+import { Button, Dialog, HelperText } from "react-native-paper";
+import { useFormik } from "formik";
 import * as Yup from "yup";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
@@ -39,7 +33,7 @@ interface PopupFormProps {
 }
 
 // Define the PopupForm component
-const PopupForm: React.FC<PopupFormProps> = ({
+const TeamSelection: React.FC<PopupFormProps> = ({
   visible,
   onDismiss,
   onSubmit,
@@ -156,4 +150,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PopupForm;
+export default TeamSelection;

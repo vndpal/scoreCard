@@ -87,7 +87,7 @@ const TeamLineup: React.FC = () => {
             team: player.team as "none" | "team1" | "team2",
           }))
         );
-      } else {
+      } else if (playersFromStorage && playersFromStorage.length > 0) {
         setPlayers(
           playersFromStorage.map((player) => ({
             id: player.id.toString(),

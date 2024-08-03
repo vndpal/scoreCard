@@ -1,34 +1,57 @@
 import { match } from "@/types/match";
+import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, View, Text, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 
-const Card = ({ match }: { match: match }) => (
-  <View style={styles.card}>
-    <View style={styles.cardHeader}>
-      <Text style={styles.title}>
-        {match.team1} vs {match.team2}
-      </Text>
-      {match.status === "completed" && (
-        <Text style={styles.winner}>
-          Winner: {match.winner === "team1" ? match.team1 : match.team2}
+const Card = ({ match }: { match: match }) => {
+  const router = useRouter();
+
+  const handlePress = () => {
+    router.push({
+      pathname: `/matchSummary`,
+      params: {
+        matchId: match.matchId,
+        team1: match.team1,
+        team2: match.team2,
+      },
+    });
+  };
+
+  return (
+    <TouchableOpacity onPress={handlePress} style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.title}>
+          {match.team1} vs {match.team2}
         </Text>
-      )}
-    </View>
-    <View style={styles.cardBody}>
-      <Text style={styles.info}>Overs: {match.overs}</Text>
-      <Text style={styles.info}>Status: {match.status}</Text>
-      <Text style={styles.info}>
-        Date:{" "}
-        {new Date(match.date).toLocaleDateString(undefined, {
-          weekday: "short",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}
-      </Text>
-    </View>
-  </View>
-);
+        {match.status === "completed" && (
+          <Text style={styles.winner}>
+            Winner: {match.winner === "team1" ? match.team1 : match.team2}
+          </Text>
+        )}
+      </View>
+      <View style={styles.cardBody}>
+        <Text style={styles.info}>Overs: {match.overs}</Text>
+        <Text style={styles.info}>Status: {match.status}</Text>
+        <Text style={styles.info}>
+          Date:{" "}
+          {new Date(match.date).toLocaleDateString(undefined, {
+            weekday: "short",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const MatchHistory = ({ matches }: { matches: match[] }) => {
   return (

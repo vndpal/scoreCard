@@ -87,6 +87,13 @@ export default function RootLayout() {
               animation: "slide_from_right",
             }}
           />
+          <Stack.Screen
+            name="matchSummary"
+            options={{
+              headerTitle: "Match summary",
+              animation: "slide_from_right",
+            }}
+          />
         </Stack>
       </PaperProvider>
     </ThemeProvider>

@@ -18,6 +18,8 @@ import { player } from "@/types/player";
 import MatchPlayerStatsBar from "@/components/MatchPlayerStatsBar";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
+import { playerCareerStats } from "@/types/playerCareerStats";
+import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -484,6 +486,7 @@ export default function HomeScreen() {
 
               matches[0] = updatedMatch;
               await setItem(STORAGE_ITEMS.MATCHES, matches);
+              await updatePlayerCareerStats(playerMatchStats);
             }
           }
           return;
@@ -514,6 +517,7 @@ export default function HomeScreen() {
 
             matches[0] = updatedMatch;
             await setItem(STORAGE_ITEMS.MATCHES, matches);
+            await updatePlayerCareerStats(playerMatchStats);
           }
         }
       }

@@ -94,6 +94,13 @@ export default function RootLayout() {
               animation: "slide_from_right",
             }}
           />
+          <Stack.Screen
+            name="playerRecords"
+            options={{
+              headerTitle: "Player stats",
+              animation: "slide_from_right",
+            }}
+          />
         </Stack>
       </PaperProvider>
     </ThemeProvider>

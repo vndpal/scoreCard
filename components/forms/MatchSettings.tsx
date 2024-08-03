@@ -1,6 +1,7 @@
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { match } from "@/types/match";
 import { getItem, setItem } from "@/utils/asyncStorage";
+import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useRoute } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -94,6 +95,12 @@ const MatchSettings = () => {
 
               matches[0] = updatedMatch;
               await setItem(STORAGE_ITEMS.MATCHES, matches);
+
+              const playerMatchStats = await getItem(
+                STORAGE_ITEMS.PLAYER_MATCH_STATS
+              );
+              await updatePlayerCareerStats(playerMatchStats);
+
               Keyboard.dismiss();
               router.push("/");
             }

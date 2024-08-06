@@ -67,12 +67,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 8,
     backgroundColor: "#282c34",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    borderBottomWidth: 1,
+    borderBottomColor: "#444c56", // Subtle border color
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 3,
+    elevation: 2,
   },
   scoreContainer: {
     flexDirection: "row",

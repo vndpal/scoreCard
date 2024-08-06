@@ -46,6 +46,9 @@ const TeamLineup: React.FC = () => {
 
       // Get the players, teams from storage
       const playersFromStorage: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
+      if (playersFromStorage && playersFromStorage.length > 0) {
+        playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
+      }
       // Get the teams from storage
       const teams: team[] = await getItem(STORAGE_ITEMS.TEAMS);
 

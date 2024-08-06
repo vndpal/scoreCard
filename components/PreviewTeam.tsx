@@ -31,9 +31,15 @@ const PreviewTeam: React.FC<PreviewTeamProps> = ({
   onSave,
   onDismiss,
 }) => {
-  const unassignedPlayers = players.filter((player) => player.team === "none");
-  const team1Players = players.filter((player) => player.team === "team1");
-  const team2Players = players.filter((player) => player.team === "team2");
+  const unassignedPlayers = players
+    .filter((player) => player.team === "none")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const team1Players = players
+    .filter((player) => player.team === "team1")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const team2Players = players
+    .filter((player) => player.team === "team2")
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const onSubmit = () => {
     onSave();

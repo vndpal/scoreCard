@@ -268,7 +268,6 @@ export default function HomeScreen() {
         (playerStats: playerMatchStats) => playerStats.matchId == currentMatchId
       );
       if (currentMatchPlayerStats) {
-        console.log("currentMatchPlayerStats", currentMatchPlayerStats);
         setPlayerMatchStats(currentMatchPlayerStats.playerMatchStats);
       }
     }
@@ -794,7 +793,6 @@ export default function HomeScreen() {
   };
 
   const handlePlayerPick = (value: player | undefined) => {
-    console.log("value", value);
     if (!bowler) {
       setBowler(value);
     } else if (!batter1) {

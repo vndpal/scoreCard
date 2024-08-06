@@ -21,12 +21,11 @@ const PlayerCareerSummary = () => {
         });
         setPlayersMap(playersMap);
         // Sort battingStats by most runs
-        const sortedBattingStats = careerStats.sort(
+        const sortedBattingStats = [...careerStats].sort(
           (a: playerCareerStats, b: playerCareerStats) => b.runs - a.runs
         );
 
-        // Sort bowlingStats by most wickets
-        const sortedBowlingStats = careerStats.sort(
+        const sortedBowlingStats = [...careerStats].sort(
           (a: playerCareerStats, b: playerCareerStats) => b.wickets - a.wickets
         );
 
@@ -44,7 +43,7 @@ const PlayerCareerSummary = () => {
     type: string;
   }) => (
     <View style={styles.row} key={item.playerId}>
-      <Text style={styles.cell}>
+      <Text style={styles.nameCell}>
         {playersMap.get(item.playerId) || item.playerId}
       </Text>
       {type === "batting" ? (
@@ -177,6 +176,14 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "#ffffff",
     textAlign: "center",
+    padding: 6,
+    fontSize: 14,
+    minWidth: 60, // Increase the minimum width
+  },
+  nameCell: {
+    flex: 1,
+    color: "#ffffff",
+    textAlign: "left",
     padding: 6,
     fontSize: 14,
     minWidth: 60, // Increase the minimum width

@@ -14,6 +14,7 @@ const Players = ({ navigation }: any) => {
     (async () => {
       const players: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
       if (players) {
+        players.sort((a, b) => a.name.localeCompare(b.name));
         setPlayers(players);
       }
     })();

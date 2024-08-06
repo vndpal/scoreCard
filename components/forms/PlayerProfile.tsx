@@ -32,9 +32,18 @@ export default function PlayerProfile() {
   const handleDelete = async () => {
     const players = await getItem(STORAGE_ITEMS.PLAYERS);
     const updatedPlayers = players.filter((p: any) => p.id != playerId);
+    await removePlayerStats(playerId?.toString());
     await setItem(STORAGE_ITEMS.PLAYERS, updatedPlayers);
     setIsEditing(false);
     router.back();
+  };
+
+  const removePlayerStats = async (playerId: string | undefined) => {
+    const playerStats = await getItem(STORAGE_ITEMS.PLAYER_CAREER_STATS);
+    const updatedPlayerStats = playerStats.filter(
+      (p: any) => p.playerId != playerId
+    );
+    await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, updatedPlayerStats);
   };
 
   return (

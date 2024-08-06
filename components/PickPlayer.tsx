@@ -57,6 +57,9 @@ const PickPlayer: React.FC<PopupFormProps> = ({
           playersFromDb = playersFromDb.filter((p: player) =>
             remainingPlayersId.includes(p.id.toString())
           );
+          playersFromDb.sort((a: player, b: player) =>
+            a.name.localeCompare(b.name)
+          );
           setPlayers(playersFromDb);
           setItems(
             playersFromDb.map((p: player) => ({

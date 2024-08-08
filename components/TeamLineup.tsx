@@ -1,57 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
-  FlatList,
   StyleSheet,
-  Alert,
+  FlatList,
+  TouchableOpacity,
 } from "react-native";
+import { Menu } from "react-native-paper";
 import { Icon } from "react-native-elements";
-import TeamSelection from "./TeamSelection";
-import teams from "@/interfaces/teams";
-import { player } from "@/types/player";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { teamPlayerMapping } from "@/types/teamPlayerMapping";
+import { player } from "@/types/player";
 import { team } from "@/types/team";
-import PreviewTeam from "./PreviewTeam";
+import TeamSelection from "./TeamSelection";
+import teams from "@/interfaces/teams";
+import { teamPlayerMapping } from "@/types/teamPlayerMapping";
+import { router } from "expo-router";
 
-// Define the Player type
-type Player = {
-  id: string;
-  name: string;
-  team: "none" | "team1" | "team2";
-};
-
-// Define the TeamLineup component
-const TeamLineup: React.FC = () => {
-  // Initialize the state with a list of players
-  const [players, setPlayers] = useState<Player[]>([]);
-
+const TeamLineUp: React.FC = () => {
+  const [team1Players, setTeam1Players] = useState<player[]>([]);
+  const [team2Players, setTeam2Players] = useState<player[]>([]);
+  const [team1, setTeam1] = useState<team>();
+  const [team2, setTeam2] = useState<team>();
+  const [availablePlayers, setAvailablePlayers] = useState<player[]>([]);
+  const [allPlayers, setAllPlayers] = useState<player[]>([]);
+  const [team1DropdownOpen, setTeam1DropdownOpen] = useState<boolean>(false);
+  const [team2DropdownOpen, setTeam2DropdownOpen] = useState<boolean>(false);
   const [teamSelectionVisible, setTeamSelectionVisible] =
     useState<boolean>(false);
 
-  const [previewTeamVisible, setPreviewTeamVisible] = useState<boolean>(false);
-
-  const [team1, setTeam1] = useState<team>();
-  const [team2, setTeam2] = useState<team>();
-
   useEffect(() => {
     (async () => {
-      // Get the team player mapping from storage
       const teamPlayersMapping = await getItem(
         STORAGE_ITEMS.TEAM_PLAYER_MAPPING
       );
-
-      // Get the players, teams from storage
       const playersFromStorage: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
       if (playersFromStorage && playersFromStorage.length > 0) {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
+        setAllPlayers(playersFromStorage);
       }
-      // Get the teams from storage
       const teams: team[] = await getItem(STORAGE_ITEMS.TEAMS);
-
       const savedTeams = Object.keys(teamPlayersMapping || {});
       if (
         savedTeams.length >= 2 &&
@@ -69,222 +57,244 @@ const TeamLineup: React.FC = () => {
         setTeam1(localTeam1);
         setTeam2(localTeam2);
 
-        const team1Players =
-          teamPlayersMapping[localTeam1?.teamInitials || ""] || [];
-        const team2Players =
-          teamPlayersMapping[localTeam2?.teamInitials || ""] || [];
-        const players = playersFromStorage.map((player) => ({
-          id: player.id.toString(),
-          name: player.name,
-          team: team1Players.includes(player.id.toString())
-            ? "team1"
-            : team2Players.includes(player.id.toString())
-            ? "team2"
-            : "none",
-        }));
-
-        setPlayers(
-          players.map((player) => ({
-            id: player.id,
-            name: player.name,
-            team: player.team as "none" | "team1" | "team2",
-          }))
+        setTeam1Players(
+          playersFromStorage.filter((player) =>
+            teamPlayersMapping[savedTeams[0]].includes(player.id)
+          )
         );
-      } else if (playersFromStorage && playersFromStorage.length > 0) {
-        setPlayers(
-          playersFromStorage.map((player) => ({
-            id: player.id.toString(),
-            name: player.name,
-            team: "none",
-          }))
+        setTeam2Players(
+          playersFromStorage.filter((player) =>
+            teamPlayersMapping[savedTeams[1]].includes(player.id)
+          )
         );
+        setAvailablePlayers(
+          playersFromStorage.filter(
+            (player) =>
+              !teamPlayersMapping[savedTeams[0]].includes(player.id) &&
+              !teamPlayersMapping[savedTeams[1]].includes(player.id)
+          )
+        );
+      } else {
+        setAvailablePlayers(playersFromStorage);
       }
     })();
   }, []);
 
-  // Handle assigning a player to a team or making them available
-  const assignToTeam = (playerId: string, team: "team1" | "team2") => {
-    setPlayers(
-      players.map((player) =>
-        player.id === playerId
-          ? { ...player, team: player.team === team ? "none" : team }
-          : player
-      )
-    );
+  const handleAddPlayer = (selectedPlayer: player) => {
+    if (selectedPlayer) {
+      if (team1DropdownOpen) {
+        setTeam1Players([...team1Players, selectedPlayer]);
+        setAvailablePlayers(
+          availablePlayers.filter((player) => player.id !== selectedPlayer.id)
+        );
+      } else if (team2DropdownOpen) {
+        setTeam2Players([...team2Players, selectedPlayer]);
+        setAvailablePlayers(
+          availablePlayers.filter((player) => player.id !== selectedPlayer.id)
+        );
+      }
 
-    const res = players.map((player) =>
-      player.id === playerId
-        ? { ...player, team: player.team === team ? "none" : team }
-        : player
-    );
+      setTeam1DropdownOpen(false);
+      setTeam2DropdownOpen(false);
+    }
   };
 
-  // Handle saving the team assignments
-  const saveTeams = async () => {
-    const allPlayersHaveNoneTeam = players.every(
-      (player) => player.team === "none"
-    );
-    if (allPlayersHaveNoneTeam) {
-      Alert.alert("Warning!", "Please assign players to teams before saving!");
-      return;
+  const openMenu = (team: "team1" | "team2") => {
+    if (team === "team1") {
+      setTeam1DropdownOpen(true);
+    } else {
+      setTeam2DropdownOpen(true);
     }
-
-    const team1PlayerCount = players.filter(
-      (player) => player.team === "team1"
-    ).length;
-    const team2PlayerCount = players.filter(
-      (player) => player.team === "team2"
-    ).length;
-
-    if (Math.abs(team1PlayerCount - team2PlayerCount) > 1) {
-      Alert.alert(
-        "Player Count Mismatch",
-        `Teams must have equal players or differ by at most 1 player!\n\n${team1?.teamName}: ${team1PlayerCount}\n${team2?.teamName}: ${team2PlayerCount}`
-      );
-      return;
-    }
-
-    if (!team1 || !team2 || !team1!.teamInitials || !team2!.teamInitials) {
-      setTeamSelectionVisible(true);
-      return;
-    }
-
-    setPreviewTeamVisible(true);
   };
 
-  const handleSaveAfterReview = async () => {
-    console.log("Saving teams");
-    const playersInTeam1 = players
-      .filter((player) => player.team === "team1")
-      .map((player) => player.id);
-    const playersInTeam2 = players
-      .filter((player) => player.team === "team2")
-      .map((player) => player.id);
-
-    const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
-    const updatedTeamPlayerMapping: teamPlayerMapping = {
-      [team1!.teamInitials]: playersInTeam1,
-      [team2!.teamInitials]: playersInTeam2,
-    };
-
-    await setItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING, updatedTeamPlayerMapping);
+  const closeMenu = () => {
+    setTeam1DropdownOpen(false);
+    setTeam2DropdownOpen(false);
   };
+
+  const removePlayer = (playerId: string, team: "team1" | "team2") => {
+    if (team === "team1") {
+      setTeam1Players(team1Players.filter((player) => player.id !== playerId));
+    } else {
+      setTeam2Players(team2Players.filter((player) => player.id !== playerId));
+    }
+    setAvailablePlayers([
+      ...availablePlayers,
+      allPlayers.find((player) => player.id === playerId)!,
+    ]);
+  };
+
+  const renderPlayer = ({
+    item,
+    team,
+  }: {
+    item: player;
+    team: "team1" | "team2";
+  }) => (
+    <View style={styles.playerCard}>
+      <Text style={styles.playerName}>{item.name}</Text>
+      <TouchableOpacity onPress={() => removePlayer(item.id, team)}>
+        <Icon
+          name="remove-circle"
+          type="Ionicons"
+          size={22}
+          color="#FF6F6F"
+          style={styles.removeIcon}
+        />
+      </TouchableOpacity>
+    </View>
+  );
 
   const randomizeTeams = () => {
-    let team1Count = 0;
-    let team2Count = 0;
-    setPlayers(
-      players
-        .map((value) => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value)
-        .map((player, index) => {
-          if (team1Count <= team2Count) {
-            team1Count++;
-            return { ...player, team: "team1" };
-          } else {
-            team2Count++;
-            return { ...player, team: "team2" };
-          }
-        })
+    const shuffledPlayers = [...allPlayers].sort(() => 0.5 - Math.random());
+    const team1Players = shuffledPlayers.slice(
+      0,
+      Math.ceil(shuffledPlayers.length / 2)
     );
-  };
+    const team2Players = shuffledPlayers.slice(
+      Math.ceil(shuffledPlayers.length / 2)
+    );
 
-  // Sort players based on their team assignment
-  const sortedPlayers = players.slice().sort((a, b) => {
-    if (a.team === "none") return -1;
-    if (b.team === "none") return 1;
-    if (a.team === "team1" && b.team === "team2") return -1;
-    if (a.team === "team2" && b.team === "team1") return 1;
-    return 0;
-  });
+    setTeam1Players(team1Players);
+    setTeam2Players(team2Players);
+    setAvailablePlayers([]);
+  };
 
   const teamSelectionSubmit = (values: teams) => {
     setTeam1(values.team1);
     setTeam2(values.team2);
-    // Reset the players on team change
-    setPlayers(
-      players.map((player) => ({
-        id: player.id.toString(),
-        name: player.name,
-        team: "none",
-      }))
-    );
+    setTeam1Players([]);
+    setTeam2Players([]);
+    setAvailablePlayers(allPlayers);
   };
 
-  // Render a single player card
-  const renderPlayer = ({ item }: { item: Player }) => (
-    <View style={styles.card}>
-      <Text style={styles.playerName}>{item.name}</Text>
-      <View style={styles.iconContainer}>
-        <TouchableOpacity onPress={() => assignToTeam(item.id, "team1")}>
-          <Icon
-            name="check-circle"
-            type="EvilIcons"
-            color={item.team === "team1" ? "#81C784" : "#CCCCCC"}
-            size={30}
-            style={styles.icon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => assignToTeam(item.id, "team2")}>
-          <Icon
-            name="check-circle"
-            type="EvilIcons"
-            size={30}
-            color={item.team === "team2" ? "#64B5F6" : "#CCCCCC"}
-            style={styles.icon}
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const saveTeams = async () => {
+    if (!team1 || !team2) {
+      return;
+    }
+
+    if (Math.abs(team1Players.length - team2Players.length) > 1) {
+      alert("Teams should have equal or one player difference");
+      return;
+    }
+
+    const updatedTeamPlayerMapping: teamPlayerMapping = {
+      [team1!.teamInitials]: team1Players.map((player: player) => player.id),
+      [team2!.teamInitials]: team2Players.map((player: player) => player.id),
+    };
+
+    await setItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING, updatedTeamPlayerMapping);
+    router.back();
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={[styles.headerText, styles.headerPlayerName]}>Player</Text>
-        <View style={styles.headerIcons}>
-          <Text style={styles.headerText}>{team1?.teamInitials}</Text>
-          <Text style={styles.headerText}>{team2?.teamInitials}</Text>
+      <View style={styles.playersContainer}>
+        <View style={styles.teamContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.header}>
+              {team1?.teamInitials ? team1.teamInitials : "Team 1"}{" "}
+              <Text style={styles.playerCount}>
+                {"(" + team1Players.length + ")"}
+              </Text>
+            </Text>
+            <Menu
+              visible={team1DropdownOpen}
+              onDismiss={closeMenu}
+              anchor={
+                <TouchableOpacity
+                  onPress={() => openMenu("team1")}
+                  style={styles.menuButton}
+                >
+                  <Icon
+                    name="add-circle"
+                    type="Ionicons"
+                    color={"#4CAF50"}
+                    size={24}
+                  />
+                </TouchableOpacity>
+              }
+            >
+              {availablePlayers.map((player) => (
+                <Menu.Item
+                  key={player.id}
+                  onPress={() => handleAddPlayer(player)}
+                  title={player.name}
+                />
+              ))}
+            </Menu>
+          </View>
+          <FlatList
+            data={team1Players}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => renderPlayer({ item, team: "team1" })}
+          />
+        </View>
+
+        <View style={styles.teamContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.header}>
+              {team2?.teamInitials ? team2.teamInitials : "Team 2"}{" "}
+              <Text style={styles.playerCount}>
+                {"(" + team2Players.length + ")"}
+              </Text>
+            </Text>
+            <Menu
+              visible={team2DropdownOpen}
+              onDismiss={closeMenu}
+              anchor={
+                <TouchableOpacity
+                  onPress={() => openMenu("team2")}
+                  style={styles.menuButton}
+                >
+                  <Icon
+                    name="add-circle"
+                    type="Ionicons"
+                    color={"#4CAF50"}
+                    size={24}
+                  />
+                </TouchableOpacity>
+              }
+            >
+              {availablePlayers.map((player) => (
+                <Menu.Item
+                  key={player.id}
+                  onPress={() => handleAddPlayer(player)}
+                  title={player.name}
+                />
+              ))}
+            </Menu>
+          </View>
+          <FlatList
+            data={team2Players}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => renderPlayer({ item, team: "team2" })}
+          />
         </View>
       </View>
-      <FlatList
-        data={sortedPlayers}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPlayer}
-      />
-      <View style={styles.buttons}>
+
+      <View style={styles.buttonsContainer}>
         <TouchableOpacity
           style={styles.configButton}
-          onPress={() => {
-            setTeamSelectionVisible(true);
-          }}
+          onPress={() => setTeamSelectionVisible(true)}
         >
-          <Icon name="swap" type="entypo" color="white"></Icon>
-          <Text style={styles.saveButtonText}> Change team</Text>
+          <Icon name="swap" type="entypo" color="white" size={20} />
+          <Text style={styles.buttonText}>Change Team</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.configButton} onPress={randomizeTeams}>
-          <Icon name="random" type="font-awesome" color="white"></Icon>
-          <Text style={styles.saveButtonText}>Randomize</Text>
+          <Icon name="random" type="font-awesome" color="white" size={20} />
+          <Text style={styles.buttonText}>Randomize</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.saveButton} onPress={saveTeams}>
-          <Text style={styles.saveButtonText}>Preview and save</Text>
-        </TouchableOpacity>
-      </View>
+
+      <TouchableOpacity style={styles.saveButton} onPress={saveTeams}>
+        <Text style={styles.buttonText}>Preview and Save</Text>
+      </TouchableOpacity>
+
       <TeamSelection
         visible={teamSelectionVisible}
         onDismiss={() => setTeamSelectionVisible(false)}
         onSubmit={teamSelectionSubmit}
-      />
-      <PreviewTeam
-        visible={previewTeamVisible}
-        players={players}
-        team1={team1}
-        team2={team2}
-        onSave={handleSaveAfterReview}
-        onDismiss={() => setPreviewTeamVisible(false)}
       />
     </View>
   );
@@ -293,91 +303,98 @@ const TeamLineup: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: "#121212", // Dark background
+    padding: 16,
+    backgroundColor: "#1F1F1F", // Dark background for a modern look
+  },
+  playersContainer: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  teamContainer: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#333", // Slightly lighter border for better contrast
+    borderRadius: 8,
+    padding: 16, // Increased padding for more spacious content
+    backgroundColor: "#2C2C2C",
+    marginHorizontal: 8, // Increased margin for better separation
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Increased shadow for a more pronounced effect
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20, // Increased margin for better spacing
+    height: 22, // Slightly taller for better alignment
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333", // Darker border
+    fontSize: 18, // Larger font size for better readability
+    fontWeight: "700", // Bolder text for emphasis
+    color: "#FFFFFF",
+    flexWrap: "wrap",
+    maxHeight: 22, // Ensure the header fits within its container
+    lineHeight: 22,
   },
-  headerText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    flex: 1,
-    textAlign: "center",
-    color: "#ffffff", // White text color
+  playerCount: {
+    fontSize: 14, // Increased font size for better visibility
+    color: "#DDDDDD",
   },
-  headerPlayerName: {
-    flex: 2,
-    textAlign: "left",
-  },
-  headerIcons: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  card: {
+  playerCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: "#1e1e1e", // Darker card background
-    borderRadius: 5,
-    elevation: 1,
+    padding: 12, // Increased padding for a more spacious layout
+    marginVertical: 6, // Increased margin for better spacing
+    backgroundColor: "#333",
+    borderRadius: 6, // Slightly rounded corners
+    flexWrap: "wrap",
   },
   playerName: {
-    fontSize: 18,
-    flex: 2,
-    color: "#ffffff", // White text color
+    fontSize: 16, // Larger font size for better readability
+    color: "#FFFFFF",
   },
-  iconContainer: {
+  removeIcon: {
+    marginLeft: 12, // Increased margin for better spacing
+  },
+  menuButton: {
+    padding: 0,
+  },
+  buttonsContainer: {
     flexDirection: "row",
-    flex: 1,
-    justifyContent: "space-around",
-  },
-  icon: {
-    marginHorizontal: 10,
-  },
-  saveButton: {
-    flexDirection: "row",
-    flex: 1,
-    backgroundColor: "#0c66e4",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginHorizontal: 5,
-    borderRadius: 25,
-    padding: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
   },
   configButton: {
     flexDirection: "row",
-    flex: 1,
-    backgroundColor: "green",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginHorizontal: 5,
-    borderRadius: 25,
-    padding: 10,
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10, // Increased padding for a more prominent button
+    paddingHorizontal: 20,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
+    flex: 1,
+    marginHorizontal: 8, // Increased margin for better spacing
   },
-  saveButtonText: {
-    color: "white",
-    fontSize: 16,
-    marginLeft: 5, // Add space between icon and text
-  },
-  buttons: {
-    flexDirection: "row",
-    justifyContent: "space-around",
+  saveButton: {
+    backgroundColor: "#0c66e4",
+    paddingVertical: 10, // Increased padding for a more prominent button
+    paddingHorizontal: 20,
+    borderRadius: 24,
     alignItems: "center",
-    marginVertical: 5,
+    justifyContent: "center",
+    marginHorizontal: 8, // Maintain margin for consistency
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 16, // Larger font size for better readability
+    marginLeft: 8,
   },
 });
 
-// Export the TeamLineup component
-export default TeamLineup;
+export default TeamLineUp;

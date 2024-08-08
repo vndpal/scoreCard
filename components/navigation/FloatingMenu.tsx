@@ -46,12 +46,12 @@ export const FloatingMenu: React.FC = () => {
             <Text style={styles.menuOptionText}>🪙 Toss</Text>
           </TouchableOpacity>
           <View style={styles.horizontalLine} />
-          <TouchableOpacity onPress={() => handleLinkPress("createTeam")}>
-            <Text style={styles.menuOptionText}>🙌 New team</Text>
+          <TouchableOpacity onPress={() => handleLinkPress("teamLineup")}>
+            <Text style={styles.menuOptionText}>📋 Team setup</Text>
           </TouchableOpacity>
           <View style={styles.horizontalLine} />
-          <TouchableOpacity onPress={() => handleLinkPress("teamLineup")}>
-            <Text style={styles.menuOptionText}>📋 Player draft</Text>
+          <TouchableOpacity onPress={() => handleLinkPress("createTeam")}>
+            <Text style={styles.menuOptionText}>🙌 New team</Text>
           </TouchableOpacity>
           <View style={styles.horizontalLine} />
           <TouchableOpacity onPress={() => handleLinkPress("players")}>

@@ -8,9 +8,9 @@ type scorePerBall = {
   isNoBall: boolean;
   isWideBall: boolean;
   isOverEnd: boolean;
-  strikerBatter: player;
-  nonStrikerBatter: player;
-  bowler: player;
+  strikerBatter: player | undefined;
+  nonStrikerBatter: player | undefined;
+  bowler: player | undefined;
 };
 
 export type { scorePerBall };

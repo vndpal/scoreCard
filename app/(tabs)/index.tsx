@@ -44,6 +44,7 @@ export default function HomeScreen() {
     status: "completed",
     isFirstInning: true,
     date: new Date().toDateString(),
+    quickMatch: false,
   });
   const [playerMatchStats, setPlayerMatchStats] = useState<playerStats[]>([]);
 
@@ -320,19 +321,21 @@ export default function HomeScreen() {
   };
 
   const handleSubmit = async () => {
-    //logic for player pick start
-    if (!bowler) {
-      setPickPlayerVisible(true);
-      setIsConfirm(false);
-      return;
-    } else if (!batter1) {
-      setPickPlayerVisible(true);
-      setIsConfirm(false);
-      return;
-    } else if (!batter2) {
-      setPickPlayerVisible(true);
-      setIsConfirm(false);
-      return;
+    if (!match.quickMatch) {
+      //logic for player pick start
+      if (!bowler) {
+        setPickPlayerVisible(true);
+        setIsConfirm(false);
+        return;
+      } else if (!batter1) {
+        setPickPlayerVisible(true);
+        setIsConfirm(false);
+        return;
+      } else if (!batter2) {
+        setPickPlayerVisible(true);
+        setIsConfirm(false);
+        return;
+      }
     }
     //logic for player pick end
     if (!isConfirm) {
@@ -380,10 +383,12 @@ export default function HomeScreen() {
         bowler: bowler,
       };
 
-      if (isWicket) {
-        setBatter1(undefined);
+      if (!match.quickMatch) {
+        if (isWicket) {
+          setBatter1(undefined);
+        }
+        await updatePlayerMatchStats(scoreThisBall);
       }
-      await updatePlayerMatchStats(scoreThisBall);
 
       const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
 
@@ -485,7 +490,9 @@ export default function HomeScreen() {
 
               matches[0] = updatedMatch;
               await setItem(STORAGE_ITEMS.MATCHES, matches);
-              await updatePlayerCareerStats(playerMatchStats);
+              if (!match.quickMatch) {
+                await updatePlayerCareerStats(playerMatchStats);
+              }
             }
           }
           return;
@@ -516,7 +523,9 @@ export default function HomeScreen() {
 
             matches[0] = updatedMatch;
             await setItem(STORAGE_ITEMS.MATCHES, matches);
-            await updatePlayerCareerStats(playerMatchStats);
+            if (!match.quickMatch) {
+              await updatePlayerCareerStats(playerMatchStats);
+            }
           }
         }
       }
@@ -594,6 +603,10 @@ export default function HomeScreen() {
           playerMatchStatsLocalState[bowlerIndex].overs += 1;
         }
         playerMatchStatsLocalState[bowlerIndex].extras += scoreThisBall.extra;
+        playerMatchStatsLocalState[bowlerIndex].FoursConceded +=
+          scoreThisBall.run == 4 ? 1 : 0;
+        playerMatchStatsLocalState[bowlerIndex].SixesConceded +=
+          scoreThisBall.run == 6 ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].wickets +=
           scoreThisBall.isWicket ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].bowlingEconomy =
@@ -656,8 +669,10 @@ export default function HomeScreen() {
         playerMatchStatsLocalState[batterIndex].runs -= scoreThisBall.run;
         playerMatchStatsLocalState[batterIndex].ballsFaced -=
           scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
-        playerMatchStatsLocalState[batterIndex].fours -= run == 4 ? 1 : 0;
-        playerMatchStatsLocalState[batterIndex].sixes -= run == 6 ? 1 : 0;
+        playerMatchStatsLocalState[batterIndex].fours -=
+          scoreThisBall.run == 4 ? 1 : 0;
+        playerMatchStatsLocalState[batterIndex].sixes -=
+          scoreThisBall.run == 6 ? 1 : 0;
         playerMatchStatsLocalState[batterIndex].strikeRate =
           (playerMatchStatsLocalState[batterIndex].runs /
             playerMatchStatsLocalState[batterIndex].ballsFaced) *
@@ -680,6 +695,10 @@ export default function HomeScreen() {
         playerMatchStatsLocalState[bowlerIndex].extras -= scoreThisBall.extra;
         playerMatchStatsLocalState[bowlerIndex].wickets -=
           scoreThisBall.isWicket ? 1 : 0;
+        playerMatchStatsLocalState[bowlerIndex].FoursConceded -=
+          scoreThisBall.run == 4 ? 1 : 0;
+        playerMatchStatsLocalState[bowlerIndex].SixesConceded -=
+          scoreThisBall.run == 6 ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].bowlingEconomy =
           playerMatchStatsLocalState[bowlerIndex].runsConceded /
           (playerMatchStatsLocalState[bowlerIndex].ballsBowled > 0
@@ -749,7 +768,9 @@ export default function HomeScreen() {
         return;
       }
 
-      await undoPlayerStatsUpdate(currentMatchTeam1Score[0][0]);
+      if (!match.quickMatch) {
+        await undoPlayerStatsUpdate(currentMatchTeam1Score[0][0]);
+      }
 
       currentMatchTeam1Score[0].shift();
       if (currentMatchTeam1Score[0].length == 0) {
@@ -768,7 +789,9 @@ export default function HomeScreen() {
         return;
       }
 
-      await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
+      if (!match.quickMatch) {
+        await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
+      }
 
       currentMatchTeam2Score[0].shift();
       if (currentMatchTeam2Score[0].length == 0) {
@@ -862,9 +885,9 @@ export default function HomeScreen() {
           ]}
           onPress={handleSubmit}
         >
-          {bowler ? (
-            batter1 ? (
-              batter2 ? (
+          {bowler || match.quickMatch ? (
+            batter1 || match.quickMatch ? (
+              batter2 || match.quickMatch ? (
                 <Text style={styles.confirmationText}>
                   {isNoBall ? "NB + " : isWideBall ? "WD + " : ""}
                   {isWicket ? "W + " : ""}
@@ -878,7 +901,6 @@ export default function HomeScreen() {
                     size={180}
                     color="black"
                   />
-                  {/* <Text style={styles.pickPlayerText}>Select Batsman</Text> */}
                 </View>
               )
             ) : (
@@ -889,7 +911,6 @@ export default function HomeScreen() {
                   size={180}
                   color="#5D3A1B"
                 />
-                {/* <Text style={styles.pickPlayerText}>Select Batsman</Text> */}
               </View>
             )
           ) : (
@@ -900,7 +921,6 @@ export default function HomeScreen() {
                 size={180}
                 color="#4CAF50"
               />
-              {/* <Text style={styles.pickPlayerText}>Select Bowler</Text> */}
             </View>
           )}
         </TouchableOpacity>

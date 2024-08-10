@@ -288,7 +288,7 @@ const TeamLineUp: React.FC = () => {
       </View>
 
       <TouchableOpacity style={styles.saveButton} onPress={saveTeams}>
-        <Text style={styles.buttonText}>Preview and Save</Text>
+        <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
 
       <TeamSelection

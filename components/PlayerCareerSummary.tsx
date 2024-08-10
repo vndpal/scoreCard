@@ -58,6 +58,7 @@ const PlayerCareerSummary = () => {
           <Text style={styles.cell}>
             {item.average ? item.average.toFixed(2) : 0.0}
           </Text>
+          <Text style={styles.cell}>{item.matches}</Text>
         </>
       ) : (
         <>
@@ -67,6 +68,9 @@ const PlayerCareerSummary = () => {
           <Text style={styles.cell}>
             {item.bowlingEconomy ? item.bowlingEconomy.toFixed(2) : 0.0}
           </Text>
+          <Text style={styles.cell}>{item.FoursConceded}</Text>
+          <Text style={styles.cell}>{item.SixesConceded}</Text>
+          <Text style={styles.cell}>{item.matches}</Text>
         </>
       )}
     </View>
@@ -92,6 +96,7 @@ const PlayerCareerSummary = () => {
                 <Text style={styles.headerCell}>Sixes</Text>
                 <Text style={styles.headerCell}>SR</Text>
                 <Text style={styles.headerCell}>Avg</Text>
+                <Text style={styles.headerCell}>Matches</Text>
               </>
             ) : (
               <>
@@ -99,6 +104,9 @@ const PlayerCareerSummary = () => {
                 <Text style={styles.headerCell}>Runs</Text>
                 <Text style={styles.headerCell}>Wickets</Text>
                 <Text style={styles.headerCell}>Eco</Text>
+                <Text style={styles.headerCell}>4s</Text>
+                <Text style={styles.headerCell}>6s</Text>
+                <Text style={styles.headerCell}>Matches</Text>
               </>
             )}
           </View>

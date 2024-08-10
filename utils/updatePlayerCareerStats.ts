@@ -51,6 +51,10 @@ export const updatePlayerCareerStats = async (
           playerMatchStat.extras;
         playerCareerStats[playerCareerStatIndex].runsConceded +=
           playerMatchStat.runsConceded;
+        playerCareerStats[playerCareerStatIndex].FoursConceded +=
+          playerMatchStat.FoursConceded;
+        playerCareerStats[playerCareerStatIndex].SixesConceded +=
+          playerMatchStat.SixesConceded;
         playerCareerStats[playerCareerStatIndex].maidens +=
           playerMatchStat.maidens;
         playerCareerStats[playerCareerStatIndex].bowlingEconomy =

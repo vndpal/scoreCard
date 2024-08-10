@@ -8,8 +8,9 @@ import {
   Dimensions,
   GestureResponderEvent,
   Alert,
+  Text,
 } from "react-native";
-import { Button, TextInput, HelperText } from "react-native-paper";
+import { Button, TextInput, HelperText, Switch } from "react-native-paper";
 import { Formik, useFormik } from "formik";
 import * as Yup from "yup";
 import { match } from "@/types/match";
@@ -24,6 +25,7 @@ const createMatchSchema = Yup.object().shape({
   team2: Yup.string().required("Fielding team is required"),
   overs: Yup.number().required("Overs are required"),
   wickets: Yup.number(),
+  quickMatch: Yup.boolean(),
 });
 
 type items = {
@@ -49,6 +51,7 @@ export const CreateMatch = () => {
             team2: looser,
             overs: lastMatch.overs.toString(),
             wickets: lastMatch.wickets?.toString() ?? "",
+            quickMatch: false,
           });
         }
       }
@@ -73,7 +76,8 @@ export const CreateMatch = () => {
 
     const matches = await getItem(STORAGE_ITEMS.MATCHES);
     const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
-    const { overs, wickets, team1, team2 } = formik.values;
+    const { overs, wickets, team1, team2, quickMatch } = formik.values;
+
     let matchId = "1";
     if (matches) {
       if (matches[0].status == "live") {
@@ -119,6 +123,7 @@ export const CreateMatch = () => {
           status: "live",
           isFirstInning: true,
           date: new Date().toString(),
+          quickMatch: quickMatch,
         },
         ...matches,
       ]);
@@ -137,54 +142,59 @@ export const CreateMatch = () => {
           status: "live",
           isFirstInning: true,
           date: new Date().toString(),
+          quickMatch: quickMatch,
         },
       ]);
     }
 
-    const playerStats: playerStats[] = [];
-    const playerIds: { playerId: string; team: string }[] = [];
-    teamPlayerMapping[team1].forEach((player: string) => {
-      playerIds.push({ playerId: player, team: team1 });
-    });
-    teamPlayerMapping[team2].forEach((player: string) => {
-      playerIds.push({ playerId: player, team: team2 });
-    });
-    playerIds.forEach((player: { playerId: string; team: string }) => {
-      playerStats.push({
-        playerId: player.playerId,
-        team: player.team,
-        runs: 0,
-        ballsFaced: 0,
-        fours: 0,
-        sixes: 0,
-        average: 0,
-        isOut: false,
-        strikeRate: 0,
-        wickets: 0,
-        ballsBowled: 0,
-        overs: 0,
-        runsConceded: 0,
-        maidens: 0,
-        bowlingEconomy: 0,
-        extras: 0,
+    if (!quickMatch) {
+      const playerStats: playerStats[] = [];
+      const playerIds: { playerId: string; team: string }[] = [];
+      teamPlayerMapping[team1].forEach((player: string) => {
+        playerIds.push({ playerId: player, team: team1 });
       });
-    });
+      teamPlayerMapping[team2].forEach((player: string) => {
+        playerIds.push({ playerId: player, team: team2 });
+      });
+      playerIds.forEach((player: { playerId: string; team: string }) => {
+        playerStats.push({
+          playerId: player.playerId,
+          team: player.team,
+          runs: 0,
+          ballsFaced: 0,
+          fours: 0,
+          sixes: 0,
+          average: 0,
+          isOut: false,
+          strikeRate: 0,
+          wickets: 0,
+          ballsBowled: 0,
+          overs: 0,
+          runsConceded: 0,
+          maidens: 0,
+          bowlingEconomy: 0,
+          extras: 0,
+          FoursConceded: 0,
+          SixesConceded: 0,
+        });
+      });
 
-    const playerStatsInMatch: playerMatchStats = {
-      matchId,
-      playerMatchStats: playerStats,
-    };
+      const playerStatsInMatch: playerMatchStats = {
+        matchId,
+        playerMatchStats: playerStats,
+      };
 
-    const playerMatchStatsList = await getItem(
-      STORAGE_ITEMS.PLAYER_MATCH_STATS
-    );
-    if (playerMatchStatsList && playerMatchStatsList.length > 0) {
-      await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [
-        playerStatsInMatch,
-        ...playerMatchStatsList,
-      ]);
-    } else {
-      await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [playerStatsInMatch]);
+      const playerMatchStatsList = await getItem(
+        STORAGE_ITEMS.PLAYER_MATCH_STATS
+      );
+      if (playerMatchStatsList && playerMatchStatsList.length > 0) {
+        await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [
+          playerStatsInMatch,
+          ...playerMatchStatsList,
+        ]);
+      } else {
+        await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [playerStatsInMatch]);
+      }
     }
 
     await setItem(STORAGE_ITEMS.IS_NEW_MATCH, true);
@@ -198,6 +208,7 @@ export const CreateMatch = () => {
       team2: "",
       overs: "",
       wickets: "",
+      quickMatch: false,
     },
     validationSchema: createMatchSchema,
     onSubmit: async (values) => {
@@ -208,7 +219,7 @@ export const CreateMatch = () => {
   return (
     <View style={styles.formContainer}>
       <Dropdown
-        label="Battting team"
+        label="Batting team"
         options={teams}
         value={formik.values.team1}
         onSelect={formik.handleChange("team1")}
@@ -241,7 +252,7 @@ export const CreateMatch = () => {
         style={styles.input}
         mode="outlined"
         label={"Overs"}
-        placeholderTextColor={"white"}
+        placeholderTextColor={"#aaa"}
         keyboardType="numeric"
         value={formik.values.overs}
         onChangeText={formik.handleChange("overs")}
@@ -259,7 +270,7 @@ export const CreateMatch = () => {
         style={styles.input}
         mode="outlined"
         label={"Wickets"}
-        placeholderTextColor={"white"}
+        placeholderTextColor={"#aaa"}
         keyboardType="numeric"
         value={formik.values.wickets}
         onChangeText={formik.handleChange("wickets")}
@@ -273,6 +284,25 @@ export const CreateMatch = () => {
       >
         {formik.errors.wickets}
       </HelperText>
+      <View style={styles.settingItem}>
+        <View style={styles.quickMatchContainer}>
+          <Text style={styles.label}>Quick match</Text>
+          <HelperText type="info" visible={true} style={styles.quickMatch}>
+            If you turn this on, player details will be skipped and only the
+            match score will be tracked.
+          </HelperText>
+        </View>
+        <Switch
+          value={formik.values.quickMatch}
+          onValueChange={(value) => {
+            formik.setFieldValue("quickMatch", value);
+          }}
+          trackColor={{ false: "#767577", true: "#4CAF50" }}
+          thumbColor={formik.values.quickMatch ? "#81C784" : "#f4f3f4"}
+          ios_backgroundColor="#3e3e3e"
+          style={styles.switch}
+        />
+      </View>
       <View style={{ flex: 1 }} />
       <Button
         textColor="white"
@@ -298,5 +328,28 @@ const styles = StyleSheet.create({
   input: {
     paddingHorizontal: 8,
     color: "white",
+    marginBottom: 8,
+  },
+  settingItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 16,
+  },
+  quickMatchContainer: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  label: {
+    fontSize: 16,
+    color: "#fff",
+  },
+  switch: {
+    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+  },
+  quickMatch: {
+    fontSize: 10,
+    color: "#B3E5FC",
+    paddingLeft: 0,
   },
 });

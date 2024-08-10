@@ -14,6 +14,7 @@ type match = {
   isFirstInning: boolean;
   wickets?: number;
   date: string;
+  quickMatch: boolean;
 };
 
 export type { match };

@@ -87,22 +87,26 @@ export const CreateMatch = () => {
         return;
       }
 
-      const team1PlayerCount = teamPlayerMapping.hasOwnProperty(team1)
-        ? teamPlayerMapping[team1]?.length
-        : 0;
-      const team2PlayerCount = teamPlayerMapping.hasOwnProperty(team2)
-        ? teamPlayerMapping[team2]?.length
-        : 0;
-      if (
-        team1PlayerCount == 0 ||
-        team2PlayerCount == 0 ||
-        Math.abs(team1PlayerCount - team2PlayerCount) > 1
-      ) {
-        Alert.alert(
-          "Team is not created properly",
-          `Teams must have equal players or differ by at most 1 player!\n\n${team1}: ${team1PlayerCount}\n${team2}: ${team2PlayerCount}`
-        );
-        return;
+      if (!quickMatch) {
+        const team1PlayerCount =
+          teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team1)
+            ? teamPlayerMapping[team1]?.length
+            : 0;
+        const team2PlayerCount =
+          teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team2)
+            ? teamPlayerMapping[team2]?.length
+            : 0;
+        if (
+          team1PlayerCount == 0 ||
+          team2PlayerCount == 0 ||
+          Math.abs(team1PlayerCount - team2PlayerCount) > 1
+        ) {
+          Alert.alert(
+            "Team is not created properly",
+            `Teams must have equal players or differ by at most 1 player!\n\n${team1}: ${team1PlayerCount}\n${team2}: ${team2PlayerCount}`
+          );
+          return;
+        }
       }
 
       matchId = Number.isNaN(matches[0].matchId)

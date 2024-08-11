@@ -74,7 +74,7 @@ const TeamLineUp: React.FC = () => {
               !teamPlayersMapping[savedTeams[1]].includes(player.id)
           )
         );
-      } else {
+      } else if (playersFromStorage && playersFromStorage.length > 0) {
         setAvailablePlayers(playersFromStorage);
       }
     })();

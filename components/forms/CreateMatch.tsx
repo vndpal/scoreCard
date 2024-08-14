@@ -178,8 +178,8 @@ export const CreateMatch = () => {
           maidens: 0,
           bowlingEconomy: 0,
           extras: 0,
-          FoursConceded: 0,
-          SixesConceded: 0,
+          foursConceded: 0,
+          sixesConceded: 0,
         });
       });
 

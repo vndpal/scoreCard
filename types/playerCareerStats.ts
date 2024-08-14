@@ -14,8 +14,8 @@ type playerCareerStats = {
   ballsBowled: number;
   extras: number;
   runsConceded: number;
-  FoursConceded: number;
-  SixesConceded: number;
+  foursConceded: number;
+  sixesConceded: number;
   maidens: number;
   bowlingEconomy: number;
 };

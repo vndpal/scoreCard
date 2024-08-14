@@ -1,17 +1,11 @@
 // app/player/[id].tsx
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import {
-  TextInput,
-  Button,
-  useTheme,
-  Text,
-  IconButton,
-  Icon,
-} from "react-native-paper";
+import { TextInput, Button, useTheme, Text, Icon } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import PlayerCareerRecords from "../PlayerCareerRecords";
 
 export default function PlayerProfile() {
   const { colors } = useTheme();
@@ -22,7 +16,6 @@ export default function PlayerProfile() {
 
   const handleSave = async () => {
     const players = await getItem(STORAGE_ITEMS.PLAYERS);
-    console.log(players);
     const player = players.find((p: any) => p.id == playerId);
     player.name = name;
     await setItem(STORAGE_ITEMS.PLAYERS, players);
@@ -78,7 +71,10 @@ export default function PlayerProfile() {
       ) : (
         <>
           <Text style={styles.text}>{playerName}</Text>
-          <View style={{ flex: 1 }} />
+          <PlayerCareerRecords
+            playerId={playerId ? playerId?.toString() : ""}
+          />
+
           <View style={styles.iconContainer}>
             <Button
               mode="contained"
@@ -115,8 +111,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   text: {
-    fontSize: 18,
+    fontSize: 24,
+    marginBottom: 16,
+    padding: 8,
     color: "white",
+    textAlign: "center",
   },
   actionButton: {
     flex: 1,

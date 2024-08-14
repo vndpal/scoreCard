@@ -83,7 +83,7 @@ export default function RootLayout() {
           <Stack.Screen
             name="player/[id]"
             options={{
-              headerTitle: "Add new player",
+              headerTitle: "Player profile",
               animation: "slide_from_right",
             }}
           />

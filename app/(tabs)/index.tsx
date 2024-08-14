@@ -603,9 +603,9 @@ export default function HomeScreen() {
           playerMatchStatsLocalState[bowlerIndex].overs += 1;
         }
         playerMatchStatsLocalState[bowlerIndex].extras += scoreThisBall.extra;
-        playerMatchStatsLocalState[bowlerIndex].FoursConceded +=
+        playerMatchStatsLocalState[bowlerIndex].foursConceded +=
           scoreThisBall.run == 4 ? 1 : 0;
-        playerMatchStatsLocalState[bowlerIndex].SixesConceded +=
+        playerMatchStatsLocalState[bowlerIndex].sixesConceded +=
           scoreThisBall.run == 6 ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].wickets +=
           scoreThisBall.isWicket ? 1 : 0;
@@ -615,7 +615,7 @@ export default function HomeScreen() {
             ? playerMatchStatsLocalState[bowlerIndex].ballsBowled / 6
             : 1);
       }
-
+      console.log(playerMatchStatsLocalState);
       setPlayerMatchStats(playerMatchStatsLocalState);
 
       const playerMatchStatsFromDb = await getItem(
@@ -695,9 +695,9 @@ export default function HomeScreen() {
         playerMatchStatsLocalState[bowlerIndex].extras -= scoreThisBall.extra;
         playerMatchStatsLocalState[bowlerIndex].wickets -=
           scoreThisBall.isWicket ? 1 : 0;
-        playerMatchStatsLocalState[bowlerIndex].FoursConceded -=
+        playerMatchStatsLocalState[bowlerIndex].foursConceded -=
           scoreThisBall.run == 4 ? 1 : 0;
-        playerMatchStatsLocalState[bowlerIndex].SixesConceded -=
+        playerMatchStatsLocalState[bowlerIndex].sixesConceded -=
           scoreThisBall.run == 6 ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].bowlingEconomy =
           playerMatchStatsLocalState[bowlerIndex].runsConceded /

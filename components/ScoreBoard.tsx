@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: "#009688",
+    backgroundColor: "#00796b",
     borderRadius: 6,
   },
   oversText: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: "#ff5722",
+    backgroundColor: "#f57f17",
     borderRadius: 6,
   },
   inningsContainer: {

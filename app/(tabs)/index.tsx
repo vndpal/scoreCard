@@ -895,32 +895,35 @@ export default function HomeScreen() {
                 </Text>
               ) : (
                 <View style={styles.pickPlayerContainer}>
-                  <Icon
+                  {/* <Icon
                     name="sports-cricket"
                     type="material-icon"
                     size={180}
                     color="black"
-                  />
+                  /> */}
+                  <Text style={styles.pickPlayerText}>Select Batsman</Text>
                 </View>
               )
             ) : (
               <View style={styles.pickPlayerContainer}>
-                <Icon
+                {/* <Icon
                   name="sports-cricket"
                   type="material-icon"
                   size={180}
                   color="#5D3A1B"
-                />
+                /> */}
+                <Text style={styles.pickPlayerText}>Select Batsman</Text>
               </View>
             )
           ) : (
             <View style={styles.pickPlayerContainer}>
-              <Icon
+              {/* <Icon
                 name="tennisball-sharp"
                 type="ionicon"
                 size={180}
                 color="#4CAF50"
-              />
+              /> */}
+              <Text style={styles.pickPlayerText}>Select Bowler</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -1065,13 +1068,14 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    fontSize: 40,
   },
   pickPlayerText: {
-    fontSize: 22,
+    fontSize: 48,
     color: "black",
-    marginTop: 10,
     fontWeight: "bold",
-    alignContent: "center",
+    textAlign: "center",
+    textShadowColor: "#555",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
   },
 });

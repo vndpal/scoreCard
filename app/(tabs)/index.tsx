@@ -677,7 +677,9 @@ export default function HomeScreen() {
           (playerMatchStatsLocalState[batterIndex].runs /
             playerMatchStatsLocalState[batterIndex].ballsFaced) *
           100;
-        playerMatchStatsLocalState[batterIndex].isOut = !scoreThisBall.isWicket;
+        if (scoreThisBall.isWicket) {
+          playerMatchStatsLocalState[batterIndex].isOut = false;
+        }
       }
       const bowlerIndex = playerMatchStatsLocalState.findIndex(
         (playerStats: playerStats) =>
@@ -686,11 +688,13 @@ export default function HomeScreen() {
       if (bowlerIndex > -1) {
         playerMatchStatsLocalState[bowlerIndex].runsConceded -=
           scoreThisBall.totalRun;
-        playerMatchStatsLocalState[bowlerIndex].ballsBowled -=
-          scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
 
         if (scoreThisBall.isOverEnd) {
           playerMatchStatsLocalState[bowlerIndex].overs -= 1;
+          playerMatchStatsLocalState[bowlerIndex].ballsBowled = 5;
+        } else {
+          playerMatchStatsLocalState[bowlerIndex].ballsBowled -=
+            scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
         }
         playerMatchStatsLocalState[bowlerIndex].extras -= scoreThisBall.extra;
         playerMatchStatsLocalState[bowlerIndex].wickets -=
@@ -983,13 +987,11 @@ export default function HomeScreen() {
               ? match.team2
               : match.team1
           }
-          remainingPlayersId={playerMatchStats
-            .filter((x: playerStats) => {
-              return !bowler
-                ? x.ballsBowled == 0 && x.overs == 0 && x.extras == 0
-                : x.isOut == false && x.ballsFaced == 0;
-            })
-            .map((x: playerStats) => x.playerId)}
+          remainingPlayers={playerMatchStats.filter((x: playerStats) => {
+            return !bowler
+              ? x.ballsBowled == 0 && x.overs == 0 && x.extras == 0
+              : x.isOut == false && x.ballsFaced == 0;
+          })}
           onSubmit={handlePlayerPick}
           onDismiss={() => setPickPlayerVisible(false)}
         />

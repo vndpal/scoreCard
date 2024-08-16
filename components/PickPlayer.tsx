@@ -7,6 +7,7 @@ import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { Dropdown } from "react-native-paper-dropdown";
 import { player } from "@/types/player";
+import { playerStats } from "@/types/playerStats";
 
 // Define validation schema with Yup
 const pickPlayerSchema = Yup.object().shape({
@@ -24,7 +25,7 @@ interface PopupFormProps {
   visible: boolean;
   team: string;
   playerType: string;
-  remainingPlayersId: string[];
+  remainingPlayers: playerStats[];
   onDismiss: () => void;
   onSubmit: (values: player | undefined) => void;
 }
@@ -33,7 +34,7 @@ interface PopupFormProps {
 const PickPlayer: React.FC<PopupFormProps> = ({
   visible,
   team,
-  remainingPlayersId,
+  remainingPlayers,
   playerType,
   onDismiss,
   onSubmit,
@@ -43,19 +44,12 @@ const PickPlayer: React.FC<PopupFormProps> = ({
 
   useEffect(() => {
     (async () => {
-      const teamPlayerMapping = await getItem(
-        STORAGE_ITEMS.TEAM_PLAYER_MAPPING
-      );
-
-      if (teamPlayerMapping && team) {
-        const playerIds = teamPlayerMapping[team];
+      if (team) {
         let playersFromDb = await getItem(STORAGE_ITEMS.PLAYERS);
         if (playersFromDb) {
+          remainingPlayers = remainingPlayers.filter((p) => p.team === team);
           playersFromDb = playersFromDb.filter((p: player) =>
-            playerIds.includes(p.id.toString())
-          );
-          playersFromDb = playersFromDb.filter((p: player) =>
-            remainingPlayersId.includes(p.id.toString())
+            remainingPlayers.map((x) => x.playerId).includes(p.id.toString())
           );
           playersFromDb.sort((a: player, b: player) =>
             a.name.localeCompare(b.name)

@@ -86,14 +86,18 @@ const MatchSummary = () => {
         <>
           <Text style={styles.cell}>{item.runs}</Text>
           <Text style={styles.cell}>{item.ballsFaced}</Text>
-          <Text style={styles.cell}>{item.strikeRate.toFixed(2)}</Text>
+          <Text style={styles.cell}>
+            {item.strikeRate ? item.strikeRate.toFixed(2) : "-"}
+          </Text>
         </>
       ) : (
         <>
           <Text style={styles.cell}>{item.overs}</Text>
           <Text style={styles.cell}>{item.runsConceded}</Text>
           <Text style={styles.cell}>{item.wickets}</Text>
-          <Text style={styles.cell}>{item.bowlingEconomy.toFixed(2)}</Text>
+          <Text style={styles.cell}>
+            {item.bowlingEconomy ? item.bowlingEconomy.toFixed(2) : "-"}
+          </Text>
         </>
       )}
     </View>

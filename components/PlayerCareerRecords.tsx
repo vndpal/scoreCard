@@ -45,7 +45,7 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
   const bowlingData = [
     { header: "Matches", value: stats.matches },
     { header: "Wickets", value: stats.wickets },
-    { header: "Overs", value: stats.overs },
+    { header: "Overs", value: stats.overs + "." + stats.ballsBowled },
     { header: "Runs", value: stats.runsConceded },
     { header: "Econ", value: stats.bowlingEconomy?.toFixed(2) ?? "-" },
     { header: "4s", value: stats.foursConceded },

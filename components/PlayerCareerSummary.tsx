@@ -62,7 +62,10 @@ const PlayerCareerSummary = () => {
         </>
       ) : (
         <>
-          <Text style={styles.cell}>{item.overs}</Text>
+          <Text style={styles.cell}>
+            {item.overs}
+            {item.ballsBowled > 0 ? "." + item.ballsBowled : ""}
+          </Text>
           <Text style={styles.cell}>{item.runsConceded}</Text>
           <Text style={styles.cell}>{item.wickets}</Text>
           <Text style={styles.cell}>

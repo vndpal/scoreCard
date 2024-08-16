@@ -15,6 +15,8 @@ import {
 } from "react-native";
 import { Switch, Button } from "react-native-paper";
 import { Dropdown } from "react-native-paper-dropdown";
+import { playerMatchStats } from "@/types/playerMatchStats";
+import { playerStats } from "@/types/playerStats";
 
 type items = {
   label: string;
@@ -96,11 +98,14 @@ const MatchSettings = () => {
               matches[0] = updatedMatch;
               await setItem(STORAGE_ITEMS.MATCHES, matches);
 
-              const playerMatchStats = await getItem(
+              const playerMatchStats: playerMatchStats[] = await getItem(
                 STORAGE_ITEMS.PLAYER_MATCH_STATS
               );
-              await updatePlayerCareerStats(playerMatchStats);
-
+              if (playerMatchStats && playerMatchStats.length > 0) {
+                const lastPlayerMatchStats: playerStats[] =
+                  playerMatchStats[0].playerMatchStats;
+                await updatePlayerCareerStats(lastPlayerMatchStats);
+              }
               Keyboard.dismiss();
               router.push("/");
             }

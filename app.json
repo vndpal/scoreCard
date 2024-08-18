@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.vndpal.ScoreCard",
-      "versionCode": 9
+      "versionCode": 10
     },
     "web": {
       "bundler": "metro",

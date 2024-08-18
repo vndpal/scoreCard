@@ -84,10 +84,14 @@ const MatchSummary = () => {
       </Text>
       {type === "batting" ? (
         <>
-          <Text style={styles.cell}>{item.runs}</Text>
-          <Text style={styles.cell}>{item.ballsFaced}</Text>
+          <Text style={styles.cell}>
+            {item.runs} ({item.ballsFaced})
+          </Text>
           <Text style={styles.cell}>
             {item.strikeRate ? item.strikeRate.toFixed(2) : "-"}
+          </Text>
+          <Text style={styles.cell}>
+            {item.sixes} / {item.fours}
           </Text>
         </>
       ) : (
@@ -96,11 +100,9 @@ const MatchSummary = () => {
             {item.overs}
             {item.ballsBowled > 0 ? "." + item.ballsBowled : ""}
           </Text>
-          <Text style={styles.cell}>{item.runsConceded}</Text>
           <Text style={styles.cell}>{item.wickets}</Text>
-          <Text style={styles.cell}>
-            {item.bowlingEconomy ? item.bowlingEconomy.toFixed(2) : "-"}
-          </Text>
+          <Text style={styles.cell}>{item.runsConceded}</Text>
+          <Text style={styles.cell}>{item.extras}</Text>
         </>
       )}
     </View>
@@ -119,15 +121,15 @@ const MatchSummary = () => {
         {type === "batting" ? (
           <>
             <Text style={styles.headerCell}>Runs</Text>
-            <Text style={styles.headerCell}>Balls</Text>
             <Text style={styles.headerCell}>SR</Text>
+            <Text style={styles.headerCell}>6s / 4s</Text>
           </>
         ) : (
           <>
             <Text style={styles.headerCell}>Overs</Text>
-            <Text style={styles.headerCell}>Runs</Text>
             <Text style={styles.headerCell}>Wickets</Text>
-            <Text style={styles.headerCell}>Eco</Text>
+            <Text style={styles.headerCell}>Runs</Text>
+            <Text style={styles.headerCell}>Extras</Text>
           </>
         )}
       </View>

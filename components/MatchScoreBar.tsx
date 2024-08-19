@@ -13,6 +13,20 @@ const MatchScoreBar = ({
   finalFirstInningsScore: currentTotalScore;
   finalSecondInningsScore: currentTotalScore;
 }) => {
+  const calculateRequiredRate = () => {
+    const runsNeeded =
+      finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1;
+
+    const ballsLeft =
+      match.overs * 6 -
+      (finalSecondInningsScore.totalOvers * 6 +
+        finalSecondInningsScore.totalBalls);
+
+    const oversLeft = ballsLeft / 6;
+
+    return (runsNeeded / oversLeft).toFixed(2);
+  };
+
   return (
     <View style={styles.statusBar}>
       {match.status == "completed" ? (
@@ -43,13 +57,7 @@ const MatchScoreBar = ({
           {match.overs * 6 -
             (finalSecondInningsScore.totalOvers * 6 +
               finalSecondInningsScore.totalBalls)}{" "}
-          balls | R.R.{" "}
-          {(
-            (finalFirstInningsScore.totalRuns -
-              finalSecondInningsScore.totalRuns +
-              1) /
-            (match.overs - finalSecondInningsScore.totalOvers)
-          ).toFixed(2)}
+          balls | R.R. {calculateRequiredRate()}
         </Text>
       )}
     </View>

@@ -355,7 +355,6 @@ export default function HomeScreen() {
         const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
         const totalRun = run + extra;
         let scoreSecondInningsLocalState;
-        // setTotalRuns((prev) => prev + totalRun);
         if (isFirstInning) {
           setFinalFirstInningsScore((prev) => ({
             ...prev,
@@ -564,7 +563,6 @@ export default function HomeScreen() {
           totalBalls: 0,
         }));
       }
-      // setTotalOvers(totalOvers + 1);
       setTotalBalls(0);
     } else {
       if (isFirstInning) {
@@ -964,10 +962,8 @@ export default function HomeScreen() {
           >
             <Text style={styles.buttonText}>WB</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity style={styles.bubbleButton} onPress={swapBatters}>
-            <Icon name="swap" type="entypo" color="black" size={28} />
-          </TouchableOpacity> */}
           <TouchableOpacity
+            disabled={showLoader}
             style={styles.bubbleButton}
             onPress={handleUndoSubmit}
           >

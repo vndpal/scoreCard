@@ -27,7 +27,6 @@ export default function HomeScreen() {
   const [isWicket, setIsWicket] = useState(false);
   const [isNoBall, setIsNoBall] = useState(false);
   const [isWideBall, setIsWideBall] = useState(false);
-  const [isConfirm, setIsConfirm] = useState(false);
 
   const [isFirstInning, setIsFirstInning] = useState(true);
 
@@ -75,6 +74,7 @@ export default function HomeScreen() {
 
   const [pickPlayerVisible, setPickPlayerVisible] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState<boolean>(false);
+  const [isEntryDone, setIsEntryDone] = useState<boolean>(false);
 
   useEffect(() => {
     fetchMatch();
@@ -303,29 +303,25 @@ export default function HomeScreen() {
   };
 
   const handleRunPress = (run: string) => {
-    if (run == ".") {
-      setRun(0);
-    } else {
-      setRun(parseInt(run));
-    }
-    setIsConfirm(false);
+    setRun(parseInt(run));
+    setIsEntryDone(true);
   };
 
   const handleWicket = () => {
     setIsWicket((prev) => !prev);
-    setIsConfirm(false);
+    setIsEntryDone(true);
   };
 
   const handleNoBall = () => {
     setIsNoBall((prev) => !prev);
     setIsWideBall(false);
-    setIsConfirm(false);
+    setIsEntryDone(true);
   };
 
   const handleWideBall = () => {
     setIsWideBall((prev) => !prev);
     setIsNoBall(false);
-    setIsConfirm(false);
+    setIsEntryDone(true);
   };
 
   const handleSubmit = async () => {
@@ -335,192 +331,149 @@ export default function HomeScreen() {
         //logic for player pick start
         if (!bowler) {
           setPickPlayerVisible(true);
-          setIsConfirm(false);
           return;
         } else if (!batter1) {
           setPickPlayerVisible(true);
-          setIsConfirm(false);
           return;
         } else if (!batter2) {
           setPickPlayerVisible(true);
-          setIsConfirm(false);
           return;
         }
       }
       //logic for player pick end
-      if (!isConfirm) {
-        setIsConfirm(true);
-        return;
+      setIsEntryDone(false);
+      const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
+      const totalRun = run + extra;
+      let scoreSecondInningsLocalState;
+      if (isFirstInning) {
+        setFinalFirstInningsScore((prev) => ({
+          ...prev,
+          totalRuns: prev.totalRuns + totalRun,
+          totalWickets: prev.totalWickets + (isWicket ? 1 : 0),
+        }));
       } else {
-        const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
-        const totalRun = run + extra;
-        let scoreSecondInningsLocalState;
-        if (isFirstInning) {
-          setFinalFirstInningsScore((prev) => ({
-            ...prev,
-            totalRuns: prev.totalRuns + totalRun,
-            totalWickets: prev.totalWickets + (isWicket ? 1 : 0),
-          }));
+        setFinalSecondInningsScore((prev) => ({
+          ...prev,
+          totalRuns: prev.totalRuns + totalRun,
+          totalWickets: prev.totalWickets + (isWicket ? 1 : 0),
+        }));
+      }
+
+      let isValidBall = false;
+      if (!isNoBall && !isWideBall) {
+        increaseOver();
+        isValidBall = true;
+      }
+      // else if (isNoBall && isWicket) {
+      //   increaseOver();
+      //   isValidBall = true;
+      // }
+
+      const scoreThisBall: scorePerBall = {
+        run: run,
+        extra: (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0),
+        totalRun: totalRun,
+        isWicket: isWicket,
+        isNoBall: isNoBall,
+        isWideBall: isWideBall,
+        isOverEnd: isValidBall && totalBalls == 5,
+        strikerBatter: batter1,
+        nonStrikerBatter: batter2,
+        bowler: bowler,
+      };
+
+      if (!match.quickMatch) {
+        if (isWicket) {
+          setBatter1(undefined);
+        }
+        await updatePlayerMatchStats(scoreThisBall);
+      }
+
+      const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
+
+      if (isFirstInning) {
+        if (scorePerOver.length == 0) {
+          const latestTotalScore = totalScore;
+          latestTotalScore.unshift(scoreThisOver);
+          setTotalScore(latestTotalScore);
         } else {
-          setFinalSecondInningsScore((prev) => ({
-            ...prev,
-            totalRuns: prev.totalRuns + totalRun,
-            totalWickets: prev.totalWickets + (isWicket ? 1 : 0),
-          }));
+          const latestTotalScore = totalScore;
+          latestTotalScore[0] = scoreThisOver;
+          setTotalScore(latestTotalScore);
         }
-
-        let isValidBall = false;
-        if (!isNoBall && !isWideBall) {
-          increaseOver();
-          isValidBall = true;
+      } else {
+        if (scorePerOver.length == 0) {
+          scoreSecondInningsLocalState = [scoreThisOver, ...scoreSecondInnings];
+          setScoreSecondInnings([scoreThisOver, ...scoreSecondInnings]);
+        } else {
+          const latestTotalScore = scoreSecondInnings;
+          latestTotalScore[0] = scoreThisOver;
+          scoreSecondInningsLocalState = latestTotalScore;
+          setScoreSecondInnings(latestTotalScore);
         }
-        // else if (isNoBall && isWicket) {
-        //   increaseOver();
-        //   isValidBall = true;
-        // }
+      }
 
-        const scoreThisBall: scorePerBall = {
-          run: run,
-          extra: (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0),
-          totalRun: totalRun,
-          isWicket: isWicket,
-          isNoBall: isNoBall,
-          isWideBall: isWideBall,
-          isOverEnd: isValidBall && totalBalls == 5,
-          strikerBatter: batter1,
-          nonStrikerBatter: batter2,
-          bowler: bowler,
-        };
-
-        if (!match.quickMatch) {
-          if (isWicket) {
-            setBatter1(undefined);
-          }
-          await updatePlayerMatchStats(scoreThisBall);
-        }
-
-        const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
-
-        if (isFirstInning) {
-          if (scorePerOver.length == 0) {
-            const latestTotalScore = totalScore;
-            latestTotalScore.unshift(scoreThisOver);
-            setTotalScore(latestTotalScore);
+      const matches = await getItem(STORAGE_ITEMS.MATCHES);
+      if (matches) {
+        const latestMatch = matches[0];
+        if (latestMatch) {
+          let updatedMatch;
+          if (isFirstInning) {
+            updatedMatch = { ...latestMatch, team1score: totalScore };
           } else {
-            const latestTotalScore = totalScore;
-            latestTotalScore[0] = scoreThisOver;
-            setTotalScore(latestTotalScore);
+            updatedMatch = {
+              ...latestMatch,
+              team2score: scoreSecondInningsLocalState,
+            };
           }
-        } else {
-          if (scorePerOver.length == 0) {
-            scoreSecondInningsLocalState = [
-              scoreThisOver,
-              ...scoreSecondInnings,
-            ];
-            setScoreSecondInnings([scoreThisOver, ...scoreSecondInnings]);
-          } else {
-            const latestTotalScore = scoreSecondInnings;
-            latestTotalScore[0] = scoreThisOver;
-            scoreSecondInningsLocalState = latestTotalScore;
-            setScoreSecondInnings(latestTotalScore);
-          }
+          matches[0] = updatedMatch;
+          await setItem(STORAGE_ITEMS.MATCHES, matches);
         }
+      }
 
-        const matches = await getItem(STORAGE_ITEMS.MATCHES);
-        if (matches) {
-          const latestMatch = matches[0];
-          if (latestMatch) {
-            let updatedMatch;
-            if (isFirstInning) {
-              updatedMatch = { ...latestMatch, team1score: totalScore };
-            } else {
-              updatedMatch = {
-                ...latestMatch,
-                team2score: scoreSecondInningsLocalState,
-              };
-            }
-            matches[0] = updatedMatch;
-            await setItem(STORAGE_ITEMS.MATCHES, matches);
-          }
-        }
+      setRun(0);
+      setIsWicket(false);
+      setIsNoBall(false);
+      setIsWideBall(false);
 
-        setIsConfirm(false);
-        setRun(0);
-        setIsWicket(false);
-        setIsNoBall(false);
-        setIsWideBall(false);
-
-        // This block of code is to check if current over is completed
-        if (isValidBall && totalBalls == 5) {
-          setScorePerOver([]);
-          setBowler(undefined);
-          if (
-            isFirstInning &&
-            match.overs > 0 &&
-            finalFirstInningsScore.totalOvers + 1 == match.overs
-          ) {
-            console.log("First Inning Completed");
-            setIsFirstInning(false);
-            setBowler(undefined);
-            setBatter1(undefined);
-            setBatter2(undefined);
-
-            const matches = await getItem(STORAGE_ITEMS.MATCHES);
-            if (matches) {
-              const latestMatch = matches[0];
-              if (latestMatch) {
-                const updatedMatch = { ...latestMatch, isFirstInning: false };
-
-                matches[0] = updatedMatch;
-                await setItem(STORAGE_ITEMS.MATCHES, matches);
-              }
-            }
-          } else if (
-            !isFirstInning &&
-            finalSecondInningsScore.totalOvers + 1 == match.overs
-          ) {
-            console.log("Second Inning Completed");
-            let winner: "team1" | "team2" | undefined = "team1";
-            if (
-              finalSecondInningsScore.totalRuns + totalRun >
-              finalFirstInningsScore.totalRuns
-            ) {
-              winner = "team2";
-            }
-            setMatch({ ...match, winner: winner, status: "completed" });
-            const matches = await getItem(STORAGE_ITEMS.MATCHES);
-            if (matches) {
-              const latestMatch = matches[0];
-              if (latestMatch) {
-                const updatedMatch = {
-                  ...latestMatch,
-                  team1score: totalScore,
-                  team2score: scoreSecondInningsLocalState,
-                  status: "completed",
-                  winner: winner,
-                };
-
-                matches[0] = updatedMatch;
-                await setItem(STORAGE_ITEMS.MATCHES, matches);
-                if (!match.quickMatch) {
-                  await updatePlayerCareerStats(playerMatchStats);
-                }
-              }
-            }
-            return;
-          }
-        } else {
-          setScorePerOver(scoreThisOver);
-        }
-
+      // This block of code is to check if current over is completed
+      if (isValidBall && totalBalls == 5) {
+        setScorePerOver([]);
+        setBowler(undefined);
         if (
+          isFirstInning &&
+          match.overs > 0 &&
+          finalFirstInningsScore.totalOvers + 1 == match.overs
+        ) {
+          console.log("First Inning Completed");
+          setIsFirstInning(false);
+          setBowler(undefined);
+          setBatter1(undefined);
+          setBatter2(undefined);
+
+          const matches = await getItem(STORAGE_ITEMS.MATCHES);
+          if (matches) {
+            const latestMatch = matches[0];
+            if (latestMatch) {
+              const updatedMatch = { ...latestMatch, isFirstInning: false };
+
+              matches[0] = updatedMatch;
+              await setItem(STORAGE_ITEMS.MATCHES, matches);
+            }
+          }
+        } else if (
           !isFirstInning &&
-          finalSecondInningsScore.totalRuns + totalRun >
-            finalFirstInningsScore.totalRuns
+          finalSecondInningsScore.totalOvers + 1 == match.overs
         ) {
           console.log("Second Inning Completed");
-          let winner = "team2";
-          setMatch({ ...match, status: "completed" });
+          let winner: "team1" | "team2" | undefined = "team1";
+          if (
+            finalSecondInningsScore.totalRuns + totalRun >
+            finalFirstInningsScore.totalRuns
+          ) {
+            winner = "team2";
+          }
+          setMatch({ ...match, winner: winner, status: "completed" });
           const matches = await getItem(STORAGE_ITEMS.MATCHES);
           if (matches) {
             const latestMatch = matches[0];
@@ -538,6 +491,38 @@ export default function HomeScreen() {
               if (!match.quickMatch) {
                 await updatePlayerCareerStats(playerMatchStats);
               }
+            }
+          }
+          return;
+        }
+      } else {
+        setScorePerOver(scoreThisOver);
+      }
+
+      if (
+        !isFirstInning &&
+        finalSecondInningsScore.totalRuns + totalRun >
+          finalFirstInningsScore.totalRuns
+      ) {
+        console.log("Second Inning Completed");
+        let winner = "team2";
+        setMatch({ ...match, status: "completed" });
+        const matches = await getItem(STORAGE_ITEMS.MATCHES);
+        if (matches) {
+          const latestMatch = matches[0];
+          if (latestMatch) {
+            const updatedMatch = {
+              ...latestMatch,
+              team1score: totalScore,
+              team2score: scoreSecondInningsLocalState,
+              status: "completed",
+              winner: winner,
+            };
+
+            matches[0] = updatedMatch;
+            await setItem(STORAGE_ITEMS.MATCHES, matches);
+            if (!match.quickMatch) {
+              await updatePlayerCareerStats(playerMatchStats);
             }
           }
         }
@@ -861,6 +846,12 @@ export default function HomeScreen() {
     setBatter2(temp);
   };
 
+  const isEntryButtonDisabled =
+    (!isEntryDone || showLoader || match.status === "completed") &&
+    (match.status === "completed" ||
+      match.quickMatch ||
+      !!(batter1 && batter2 && bowler));
+
   return (
     <View style={styles.container}>
       <View style={styles.scoreBoardcontainer}>
@@ -901,11 +892,10 @@ export default function HomeScreen() {
 
       <View style={styles.subContainer}>
         <TouchableOpacity
-          disabled={showLoader || match.status == "completed"}
+          disabled={isEntryButtonDisabled}
           style={[
             styles.ConfirmationButton,
-            { backgroundColor: isConfirm ? "lightgreen" : "#ddd" },
-            (showLoader || match.status === "completed") && {
+            isEntryButtonDisabled && {
               backgroundColor: "#b0b0b0",
               opacity: 0.8,
             },
@@ -939,10 +929,14 @@ export default function HomeScreen() {
       </View>
       <View style={styles.subContainer}>
         <View style={styles.scoreContainer}>
-          {[".", "1", "2", "3", "4", "6"].map((score, index) => (
+          {["0", "1", "2", "3", "4", "6"].map((score, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.bubbleButton}
+              style={[
+                styles.bubbleButton,
+                isEntryDone &&
+                  run == parseInt(score) && { backgroundColor: "#00796B" },
+              ]}
               onPress={() => handleRunPress(score)}
             >
               <Text style={styles.buttonText}>{score}</Text>
@@ -950,14 +944,29 @@ export default function HomeScreen() {
           ))}
         </View>
         <View style={styles.scoreContainer}>
-          <TouchableOpacity style={styles.bubbleButton} onPress={handleWicket}>
+          <TouchableOpacity
+            style={[
+              styles.bubbleButton,
+              isWicket && { backgroundColor: "#00796B" },
+            ]}
+            onPress={handleWicket}
+          >
             <Text style={styles.buttonText}>W</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.bubbleButton} onPress={handleNoBall}>
+          <TouchableOpacity
+            style={[
+              styles.bubbleButton,
+              isNoBall && { backgroundColor: "#00796B" },
+            ]}
+            onPress={handleNoBall}
+          >
             <Text style={styles.buttonText}>NB</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.bubbleButton}
+            style={[
+              styles.bubbleButton,
+              isWideBall && { backgroundColor: "#00796B" },
+            ]}
             onPress={handleWideBall}
           >
             <Text style={styles.buttonText}>WB</Text>

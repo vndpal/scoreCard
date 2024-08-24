@@ -935,7 +935,7 @@ export default function HomeScreen() {
               style={[
                 styles.bubbleButton,
                 isEntryDone &&
-                  run == parseInt(score) && { backgroundColor: "#00796B" },
+                  run == parseInt(score) && { backgroundColor: "#019999" },
               ]}
               onPress={() => handleRunPress(score)}
             >
@@ -946,40 +946,40 @@ export default function HomeScreen() {
         <View style={styles.scoreContainer}>
           <TouchableOpacity
             style={[
-              styles.bubbleButton,
-              isWicket && { backgroundColor: "#00796B" },
+              styles.specialBubbleButton,
+              isWicket && { backgroundColor: "#019999" },
             ]}
             onPress={handleWicket}
           >
-            <Text style={styles.buttonText}>W</Text>
+            <Text style={styles.buttonText}>Out</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
-              styles.bubbleButton,
-              isNoBall && { backgroundColor: "#00796B" },
+              styles.specialBubbleButton,
+              isNoBall && { backgroundColor: "#019999" },
             ]}
             onPress={handleNoBall}
           >
-            <Text style={styles.buttonText}>NB</Text>
+            <Text style={styles.buttonText}>NoBall</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
-              styles.bubbleButton,
-              isWideBall && { backgroundColor: "#00796B" },
+              styles.specialBubbleButton,
+              isWideBall && { backgroundColor: "#019999" },
             ]}
             onPress={handleWideBall}
           >
-            <Text style={styles.buttonText}>WB</Text>
+            <Text style={styles.buttonText}>Wide</Text>
           </TouchableOpacity>
           <TouchableOpacity
             disabled={showLoader}
-            style={styles.bubbleButton}
+            style={styles.specialBubbleButton}
             onPress={handleUndoSubmit}
           >
-            <Icon name="arrow-undo" type="ionicon" color="black" size={28} />
+            <Icon name="delete" type="feather" color="black" size={28} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.bubbleButton}
+            style={styles.specialBubbleButton}
             onPress={handleMatchSettings}
           >
             <Icon name="settings" type="ionicon" color="black" size={28} />
@@ -1013,6 +1013,7 @@ export default function HomeScreen() {
 }
 
 const windowWidth = Dimensions.get("window").width;
+const windowHeight = Dimensions.get("window").height;
 
 const styles = StyleSheet.create({
   container: {
@@ -1024,7 +1025,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    margin: 5,
+    margin: 2,
+    padding: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "rgba(50, 50, 50, 0.8)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 3,
   },
   totalScoreContainer: {
     justifyContent: "center",
@@ -1036,13 +1047,32 @@ const styles = StyleSheet.create({
     color: "red",
   },
   bubbleButton: {
-    margin: 5,
+    margin: 6,
     width: windowWidth * 0.12,
     height: windowWidth * 0.12,
     borderRadius: windowWidth * 0.1,
     backgroundColor: "#ddd",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 0.5,
+    borderColor: "#aaa",
+  },
+  specialBubbleButton: {
+    marginVertical: 6,
+    marginHorizontal: 4,
+    width: windowWidth * 0.17,
+    height: windowWidth * 0.1,
+    backgroundColor: "#e2e6ea",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 0.5,
+    borderColor: "#d3d9e0",
   },
   bubbleButtonDisabled: {
     margin: 5,
@@ -1054,8 +1084,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#343a40",
+    letterSpacing: 0.2,
+    textAlign: "center",
   },
   ConfirmationButton: {
     margin: 5,

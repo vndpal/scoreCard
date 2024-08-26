@@ -2,6 +2,7 @@ import { scorePerBall } from "@/types/scorePerBall";
 import { scorePerInning } from "@/types/scorePerInnig";
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useTheme } from "@/context/ThemeContext";
 
 const ScoreBoard = ({
   totalScore,
@@ -16,13 +17,16 @@ const ScoreBoard = ({
   balls: Number;
   scorePerInning: scorePerInning;
 }) => {
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.scoreContainer}>
-        <Text style={styles.scoreText}>
+    <View style={[styles.container, themeStyles.container]}>
+      <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
+        <Text style={[styles.scoreText, themeStyles.scoreText]}>
           {totalScore.toString()}/{wickets.toString()}
         </Text>
-        <Text style={styles.oversText}>
+        <Text style={[styles.oversText, themeStyles.oversText]}>
           {overs.toString()}.{balls.toString()}
         </Text>
       </View>
@@ -33,14 +37,24 @@ const ScoreBoard = ({
               {overs.map((score: scorePerBall, ballIndex: number) => (
                 <View style={styles.ballsContainer} key={ballIndex}>
                   {score.isOverEnd ? (
-                    <View style={styles.overSummary}>
-                      <Text style={styles.ballScoreText}>
+                    <View style={[styles.overSummary, themeStyles.overSummary]}>
+                      <Text
+                        style={[
+                          styles.ballScoreText,
+                          themeStyles.ballScoreText,
+                        ]}
+                      >
                         {overs.reduce((sum, over) => sum + over.totalRun, 0)}
                       </Text>
                     </View>
                   ) : null}
-                  <View key={ballIndex} style={styles.ballScore}>
-                    <Text style={styles.ballScoreText}>
+                  <View
+                    key={ballIndex}
+                    style={[styles.ballScore, themeStyles.ballScore]}
+                  >
+                    <Text
+                      style={[styles.ballScoreText, themeStyles.ballScoreText]}
+                    >
                       {score.isNoBall
                         ? "NB + "
                         : score.isWideBall
@@ -66,10 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 8,
-    backgroundColor: "#282c34",
     borderBottomWidth: 1,
-    borderBottomColor: "#444c56", // Subtle border color
-    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -80,22 +91,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scoreText: {
-    color: "#ffffff",
     fontSize: 18,
     fontWeight: "bold",
     marginRight: 6,
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: "#00796b",
     borderRadius: 6,
   },
   oversText: {
-    color: "#ffffff",
     fontSize: 18,
     fontWeight: "bold",
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: "#f57f17",
     borderRadius: 6,
   },
   inningsContainer: {
@@ -105,23 +112,23 @@ const styles = StyleSheet.create({
   ballScore: {
     width: 35,
     height: 35,
-    borderRadius: 17.5,
-    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 4,
     elevation: 2,
+    borderWidth: 1, // Slightly thicker border for definition
+    borderRadius: 6, // Rounded corners for a modern look
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   ballScoreText: {
     fontSize: 10,
     textAlign: "center",
-    color: "#000000",
   },
   overSummary: {
     width: 35,
     height: 35,
-    // borderRadius: 17.5,
-    backgroundColor: "#b0b0b0",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 4,
@@ -134,6 +141,67 @@ const styles = StyleSheet.create({
   ballsContainer: {
     flexDirection: "row",
     alignItems: "center",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#282c34",
+    borderBottomColor: "#444c56",
+    shadowColor: "#000000",
+  },
+  scoreContainer: {
+    backgroundColor: "#1c1e22",
+  },
+  scoreText: {
+    color: "#ffffff",
+    backgroundColor: "#00796b",
+  },
+  oversText: {
+    color: "#ffffff",
+    backgroundColor: "#f57f17",
+  },
+  ballScore: {
+    backgroundColor: "#f5f5f5", // Very light gray background for contrast
+    borderColor: "#cccccc", // Light gray border for subtle contrast
+    shadowColor: "#000000", // Dark shadow for depth
+  },
+  ballScoreText: {
+    color: "#000000",
+    fontWeight: "bold",
+  },
+  overSummary: {
+    backgroundColor: "#b0b0b0",
+  },
+});
+const lightStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#ffffff", // Bright white background
+    borderBottomColor: "#e0e0e0", // Subtle border
+    shadowColor: "#b0b0b0", // Light shadow
+  },
+  scoreContainer: {
+    backgroundColor: "#f0f4f8", // Light, cool background
+  },
+  scoreText: {
+    color: "#333333", // Dark gray for readability
+    backgroundColor: "#4caf50", // Vibrant green for score
+  },
+  oversText: {
+    color: "#333333", // Dark gray for readability
+    backgroundColor: "#2196f3", // Bright blue for overs
+  },
+  ballScore: {
+    backgroundColor: "#ffffff", // Clean white background
+    borderColor: "#dcdcdc", // Light gray border for a modern look
+    shadowColor: "#b0b0b0", // Light shadow for subtle depth
+  },
+  ballScoreText: {
+    color: "#333333", // Dark gray text for contrast
+    fontWeight: "bold",
+  },
+  overSummary: {
+    backgroundColor: "#e3f2fd", // Light blue for summary
   },
 });
 

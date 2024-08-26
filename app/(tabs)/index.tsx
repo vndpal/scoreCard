@@ -19,6 +19,7 @@ import MatchPlayerStatsBar from "@/components/MatchPlayerStatsBar";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -75,6 +76,9 @@ export default function HomeScreen() {
   const [pickPlayerVisible, setPickPlayerVisible] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState<boolean>(false);
   const [isEntryDone, setIsEntryDone] = useState<boolean>(false);
+
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     fetchMatch();
@@ -889,16 +893,13 @@ export default function HomeScreen() {
           ""
         )}
       </View>
-
+      <View style={{ flex: 0.1 }}></View>
       <View style={styles.subContainer}>
         <TouchableOpacity
           disabled={isEntryButtonDisabled}
           style={[
             styles.ConfirmationButton,
-            isEntryButtonDisabled && {
-              backgroundColor: "#b0b0b0",
-              opacity: 0.8,
-            },
+            isEntryButtonDisabled && themeStyles.entryButtonDisabled,
           ]}
           onPress={handleSubmit}
         >
@@ -927,13 +928,15 @@ export default function HomeScreen() {
           )}
         </TouchableOpacity>
       </View>
+      <View style={{ flex: 0.3 }}></View>
       <View style={styles.subContainer}>
-        <View style={styles.scoreContainer}>
+        <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
           {["0", "1", "2", "3", "4", "6"].map((score, index) => (
             <TouchableOpacity
               key={index}
               style={[
                 styles.bubbleButton,
+                themeStyles.bubbleButton,
                 isEntryDone &&
                   run == parseInt(score) && { backgroundColor: "#019999" },
               ]}
@@ -943,7 +946,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <View style={styles.scoreContainer}>
+        <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
           <TouchableOpacity
             style={[
               styles.specialBubbleButton,
@@ -1124,5 +1127,41 @@ const styles = StyleSheet.create({
     textShadowColor: "#555",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  entryButtonDisabled: {
+    backgroundColor: "#b0b0b0",
+    opacity: 0.8,
+  },
+  scoreContainer: {
+    backgroundColor: "#333",
+    borderColor: "#555",
+  },
+  bubbleButton: {
+    backgroundColor: "#ddd",
+    borderColor: "#aaa",
+  },
+});
+const lightStyles = StyleSheet.create({
+  entryButtonDisabled: {
+    backgroundColor: "#c0c0c0",
+    opacity: 0.8,
+  },
+  scoreContainer: {
+    backgroundColor: "#ffffff",
+    borderWidth: 2,
+    borderColor: "#e0e0e0",
+  },
+  bubbleButton: {
+    backgroundColor: "#e2e6ea",
+    borderColor: "##d3d9e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 0.5,
   },
 });

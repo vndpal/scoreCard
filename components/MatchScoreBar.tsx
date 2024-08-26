@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { match } from "@/types/match";
 import { currentTotalScore } from "@/types/currentTotalScore";
+import { useTheme } from "@/context/ThemeContext";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -13,6 +14,8 @@ const MatchScoreBar = ({
   finalFirstInningsScore: currentTotalScore;
   finalSecondInningsScore: currentTotalScore;
 }) => {
+  const { currentTheme } = useTheme();
+
   const calculateRequiredRate = () => {
     const runsNeeded =
       finalFirstInningsScore.totalRuns - finalSecondInningsScore.totalRuns + 1;
@@ -27,18 +30,20 @@ const MatchScoreBar = ({
     return (runsNeeded / oversLeft).toFixed(2);
   };
 
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+
   return (
-    <View style={styles.statusBar}>
+    <View style={[styles.statusBar, themeStyles.statusBar]}>
       {match.status == "completed" ? (
         match.winner == "team1" ? (
-          <Text style={styles.resultText}>
+          <Text style={[styles.resultText, themeStyles.resultText]}>
             {match.team1} won by{" "}
             {finalFirstInningsScore.totalRuns -
               finalSecondInningsScore.totalRuns}{" "}
             runs
           </Text>
         ) : (
-          <Text style={styles.resultText}>
+          <Text style={[styles.resultText, themeStyles.resultText]}>
             {match.team2} won by{" "}
             {match.wickets! - finalSecondInningsScore.totalWickets} wickets &{" "}
             {match.overs * 6 -
@@ -48,7 +53,7 @@ const MatchScoreBar = ({
           </Text>
         )
       ) : (
-        <Text style={styles.inProgressText}>
+        <Text style={[styles.inProgressText, themeStyles.inProgressText]}>
           {match.team2} need{" "}
           {finalFirstInningsScore.totalRuns -
             finalSecondInningsScore.totalRuns +
@@ -72,11 +77,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,
-    backgroundColor: "#282c34", // Dark background
     width: windowWidth,
     borderBottomWidth: 1,
-    borderBottomColor: "#444c56", // Subtle border color
-    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -85,11 +87,37 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 15,
     fontWeight: "500",
-    color: "#cddc39", // Light lime green for completed results
   },
   inProgressText: {
     fontSize: 15,
     fontWeight: "500",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  statusBar: {
+    backgroundColor: "#282c34",
+    borderBottomColor: "#444c56",
+    shadowColor: "#000000",
+  },
+  resultText: {
+    color: "#cddc39", // Light lime green for completed results
+  },
+  inProgressText: {
     color: "#64b5f6", // Light blue for in-progress status
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  statusBar: {
+    backgroundColor: "#f9f9f9",
+    borderBottomColor: "#cccccc",
+    shadowColor: "#888888",
+  },
+  resultText: {
+    color: "#4caf50", // Green for completed results
+  },
+  inProgressText: {
+    color: "#1976d2", // Blue for in-progress status
   },
 });

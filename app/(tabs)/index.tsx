@@ -733,7 +733,7 @@ export default function HomeScreen() {
   const handleUndoSubmit = () => {
     Alert.alert(
       "Undo Confirmation",
-      "Are you sure you want to undo the last action?",
+      "Are you sure you want to undo the last ball?",
       [
         {
           text: "Cancel",

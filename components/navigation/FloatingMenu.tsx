@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import { Icon } from "react-native-elements";
 import { Button } from "react-native-elements/dist/buttons/Button";
+import { useTheme } from "@/context/ThemeContext";
 
 export const FloatingMenu: React.FC = () => {
   const router = useRouter();
+  const { toggleTheme, currentTheme } = useTheme();
 
   const colorScheme = useColorScheme();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -24,6 +26,11 @@ export const FloatingMenu: React.FC = () => {
   const handleLinkPress = (route: string) => {
     toggleMenu();
     router.push(route);
+  };
+
+  const changeTheme = () => {
+    toggleTheme();
+    toggleMenu();
   };
 
   return (
@@ -60,6 +67,12 @@ export const FloatingMenu: React.FC = () => {
           <View style={styles.horizontalLine} />
           <TouchableOpacity onPress={() => handleLinkPress("playerRecords")}>
             <Text style={styles.menuOptionText}>📈 Stats</Text>
+          </TouchableOpacity>
+          <View style={styles.horizontalLine} />
+          <TouchableOpacity onPress={changeTheme}>
+            <Text style={styles.menuOptionText}>
+              {currentTheme === "dark" ? "🌙" : "☀️"} Theme
+            </Text>
           </TouchableOpacity>
         </View>
       )}

@@ -5,11 +5,16 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
+import { useTheme as currentSelectedTheme } from "@/context/ThemeContext";
+import { Colors } from "@/constants/Colors";
 
 export const CreatePlayer = () => {
   const { colors } = useTheme();
+  const { currentTheme } = currentSelectedTheme();
   const [name, setName] = useState("");
   const router = useRouter();
+
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
     const players: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
@@ -91,7 +96,7 @@ export const CreatePlayer = () => {
         label="Player Name"
         value={name}
         onChangeText={setName}
-        style={{ backgroundColor: colors.background }}
+        style={[{ backgroundColor: colors.background }, themeStyles.input]}
         mode="outlined"
       />
       <Button mode="contained" onPress={handleSave} style={styles.button}>
@@ -108,5 +113,17 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 16,
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  input: {
+    backgroundColor: Colors.light.background,
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  input: {
+    backgroundColor: Colors.dark.background,
   },
 });

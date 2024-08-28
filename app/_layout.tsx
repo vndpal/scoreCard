@@ -11,7 +11,8 @@ import "react-native-reanimated";
 import { AppThemeProvider } from "@/context/ThemeContext";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { PaperProvider } from "react-native-paper";
+import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
+import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,7 +23,9 @@ export default function RootLayout() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  const [theme, setTheme] = useState(
+  const { theme } = useMaterial3Theme();
+
+  const [customTheme, setTheme] = useState(
     colorScheme === "dark" ? DarkTheme : DefaultTheme
   );
   const [currentTheme, setCurrentTheme] = useState<"dark" | "light">(
@@ -47,9 +50,14 @@ export default function RootLayout() {
     });
   };
 
+  const paperTheme =
+    currentTheme === "dark"
+      ? { ...MD3DarkTheme, colors: theme.dark }
+      : { ...MD3LightTheme, colors: theme.light };
+
   return (
-    <ThemeProvider value={theme}>
-      <PaperProvider>
+    <ThemeProvider value={customTheme}>
+      <PaperProvider theme={paperTheme}>
         <AppThemeProvider toggleTheme={toggleTheme} currentTheme={currentTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

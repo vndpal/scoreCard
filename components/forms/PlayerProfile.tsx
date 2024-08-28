@@ -1,18 +1,21 @@
 // app/player/[id].tsx
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { TextInput, Button, useTheme, Text, Icon } from "react-native-paper";
+import { TextInput, Button, Text, Icon } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import PlayerCareerRecords from "../PlayerCareerRecords";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function PlayerProfile() {
-  const { colors } = useTheme();
   const router = useRouter();
   const { playerId, playerName } = useLocalSearchParams();
   const [name, setName] = useState(playerName?.toString());
   const [isEditing, setIsEditing] = useState(false);
+
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
     const players = await getItem(STORAGE_ITEMS.PLAYERS);
@@ -47,7 +50,6 @@ export default function PlayerProfile() {
             label="Player Name"
             value={name}
             onChangeText={setName}
-            style={{ backgroundColor: colors.background }}
             mode="outlined"
           />
           <View style={{ flex: 1 }} />
@@ -57,20 +59,30 @@ export default function PlayerProfile() {
               onPress={handleSave}
               style={styles.actionButton}
             >
-              <Icon source="content-save-check" color="black" size={20} /> Save
+              <Icon
+                source="content-save-check"
+                color={currentTheme == "dark" ? "black" : "white"}
+                size={20}
+              />{" "}
+              Save
             </Button>
             <Button
               mode="contained"
               onPress={() => setIsEditing(false)}
               style={styles.actionButton}
             >
-              <Icon source="close-thick" color="black" size={20} /> Cancel
+              <Icon
+                source="close-thick"
+                color={currentTheme == "dark" ? "black" : "white"}
+                size={20}
+              />{" "}
+              Cancel
             </Button>
           </View>
         </>
       ) : (
         <>
-          <Text style={styles.text}>{playerName}</Text>
+          <Text style={[styles.text, themeStyles.text]}>{playerName}</Text>
           <PlayerCareerRecords
             playerId={playerId ? playerId?.toString() : ""}
           />
@@ -81,14 +93,24 @@ export default function PlayerProfile() {
               onPress={() => setIsEditing(true)}
               style={styles.actionButton}
             >
-              <Icon source="pencil" color="black" size={20} /> Edit
+              <Icon
+                source="pencil"
+                color={currentTheme == "dark" ? "black" : "white"}
+                size={20}
+              />{" "}
+              Edit
             </Button>
             <Button
               mode="contained"
               onPress={handleDelete}
               style={styles.actionButton}
             >
-              <Icon source="delete" color="black" size={20} /> Delete
+              <Icon
+                source="delete"
+                color={currentTheme == "dark" ? "black" : "white"}
+                size={20}
+              />{" "}
+              Delete
             </Button>
           </View>
         </>
@@ -120,5 +142,25 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 4,
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  text: {
+    fontSize: 24,
+    marginBottom: 16,
+    padding: 8,
+    color: "black",
+    textAlign: "center",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  text: {
+    fontSize: 24,
+    marginBottom: 16,
+    padding: 8,
+    color: "white",
+    textAlign: "center",
   },
 });

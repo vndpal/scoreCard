@@ -1,14 +1,18 @@
+import { Colors } from "@/constants/Colors";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { useTheme } from "@/context/ThemeContext";
 import { player } from "@/types/player";
 import { getItem } from "@/utils/asyncStorage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View, FlatList, StyleSheet } from "react-native";
-import { Card, Button, Text, FAB, useTheme } from "react-native-paper";
+import { Card, Text, FAB } from "react-native-paper";
 
-const Players = ({ navigation }: any) => {
+const Players = () => {
   const router = useRouter();
   const [players, setPlayers] = useState<player[]>([]);
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
@@ -22,7 +26,7 @@ const Players = ({ navigation }: any) => {
 
   const renderItem = ({ item }: { item: player }) => (
     <Card
-      style={styles.card}
+      style={[styles.card, themeStyles.card]}
       onPress={() =>
         router.push({
           pathname: `/player/${item.id}`,
@@ -31,7 +35,7 @@ const Players = ({ navigation }: any) => {
       }
     >
       <Card.Content>
-        <Text style={styles.text}>{item.name}</Text>
+        <Text style={[styles.text, themeStyles.text]}>{item.name}</Text>
       </Card.Content>
     </Card>
   );
@@ -44,7 +48,7 @@ const Players = ({ navigation }: any) => {
         keyExtractor={(item) => item.id}
       />
       <FAB
-        style={styles.fab}
+        style={[styles.fab, themeStyles.fab]}
         small
         icon="plus"
         onPress={() => router.push("/createPlayer")}
@@ -68,7 +72,36 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   text: {
-    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  card: {
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  fab: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 0,
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  card: {
+    backgroundColor: Colors.light.background,
+  },
+  text: {
+    color: Colors.light.text,
+  },
+  fab: {
+    backgroundColor: Colors.light.tint,
   },
 });
 

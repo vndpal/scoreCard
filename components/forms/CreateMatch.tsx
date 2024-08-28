@@ -19,6 +19,7 @@ import { team } from "@/types/team";
 import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
+import { useTheme } from "@/context/ThemeContext";
 
 const createMatchSchema = Yup.object().shape({
   team1: Yup.string().required("Batting team is required"),
@@ -35,6 +36,8 @@ type items = {
 
 export const CreateMatch = () => {
   const [teams, setTeams] = useState<items[]>([]);
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
@@ -290,8 +293,12 @@ export const CreateMatch = () => {
       </HelperText>
       <View style={styles.settingItem}>
         <View style={styles.quickMatchContainer}>
-          <Text style={styles.label}>Quick match</Text>
-          <HelperText type="info" visible={true} style={styles.quickMatch}>
+          <Text style={[styles.label, themeStyles.label]}>Quick match</Text>
+          <HelperText
+            type="info"
+            visible={true}
+            style={[styles.quickMatch, themeStyles.quickMatch]}
+          >
             If you turn this on, player details will be skipped and only the
             match score will be tracked.
           </HelperText>
@@ -355,5 +362,30 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#B3E5FC",
     paddingLeft: 0,
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  input: {
+    backgroundColor: "#fff",
+  },
+  quickMatch: {
+    fontWeight: "bold",
+    color: "black",
+  },
+  label: {
+    color: "black",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  input: {
+    backgroundColor: "#333",
+  },
+  quickMatch: {
+    color: "#B3E5FC",
+  },
+  label: {
+    color: "#fff",
   },
 });

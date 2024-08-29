@@ -6,6 +6,7 @@ import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { player } from "@/types/player"; // Import the player type
 import { getItem } from "@/utils/asyncStorage";
+import { useTheme } from "@/context/ThemeContext";
 
 const MatchSummary = () => {
   const { matchId, team1, team2 } = useLocalSearchParams();
@@ -22,6 +23,9 @@ const MatchSummary = () => {
     []
   );
   const [playersMap, setPlayersMap] = useState<Map<string, string>>(new Map());
+
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
@@ -78,31 +82,33 @@ const MatchSummary = () => {
     item: playerStats;
     type: "batting" | "bowling";
   }) => (
-    <View style={styles.row} key={item.playerId}>
-      <Text style={styles.cell}>
+    <View style={[styles.row, themeStyles.row]} key={item.playerId}>
+      <Text style={[styles.cell, themeStyles.cell]}>
         {playersMap.get(item.playerId) || item.playerId}
       </Text>
       {type === "batting" ? (
         <>
-          <Text style={styles.cell}>
+          <Text style={[styles.cell, themeStyles.cell]}>
             {item.runs} ({item.ballsFaced})
           </Text>
-          <Text style={styles.cell}>
+          <Text style={[styles.cell, themeStyles.cell]}>
             {item.strikeRate ? item.strikeRate.toFixed(2) : "-"}
           </Text>
-          <Text style={styles.cell}>
+          <Text style={[styles.cell, themeStyles.cell]}>
             {item.sixes} / {item.fours}
           </Text>
         </>
       ) : (
         <>
-          <Text style={styles.cell}>
+          <Text style={[styles.cell, themeStyles.cell]}>
             {item.overs}
             {item.ballsBowled > 0 ? "." + item.ballsBowled : ""}
           </Text>
-          <Text style={styles.cell}>{item.wickets}</Text>
-          <Text style={styles.cell}>{item.runsConceded}</Text>
-          <Text style={styles.cell}>{item.extras}</Text>
+          <Text style={[styles.cell, themeStyles.cell]}>{item.wickets}</Text>
+          <Text style={[styles.cell, themeStyles.cell]}>
+            {item.runsConceded}
+          </Text>
+          <Text style={[styles.cell, themeStyles.cell]}>{item.extras}</Text>
         </>
       )}
     </View>
@@ -114,22 +120,34 @@ const MatchSummary = () => {
     type: "batting" | "bowling",
     id: string
   ) => (
-    <View key={id} style={styles.table}>
-      <Text style={styles.tableTitle}>{title}</Text>
-      <View style={styles.headerRow}>
-        <Text style={styles.headerCell}>Player</Text>
+    <View key={id} style={[styles.table, themeStyles.table]}>
+      <Text style={[styles.tableTitle, themeStyles.tableTitle]}>{title}</Text>
+      <View style={[styles.headerRow, themeStyles.headerRow]}>
+        <Text style={[styles.headerCell, themeStyles.headerCell]}>Player</Text>
         {type === "batting" ? (
           <>
-            <Text style={styles.headerCell}>Runs</Text>
-            <Text style={styles.headerCell}>SR</Text>
-            <Text style={styles.headerCell}>6s / 4s</Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>
+              Runs
+            </Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>SR</Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>
+              6s / 4s
+            </Text>
           </>
         ) : (
           <>
-            <Text style={styles.headerCell}>Overs</Text>
-            <Text style={styles.headerCell}>Wickets</Text>
-            <Text style={styles.headerCell}>Runs</Text>
-            <Text style={styles.headerCell}>Extras</Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>
+              Overs
+            </Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>
+              Wickets
+            </Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>
+              Runs
+            </Text>
+            <Text style={[styles.headerCell, themeStyles.headerCell]}>
+              Extras
+            </Text>
           </>
         )}
       </View>
@@ -177,7 +195,7 @@ const MatchSummary = () => {
       keyExtractor={(item) => item.id}
       getItem={getItemLocal}
       getItemCount={getItemCount}
-      style={styles.container}
+      style={[styles.container, themeStyles.container]}
     />
   );
 };
@@ -234,4 +252,95 @@ const styles = StyleSheet.create({
   },
 });
 
+const darkStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#121212",
+  },
+  table: {
+    backgroundColor: "#1f1f1f",
+  },
+  tableTitle: {
+    color: "#ffffff",
+  },
+  headerRow: {
+    backgroundColor: "#333",
+    borderBottomColor: "#555",
+  },
+  headerCell: {
+    color: "#ffffff",
+  },
+  cell: {
+    color: "#ffffff",
+  },
+  nameCell: {
+    color: "#ffffff",
+  },
+  row: {
+    borderBottomColor: "#444",
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#f5f5f5",
+  },
+  table: {
+    backgroundColor: "#ffffff",
+    borderColor: "#e0e0e0",
+    borderWidth: 1,
+    borderRadius: 6,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  tableTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333333",
+    marginVertical: 12,
+    textAlign: "center",
+  },
+  tableContent: {
+    flexDirection: "column",
+  },
+  headerRow: {
+    flexDirection: "row",
+    backgroundColor: "#dcdcdc", // Darker gray background
+    borderBottomColor: "#b0b0b0", // Darker border color
+    borderBottomWidth: 1,
+    paddingVertical: 6,
+  },
+  headerCell: {
+    flex: 1,
+    fontWeight: "500",
+    color: "#333333",
+    textAlign: "center",
+    paddingVertical: 8,
+    fontSize: 12,
+    minWidth: 60,
+  },
+  cell: {
+    flex: 1,
+    color: "#333333",
+    textAlign: "center",
+    paddingVertical: 8,
+    fontSize: 12,
+    minWidth: 60,
+  },
+  nameCell: {
+    flex: 1,
+    color: "#333333",
+    textAlign: "left",
+    paddingVertical: 8,
+    fontSize: 12,
+    fontWeight: "500",
+    minWidth: 60,
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eeeeee",
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+  },
+});
 export default MatchSummary;

@@ -899,6 +899,7 @@ export default function HomeScreen() {
           disabled={isEntryButtonDisabled}
           style={[
             styles.ConfirmationButton,
+            themeStyles.ConfirmationButton,
             isEntryButtonDisabled && themeStyles.entryButtonDisabled,
           ]}
           onPress={handleSubmit}
@@ -1143,6 +1144,9 @@ const darkStyles = StyleSheet.create({
     backgroundColor: "#ddd",
     borderColor: "#aaa",
   },
+  ConfirmationButton: {
+    backgroundColor: "#ddd",
+  },
 });
 const lightStyles = StyleSheet.create({
   entryButtonDisabled: {
@@ -1163,5 +1167,8 @@ const lightStyles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 0.5,
+  },
+  ConfirmationButton: {
+    backgroundColor: "#fffffe",
   },
 });

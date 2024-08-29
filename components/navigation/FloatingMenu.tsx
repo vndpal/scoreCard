@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   TouchableOpacity,
@@ -8,15 +8,13 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
-import { Icon } from "react-native-elements";
-import { Button } from "react-native-elements/dist/buttons/Button";
 import { useTheme } from "@/context/ThemeContext";
 
 export const FloatingMenu: React.FC = () => {
   const router = useRouter();
   const { toggleTheme, currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
-  const colorScheme = useColorScheme();
   const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   const toggleMenu = () => {
@@ -30,12 +28,14 @@ export const FloatingMenu: React.FC = () => {
 
   const changeTheme = () => {
     toggleTheme();
-    toggleMenu();
   };
 
   return (
     <View>
-      <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
+      <TouchableOpacity
+        style={[styles.menuButton, themeStyles.menuButton]}
+        onPress={toggleMenu}
+      >
         {isMenuVisible ? (
           <Ionicons name="close" size={24} color="white" />
         ) : (
@@ -43,35 +43,46 @@ export const FloatingMenu: React.FC = () => {
         )}
       </TouchableOpacity>
       {isMenuVisible && (
-        <View style={styles.menuOptions}>
+        <View style={[styles.menuOptions, themeStyles.menuOptions]}>
           <TouchableOpacity onPress={() => handleLinkPress("createMatch")}>
-            <Text style={styles.menuOptionText}>🏏 New match</Text>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              🏏 New match
+            </Text>
           </TouchableOpacity>
-
-          <View style={styles.horizontalLine} />
+          <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
           <TouchableOpacity onPress={() => handleLinkPress("toss")}>
-            <Text style={styles.menuOptionText}>🪙 Toss</Text>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              🪙 Toss
+            </Text>
           </TouchableOpacity>
-          <View style={styles.horizontalLine} />
+          <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
           <TouchableOpacity onPress={() => handleLinkPress("teamLineup")}>
-            <Text style={styles.menuOptionText}>📋 Team setup</Text>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              📋 Team setup
+            </Text>
           </TouchableOpacity>
-          <View style={styles.horizontalLine} />
+          <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
           <TouchableOpacity onPress={() => handleLinkPress("createTeam")}>
-            <Text style={styles.menuOptionText}>🙌 New team</Text>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              🙌 New team
+            </Text>
           </TouchableOpacity>
-          <View style={styles.horizontalLine} />
+          <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
           <TouchableOpacity onPress={() => handleLinkPress("players")}>
-            <Text style={styles.menuOptionText}>👦 Players</Text>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              👦 Players
+            </Text>
           </TouchableOpacity>
-          <View style={styles.horizontalLine} />
+          <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
           <TouchableOpacity onPress={() => handleLinkPress("playerRecords")}>
-            <Text style={styles.menuOptionText}>📈 Stats</Text>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              📈 Stats
+            </Text>
           </TouchableOpacity>
-          <View style={styles.horizontalLine} />
+          <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
           <TouchableOpacity onPress={changeTheme}>
-            <Text style={styles.menuOptionText}>
-              {currentTheme === "dark" ? "🌙" : "☀️"} Theme
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              {currentTheme === "dark" ? "🌙" : "☀️"} Change theme
             </Text>
           </TouchableOpacity>
         </View>
@@ -88,25 +99,93 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#007bff",
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   menuOptions: {
     position: "absolute",
-    bottom: 80,
+    bottom: 90,
     right: 20,
-    backgroundColor: "#007bff",
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    shadowColor: "#eee",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   menuOptionText: {
     fontSize: 16,
-    color: "white",
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
   },
   horizontalLine: {
-    borderBottomColor: "black",
     borderBottomWidth: 1,
+    marginVertical: 4,
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  menuButton: {
+    backgroundColor: "#00C4B4",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  menuOptions: {
+    backgroundColor: "#6C8E6F", // Lighter background color
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Minimal shadow offset
+    shadowOpacity: 0.5, // Increased shadow intensity for better visibility
+    shadowRadius: 8, // Moderate shadow blur
+    elevation: 4, // Moderate elevation
+    borderRadius: 8, // Rounded corners
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+
+  menuOptionText: {
+    color: "#E0E0E0", // Darker text color for high contrast
+    fontWeight: "500",
+  },
+  horizontalLine: {
+    borderBottomColor: "#666", // Medium gray for better visibility
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  menuButton: {
+    backgroundColor: "#8E24AA",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  menuOptions: {
+    backgroundColor: "#E5E5FF", // Light background color
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 }, // Minimal shadow offset
+    shadowOpacity: 0.3, // Light shadow intensity
+    shadowRadius: 8, // Moderate shadow blur
+    elevation: 2, // Low elevation
+    borderRadius: 8, // Rounded corners
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  menuOptionText: {
+    color: "#003366", // Bright blue text color for a standout look
+    fontWeight: "500",
+  },
+  horizontalLine: {
+    borderBottomColor: "#BBBBBB", // Darker gray for clearer separation
   },
 });

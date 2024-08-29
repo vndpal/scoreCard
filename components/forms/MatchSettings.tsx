@@ -5,18 +5,12 @@ import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useRoute } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  ScrollView,
-  Keyboard,
-} from "react-native";
-import { Switch, Button } from "react-native-paper";
+import { View, Text, StyleSheet, ScrollView, Keyboard } from "react-native";
+import { Switch, Button, TextInput } from "react-native-paper";
 import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
+import { useTheme } from "@/context/ThemeContext";
 
 type items = {
   label: string;
@@ -29,6 +23,8 @@ const MatchSettings = () => {
   const [currentMatch, setCurrentMatch] = useState<match>();
   const [items, setItems] = useState<items[]>([]);
   const [winner, setWinner] = useState<string>("");
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     fetchMatch();
@@ -148,21 +144,22 @@ const MatchSettings = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, themeStyles.container]}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.settingItem}>
-          <Text style={styles.label}>Change overs</Text>
+        <View style={[styles.settingItem, themeStyles.settingItem]}>
+          <Text style={[styles.label, themeStyles.label]}>Change overs</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, themeStyles.input]}
             keyboardType="numeric"
             onChangeText={handleOversChange}
             value={overs.toString()}
             placeholder="Enter overs"
-            placeholderTextColor="#888"
+            mode="flat"
+            placeholderTextColor={currentTheme === "dark" ? "#fff" : "#000"}
           />
         </View>
-        <View style={styles.settingItem}>
-          <Text style={styles.label}>Declare innings</Text>
+        <View style={[styles.settingItem, themeStyles.settingItem]}>
+          <Text style={[styles.label, themeStyles.label]}>Declare innings</Text>
           <Switch
             value={declareInnings}
             onValueChange={handleDeclareInningsToggle}
@@ -173,8 +170,8 @@ const MatchSettings = () => {
           />
         </View>
         {declareInnings && !currentMatch?.isFirstInning && (
-          <View style={styles.settingItem}>
-            <Text style={styles.label}>Winner</Text>
+          <View style={[styles.settingItem, themeStyles.settingItem]}>
+            <Text style={[styles.label, themeStyles.label]}>Winner</Text>
             <Dropdown
               label="Winner"
               options={items}
@@ -185,7 +182,7 @@ const MatchSettings = () => {
           </View>
         )}
       </ScrollView>
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer, themeStyles.buttonContainer]}>
         <Button
           textColor="white"
           buttonColor="#0c66e4"
@@ -225,8 +222,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#fff",
     fontSize: 16,
-    padding: 4,
-    minWidth: 50,
     color: "#fff",
   },
   switch: {
@@ -239,6 +234,42 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 16,
     backgroundColor: "#121212",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#121212",
+  },
+  settingItem: {
+    borderBottomColor: "#444",
+  },
+  label: {
+    color: "#ffffff",
+  },
+  input: {
+    borderBottomColor: "#ffffff",
+  },
+  buttonContainer: {
+    backgroundColor: "#121212",
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#f5f5f5",
+  },
+  settingItem: {
+    borderBottomColor: "#e0e0e0",
+  },
+  label: {
+    color: "#000000",
+  },
+  input: {
+    borderBottomColor: "#000000",
+  },
+  buttonContainer: {
+    backgroundColor: "#f5f5f5",
   },
 });
 

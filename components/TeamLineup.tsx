@@ -16,6 +16,7 @@ import TeamSelection from "./TeamSelection";
 import teams from "@/interfaces/teams";
 import { teamPlayerMapping } from "@/types/teamPlayerMapping";
 import { router } from "expo-router";
+import { useTheme } from "@/context/ThemeContext";
 
 const TeamLineUp: React.FC = () => {
   const [team1Players, setTeam1Players] = useState<player[]>([]);
@@ -28,6 +29,9 @@ const TeamLineUp: React.FC = () => {
   const [team2DropdownOpen, setTeam2DropdownOpen] = useState<boolean>(false);
   const [teamSelectionVisible, setTeamSelectionVisible] =
     useState<boolean>(false);
+
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
@@ -131,8 +135,10 @@ const TeamLineUp: React.FC = () => {
     item: player;
     team: "team1" | "team2";
   }) => (
-    <View style={styles.playerCard}>
-      <Text style={styles.playerName}>{item.name}</Text>
+    <View style={[styles.playerCard, themeStyles.playerCard]}>
+      <Text style={[styles.playerName, themeStyles.playerName]}>
+        {item.name}
+      </Text>
       <TouchableOpacity onPress={() => removePlayer(item.id, team)}>
         <Icon
           name="remove-circle"
@@ -188,13 +194,13 @@ const TeamLineUp: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, themeStyles.container]}>
       <View style={styles.playersContainer}>
-        <View style={styles.teamContainer}>
+        <View style={[styles.teamContainer, themeStyles.teamContainer]}>
           <View style={styles.headerContainer}>
-            <Text style={styles.header}>
+            <Text style={[styles.header, themeStyles.header]}>
               {team1?.teamInitials ? team1.teamInitials : "Team 1"}{" "}
-              <Text style={styles.playerCount}>
+              <Text style={[styles.playerCount, themeStyles.playerCount]}>
                 {"(" + team1Players.length + ")"}
               </Text>
             </Text>
@@ -231,11 +237,11 @@ const TeamLineUp: React.FC = () => {
           />
         </View>
 
-        <View style={styles.teamContainer}>
+        <View style={[styles.teamContainer, themeStyles.teamContainer]}>
           <View style={styles.headerContainer}>
-            <Text style={styles.header}>
+            <Text style={[styles.header, themeStyles.header]}>
               {team2?.teamInitials ? team2.teamInitials : "Team 2"}{" "}
-              <Text style={styles.playerCount}>
+              <Text style={[styles.playerCount, themeStyles.playerCount]}>
                 {"(" + team2Players.length + ")"}
               </Text>
             </Text>
@@ -275,20 +281,30 @@ const TeamLineUp: React.FC = () => {
 
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
-          style={styles.configButton}
+          style={[styles.configButton, themeStyles.configButton]}
           onPress={() => setTeamSelectionVisible(true)}
         >
           <Icon name="swap" type="entypo" color="white" size={20} />
-          <Text style={styles.buttonText}>Change Team</Text>
+          <Text style={[styles.buttonText, themeStyles.buttonText]}>
+            Change Team
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.configButton} onPress={randomizeTeams}>
+        <TouchableOpacity
+          style={[styles.configButton, themeStyles.configButton]}
+          onPress={randomizeTeams}
+        >
           <Icon name="random" type="font-awesome" color="white" size={20} />
-          <Text style={styles.buttonText}>Randomize</Text>
+          <Text style={[styles.buttonText, themeStyles.buttonText]}>
+            Randomize
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.saveButton} onPress={saveTeams}>
-        <Text style={styles.buttonText}>Save</Text>
+      <TouchableOpacity
+        style={[styles.saveButton, themeStyles.saveButton]}
+        onPress={saveTeams}
+      >
+        <Text style={[styles.buttonText, themeStyles.buttonText]}>Save</Text>
       </TouchableOpacity>
 
       <TeamSelection
@@ -317,7 +333,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#333", // Slightly lighter border for better contrast
     borderRadius: 8,
-    padding: 16, // Increased padding for more spacious content
     backgroundColor: "#2C2C2C",
     marginHorizontal: 8, // Increased margin for better separation
     shadowColor: "#000",
@@ -325,6 +340,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 4,
+    padding: 12, // Reduced padding to make the layout more compact
   },
   headerContainer: {
     flexDirection: "row",
@@ -334,30 +350,31 @@ const styles = StyleSheet.create({
     height: 22, // Slightly taller for better alignment
   },
   header: {
-    fontSize: 18, // Larger font size for better readability
-    fontWeight: "700", // Bolder text for emphasis
     color: "#FFFFFF",
     flexWrap: "wrap",
     maxHeight: 22, // Ensure the header fits within its container
     lineHeight: 22,
+    fontSize: 16, // Slightly reduced font size for compactness
+    fontWeight: "700", // Bold for emphasis
   },
   playerCount: {
-    fontSize: 14, // Increased font size for better visibility
     color: "#DDDDDD",
+    fontSize: 12, // Smaller size to save space
   },
   playerCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 12, // Increased padding for a more spacious layout
     marginVertical: 6, // Increased margin for better spacing
     backgroundColor: "#333",
-    borderRadius: 6, // Slightly rounded corners
     flexWrap: "wrap",
+    borderRadius: 4, // Less rounded corners for a modern aesthetic
+    padding: 10, // Reduced padding for a more compact appearance
   },
   playerName: {
-    fontSize: 16, // Larger font size for better readability
     color: "#FFFFFF",
+    fontSize: 14, // Slightly smaller font size for compactness
+    fontWeight: "600", // Semi-bold to retain readability and elegance
   },
   removeIcon: {
     marginLeft: 12, // Increased margin for better spacing
@@ -373,27 +390,97 @@ const styles = StyleSheet.create({
   configButton: {
     flexDirection: "row",
     backgroundColor: "#4CAF50",
-    paddingVertical: 10, // Increased padding for a more prominent button
-    paddingHorizontal: 20,
-    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
     marginHorizontal: 8, // Increased margin for better spacing
+    paddingVertical: 8, // Reduced padding for a more compact button
+    paddingHorizontal: 16,
+    borderRadius: 20, // Less rounded for a modern appearance
   },
   saveButton: {
     backgroundColor: "#0c66e4",
-    paddingVertical: 10, // Increased padding for a more prominent button
-    paddingHorizontal: 20,
-    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 8, // Maintain margin for consistency
+    paddingVertical: 8, // Reduced padding for a more compact button
+    paddingHorizontal: 16,
+    borderRadius: 20, // Less rounded for consistency
   },
   buttonText: {
     color: "#FFFFFF",
     fontSize: 16, // Larger font size for better readability
     marginLeft: 8,
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#121212",
+  },
+  teamContainer: {
+    backgroundColor: "#2C2C2C",
+    borderColor: "#333",
+  },
+  playerCard: {
+    backgroundColor: "#333",
+  },
+  playerName: {
+    color: "#FFFFFF",
+  },
+  removeIcon: {
+    color: "#FF6F6F",
+  },
+  header: {
+    color: "#FFFFFF",
+  },
+  playerCount: {
+    color: "#DDDDDD",
+  },
+  configButton: {
+    backgroundColor: "#4CAF50",
+  },
+  saveButton: {
+    backgroundColor: "#0c66e4",
+  },
+  buttonText: {
+    fontSize: 14, // Slightly smaller font size for compactness
+    fontWeight: "600", // Semi-bold for emphasis without overwhelming
+    color: "#FFFFFF",
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#FAFAFA", // Softer background color for a more modern look
+  },
+  teamContainer: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E0E0E0", // Lighter border for a clean and minimal look
+  },
+  playerCard: {
+    backgroundColor: "#F9F9F9", // Slightly off-white for a subtle distinction
+  },
+  playerName: {
+    color: "#333333", // Dark gray for a softer, classy text color
+  },
+  removeIcon: {
+    color: "#E57373", // Softer red for a more refined look
+  },
+  header: {
+    color: "#333333", // Darker text for better contrast and readability
+  },
+  playerCount: {
+    color: "#888888", // Softer gray for a subtle, modern look
+  },
+  configButton: {
+    backgroundColor: "#388E3C", // Slightly darker green for a more sophisticated look
+  },
+  saveButton: {
+    backgroundColor: "#1565C0", // Slightly darker blue for a more professional tone
+  },
+  buttonText: {
+    color: "#FFFFFF",
   },
 });
 

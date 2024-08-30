@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import {
   TouchableOpacity,
   View,
-  useColorScheme,
   Text,
   StyleSheet,
+  Animated,
+  Easing,
 } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -16,9 +17,16 @@ export const FloatingMenu: React.FC = () => {
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
 
   const toggleMenu = () => {
     setIsMenuVisible(!isMenuVisible);
+    Animated.timing(animation, {
+      toValue: isMenuVisible ? 0 : 1,
+      duration: 300,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+      useNativeDriver: true,
+    }).start();
   };
 
   const handleLinkPress = (route: string) => {
@@ -30,20 +38,47 @@ export const FloatingMenu: React.FC = () => {
     toggleTheme();
   };
 
+  const menuOptionsStyle = {
+    opacity: animation,
+    transform: [
+      {
+        translateY: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [50, 0],
+        }),
+      },
+    ],
+  };
+
   return (
-    <View>
+    <View style={styles.container}>
       <TouchableOpacity
         style={[styles.menuButton, themeStyles.menuButton]}
         onPress={toggleMenu}
       >
-        {isMenuVisible ? (
-          <Ionicons name="close" size={24} color="white" />
-        ) : (
+        <Animated.View
+          style={{
+            transform: [
+              {
+                rotate: animation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ["0deg", "45deg"],
+                }),
+              },
+            ],
+          }}
+        >
           <Ionicons name="add" size={24} color="white" />
-        )}
+        </Animated.View>
       </TouchableOpacity>
       {isMenuVisible && (
-        <View style={[styles.menuOptions, themeStyles.menuOptions]}>
+        <Animated.View
+          style={[
+            styles.menuOptions,
+            themeStyles.menuOptions,
+            menuOptionsStyle,
+          ]}
+        >
           <TouchableOpacity onPress={() => handleLinkPress("createMatch")}>
             <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
               🏏 New match
@@ -85,17 +120,19 @@ export const FloatingMenu: React.FC = () => {
               {currentTheme === "dark" ? "🌙" : "☀️"} Change theme
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  menuButton: {
+  container: {
     position: "absolute",
     bottom: 20,
     right: 20,
+  },
+  menuButton: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -109,21 +146,21 @@ const styles = StyleSheet.create({
   },
   menuOptions: {
     position: "absolute",
-    bottom: 90,
-    right: 20,
+    bottom: 70,
+    right: 0,
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    shadowColor: "#eee",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3.84,
     elevation: 5,
+    minWidth: 180,
   },
   menuOptionText: {
     fontSize: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 5,
+    paddingVertical: 8,
   },
   horizontalLine: {
     borderBottomWidth: 1,
@@ -134,58 +171,29 @@ const styles = StyleSheet.create({
 const darkStyles = StyleSheet.create({
   menuButton: {
     backgroundColor: "#00C4B4",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 10,
   },
   menuOptions: {
-    backgroundColor: "#6C8E6F", // Lighter background color
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 }, // Minimal shadow offset
-    shadowOpacity: 0.5, // Increased shadow intensity for better visibility
-    shadowRadius: 8, // Moderate shadow blur
-    elevation: 4, // Moderate elevation
-    borderRadius: 8, // Rounded corners
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    backgroundColor: "#2C2C2C",
   },
-
   menuOptionText: {
-    color: "#E0E0E0", // Darker text color for high contrast
-    fontWeight: "500",
+    color: "#FFFFFF",
   },
   horizontalLine: {
-    borderBottomColor: "#666", // Medium gray for better visibility
+    borderBottomColor: "#444444",
   },
 });
 
 const lightStyles = StyleSheet.create({
   menuButton: {
     backgroundColor: "#8E24AA",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 10,
   },
   menuOptions: {
-    backgroundColor: "#E5E5FF", // Light background color
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 }, // Minimal shadow offset
-    shadowOpacity: 0.3, // Light shadow intensity
-    shadowRadius: 8, // Moderate shadow blur
-    elevation: 2, // Low elevation
-    borderRadius: 8, // Rounded corners
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    backgroundColor: "#FFFFFF",
   },
   menuOptionText: {
-    color: "#003366", // Bright blue text color for a standout look
-    fontWeight: "500",
+    color: "#333333",
   },
   horizontalLine: {
-    borderBottomColor: "#BBBBBB", // Darker gray for clearer separation
+    borderBottomColor: "#EEEEEE",
   },
 });

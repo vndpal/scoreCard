@@ -5,6 +5,7 @@ import { player } from "@/types/player";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useTheme } from "@/context/ThemeContext";
+import { LinearGradient } from "expo-linear-gradient";
 
 const PlayerCareerSummary = () => {
   const [battingStats, setBattingStats] = useState<playerCareerStats[]>([]);
@@ -46,8 +47,12 @@ const PlayerCareerSummary = () => {
     item: playerCareerStats;
     type: string;
   }) => (
-    <View style={styles.row} key={item.playerId}>
-      <Text style={[styles.nameCell, themeStyles.nameCell]}>
+    <View style={[styles.row, themeStyles.row]} key={item.playerId}>
+      <Text
+        style={[styles.nameCell, themeStyles.nameCell]}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
         {playersMap.get(item.playerId) || item.playerId}
       </Text>
       {type === "batting" ? (
@@ -57,10 +62,10 @@ const PlayerCareerSummary = () => {
           <Text style={[styles.cell, themeStyles.cell]}>{item.fours}</Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.sixes}</Text>
           <Text style={[styles.cell, themeStyles.cell]}>
-            {item.strikeRate ? item.strikeRate.toFixed(2) : 0.0}
+            {item.strikeRate ? item.strikeRate.toFixed(2) : "-"}
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>
-            {item.average ? item.average.toFixed(2) : 0.0}
+            {item.average ? item.average.toFixed(2) : "-"}
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.matches}</Text>
         </>
@@ -75,7 +80,7 @@ const PlayerCareerSummary = () => {
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.wickets}</Text>
           <Text style={[styles.cell, themeStyles.cell]}>
-            {item.bowlingEconomy ? item.bowlingEconomy.toFixed(2) : 0.0}
+            {item.bowlingEconomy ? item.bowlingEconomy.toFixed(2) : "-"}
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>
             {item.foursConceded}
@@ -96,8 +101,17 @@ const PlayerCareerSummary = () => {
     id: string
   ) => (
     <View key={id} style={[styles.table, themeStyles.table]}>
-      <Text style={[styles.tableTitle, themeStyles.tableTitle]}>{title}</Text>
-      <ScrollView horizontal>
+      <LinearGradient
+        colors={
+          currentTheme === "dark"
+            ? ["#2c3e50", "#34495e"]
+            : ["#ecf0f1", "#bdc3c7"]
+        }
+        style={styles.tableHeader}
+      >
+        <Text style={[styles.tableTitle, themeStyles.tableTitle]}>{title}</Text>
+      </LinearGradient>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.tableContent}>
           <View style={[styles.headerRow, themeStyles.headerRow]}>
             <Text style={[styles.headerCell, themeStyles.headerCell]}>
@@ -186,22 +200,24 @@ const PlayerCareerSummary = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
     padding: 16,
   },
   table: {
-    borderWidth: 1,
-    borderColor: "#444",
-    borderRadius: 6,
+    borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 20,
-    backgroundColor: "#1f1f1f",
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableHeader: {
+    padding: 16,
   },
   tableTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "700",
-    color: "#ffffff",
-    marginVertical: 12,
     textAlign: "center",
   },
   tableContent: {
@@ -209,42 +225,34 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: "row",
-    backgroundColor: "#333",
-    borderBottomWidth: 1,
-    borderBottomColor: "#555",
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   headerCell: {
     flex: 1,
     fontWeight: "600",
-    color: "#ffffff",
     textAlign: "center",
-    padding: 6,
     fontSize: 14,
-    minWidth: 60, // Increase the minimum width
+    minWidth: 70,
   },
   cell: {
     flex: 1,
-    color: "#ffffff",
     textAlign: "center",
-    padding: 6,
+    padding: 8,
     fontSize: 14,
-    minWidth: 60, // Increase the minimum width
+    minWidth: 70,
   },
   nameCell: {
-    flex: 1,
-    color: "#ffffff",
+    flex: 1.5,
     textAlign: "left",
-    padding: 6,
+    padding: 8,
     fontSize: 14,
-    minWidth: 60, // Increase the minimum width
+    minWidth: 100,
   },
   row: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#444",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
 });
 
@@ -259,17 +267,20 @@ const darkStyles = StyleSheet.create({
     color: "#ffffff",
   },
   headerRow: {
-    backgroundColor: "#333",
-    borderBottomColor: "#555",
+    backgroundColor: "#2c3e50",
   },
   headerCell: {
-    color: "#ffffff",
+    color: "#ecf0f1",
   },
   cell: {
     color: "#ffffff",
   },
   nameCell: {
-    color: "#ffffff",
+    color: "#3498db",
+  },
+  row: {
+    borderBottomColor: "#2c3e50",
+    borderBottomWidth: 1,
   },
 });
 
@@ -279,61 +290,25 @@ const lightStyles = StyleSheet.create({
   },
   table: {
     backgroundColor: "#ffffff",
-    borderColor: "#e0e0e0",
-    borderWidth: 1,
-    borderRadius: 6,
-    marginBottom: 16,
-    elevation: 2,
   },
   tableTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333333",
-    marginVertical: 12,
-    textAlign: "center",
-  },
-  tableContent: {
-    flexDirection: "column",
+    color: "#2c3e50",
   },
   headerRow: {
-    flexDirection: "row",
-    backgroundColor: "#dcdcdc", // Darker gray background
-    borderBottomColor: "#b0b0b0", // Darker border color
-    borderBottomWidth: 1,
-    paddingVertical: 6,
+    backgroundColor: "#ecf0f1",
   },
   headerCell: {
-    flex: 1,
-    fontWeight: "500",
-    color: "#333333",
-    textAlign: "center",
-    paddingVertical: 8,
-    fontSize: 12,
-    minWidth: 60,
+    color: "#2c3e50",
   },
   cell: {
-    flex: 1,
-    color: "#333333",
-    textAlign: "center",
-    paddingVertical: 8,
-    fontSize: 12,
-    minWidth: 60,
+    color: "#34495e",
   },
   nameCell: {
-    flex: 1,
-    color: "#333333",
-    textAlign: "left",
-    paddingVertical: 8,
-    fontSize: 12,
-    fontWeight: "500",
-    minWidth: 60,
+    color: "#2980b9",
   },
   row: {
-    flexDirection: "row",
+    borderBottomColor: "#ecf0f1",
     borderBottomWidth: 1,
-    borderBottomColor: "#eeeeee",
-    paddingVertical: 10,
-    paddingHorizontal: 6,
   },
 });
 

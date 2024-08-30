@@ -172,36 +172,42 @@ const darkStyles = StyleSheet.create({
   },
   overSummary: {
     backgroundColor: "#b0b0b0",
+    borderWidth: 1,
+    borderColor: "#b0b0b0",
+    borderRadius: 6,
   },
 });
 const lightStyles = StyleSheet.create({
   container: {
-    backgroundColor: "#ffffff", // Bright white background
-    borderBottomColor: "#e0e0e0", // Subtle border
-    shadowColor: "#b0b0b0", // Light shadow
+    backgroundColor: "#f8f9fa", // Light gray background
+    borderBottomColor: "#e9ecef", // Subtle border
+    shadowColor: "#adb5bd", // Soft shadow
   },
   scoreContainer: {
-    backgroundColor: "#f0f4f8", // Light, cool background
+    backgroundColor: "#e9ecef", // Light cool gray background
   },
   scoreText: {
-    color: "#333333", // Dark gray for readability
-    backgroundColor: "#4caf50", // Vibrant green for score
+    color: "#ffffff", // White text for better contrast
+    backgroundColor: "#28a745", // Professional green for score
   },
   oversText: {
-    color: "#333333", // Dark gray for readability
-    backgroundColor: "#2196f3", // Bright blue for overs
+    color: "#ffffff", // White text for better contrast
+    backgroundColor: "#007bff", // Professional blue for overs
   },
   ballScore: {
-    backgroundColor: "#ffffff", // Clean white background
-    borderColor: "#dcdcdc", // Light gray border for a modern look
-    shadowColor: "#b0b0b0", // Light shadow for subtle depth
+    backgroundColor: "#ffffff", // White background
+    borderColor: "#ced4da", // Light border color
+    shadowColor: "#adb5bd", // Soft shadow
   },
   ballScoreText: {
-    color: "#333333", // Dark gray text for contrast
+    color: "#212529", // Dark gray text for contrast
     fontWeight: "bold",
   },
   overSummary: {
-    backgroundColor: "#e3f2fd", // Light blue for summary
+    backgroundColor: "#e9ecef",
+    borderWidth: 1,
+    borderColor: "#ced4da",
+    borderRadius: 6,
   },
 });
 

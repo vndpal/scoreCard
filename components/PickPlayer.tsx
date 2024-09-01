@@ -1,27 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, GestureResponderEvent } from "react-native";
-import { Button, Dialog, HelperText } from "react-native-paper";
-import { useFormik } from "formik";
-import * as Yup from "yup";
+import { View, StyleSheet, TouchableOpacity, FlatList } from "react-native";
+import { Button, Text, Searchbar } from "react-native-paper";
+import Modal from "react-native-modal";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { Dropdown } from "react-native-paper-dropdown";
 import { player } from "@/types/player";
 import { playerStats } from "@/types/playerStats";
+import { useTheme } from "@/context/ThemeContext";
 
-// Define validation schema with Yup
-const pickPlayerSchema = Yup.object().shape({
-  selectedPlayer: Yup.string().required("Player is required"),
-});
-
-type items = {
-  label: string;
-  value: string;
-  disabled: boolean;
-};
-
-// Define the props for the PopupForm component
-interface PopupFormProps {
+interface PickPlayerProps {
   visible: boolean;
   team: string;
   playerType: string;
@@ -30,8 +17,7 @@ interface PopupFormProps {
   onSubmit: (values: player | undefined) => void;
 }
 
-// Define the PopupForm component
-const PickPlayer: React.FC<PopupFormProps> = ({
+const PickPlayer: React.FC<PickPlayerProps> = ({
   visible,
   team,
   remainingPlayers,
@@ -39,8 +25,10 @@ const PickPlayer: React.FC<PopupFormProps> = ({
   onDismiss,
   onSubmit,
 }) => {
-  const [items, setItems] = useState<items[]>([]);
   const [players, setPlayers] = useState<player[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { currentTheme } = useTheme();
+  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
@@ -55,86 +43,158 @@ const PickPlayer: React.FC<PopupFormProps> = ({
             a.name.localeCompare(b.name)
           );
           setPlayers(playersFromDb);
-          setItems(
-            playersFromDb.map((p: player) => ({
-              label: p.name,
-              value: p.id,
-              disabled: false,
-            }))
-          );
         }
       }
     })();
   }, [visible]);
 
-  const formik = useFormik({
-    initialValues: {
-      selectedPlayer: "",
-    },
-    validationSchema: pickPlayerSchema,
-    onSubmit: async (values, { resetForm }) => {
-      await handleSubmit();
-    },
-  });
+  const filteredPlayers = players.filter((player) =>
+    player.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const handleSubmit = async () => {
-    const result = players.find(
-      (player) => player.id === formik.values.selectedPlayer
-    );
-    onSubmit(result);
-    onDismiss();
-  };
+  const renderItem = ({ item }: { item: player }) => (
+    <TouchableOpacity
+      style={[styles.playerItem, themeStyles.playerItem]}
+      onPress={() => {
+        onSubmit(item);
+        onDismiss();
+      }}
+    >
+      <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <Dialog visible={visible} onDismiss={onDismiss}>
-      <Dialog.Content>
-        <View>
-          <Dropdown
-            label={
-              playerType == "Bowler" ? "Select Bowler" : "Select Next Batsman"
-            }
-            options={items}
-            value={formik.values.selectedPlayer}
-            onSelect={(value) => {
-              formik.setFieldValue("selectedPlayer", value);
-            }}
-            mode="outlined"
-            error={
-              !!formik.errors.selectedPlayer && !!formik.touched.selectedPlayer
-            }
-          />
-          <HelperText
-            type="error"
-            padding="none"
-            visible={
-              !!formik.errors.selectedPlayer && !!formik.touched.selectedPlayer
-            }
-          >
-            {formik.errors.selectedPlayer}
-          </HelperText>
-          <Button
-            textColor="white"
-            buttonColor="#0c66e4"
-            mode="contained"
-            onPress={formik.handleSubmit as (e?: GestureResponderEvent) => void}
-          >
-            {playerType == "Bowler" ? "Select Bowler" : "Select Next Batsman"}
-          </Button>
-        </View>
-      </Dialog.Content>
-    </Dialog>
+    <Modal
+      isVisible={visible}
+      onBackdropPress={onDismiss}
+      onBackButtonPress={onDismiss}
+      swipeDirection="down"
+      onSwipeComplete={onDismiss}
+      style={styles.modal}
+    >
+      <View style={[styles.container, themeStyles.container]}>
+        <Text style={[styles.headerText, themeStyles.headerText]}>
+          {playerType === "Bowler" ? "Select Bowler" : "Select Next Batsman"}
+        </Text>
+        {/* <Searchbar
+          placeholder="Search players"
+          onChangeText={setSearchQuery}
+          value={searchQuery}
+          style={[styles.searchBar, themeStyles.searchBar]}
+          inputStyle={themeStyles.searchBarInput}
+          iconColor={themeStyles.searchBarIcon.color}
+        /> */}
+        <FlatList
+          data={filteredPlayers}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+          showsVerticalScrollIndicator={true}
+          persistentScrollbar={true}
+        />
+        <Button
+          mode="contained"
+          onPress={onDismiss}
+          style={styles.cancelButton}
+          labelStyle={styles.cancelButtonText}
+        >
+          Cancel
+        </Button>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  input: {
-    marginBottom: 12,
+  modal: {
+    justifyContent: "flex-end",
+    margin: 0,
   },
-  button: {
-    marginTop: 12,
+  container: {
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "85%",
   },
-  error: {
-    color: "red",
+  headerText: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  searchBar: {
+    marginBottom: 16,
+    elevation: 0,
+  },
+  list: {
+    marginBottom: 4,
+    marginRight: 4, // Increased margin to accommodate the scrollbar
+  },
+  playerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  playerName: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  cancelButton: {
+    borderRadius: 8,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#1E1E1E",
+  },
+  headerText: {
+    color: "#FFFFFF",
+  },
+  text: {
+    color: "#FFFFFF",
+  },
+  playerItem: {
+    backgroundColor: "#2C2C2C",
+  },
+  searchBar: {
+    backgroundColor: "#2C2C2C",
+  },
+  searchBarInput: {
+    color: "#FFFFFF",
+  },
+  searchBarIcon: {
+    color: "#FFFFFF",
+  },
+});
+
+const lightStyles = StyleSheet.create({
+  container: {
+    backgroundColor: "#FFFFFF",
+  },
+  headerText: {
+    color: "#212121",
+  },
+  text: {
+    color: "#212121",
+  },
+  playerItem: {
+    backgroundColor: "#F0F0F0", // Slightly darker background for better contrast
+  },
+  searchBar: {
+    backgroundColor: "#F0F0F0",
+  },
+  searchBarInput: {
+    color: "#212121",
+  },
+  searchBarIcon: {
+    color: "#666666",
   },
 });
 

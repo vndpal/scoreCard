@@ -60,6 +60,8 @@ export const updatePlayerCareerStats = async (
         playerCareerStats[playerCareerStatIndex].bowlingEconomy =
           playerCareerStats[playerCareerStatIndex].runsConceded /
           playerCareerStats[playerCareerStatIndex].overs;
+        playerCareerStats[playerCareerStatIndex].dotBalls +=
+          playerMatchStat.dotBalls;
       }
     });
     await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, playerCareerStats);

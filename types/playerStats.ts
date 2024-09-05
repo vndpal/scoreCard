@@ -17,6 +17,7 @@ type playerStats = {
   sixesConceded: number;
   maidens: number;
   bowlingEconomy: number;
+  dotBalls: number;
 };
 
 export type { playerStats };

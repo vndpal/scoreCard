@@ -20,6 +20,7 @@ import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useTheme } from "@/context/ThemeContext";
+import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function HomeScreen() {
     isFirstInning: true,
     date: new Date().toDateString(),
     quickMatch: false,
+    manOfTheMatch: "",
   });
   const [playerMatchStats, setPlayerMatchStats] = useState<playerStats[]>([]);
 
@@ -494,6 +496,7 @@ export default function HomeScreen() {
               await setItem(STORAGE_ITEMS.MATCHES, matches);
               if (!match.quickMatch) {
                 await updatePlayerCareerStats(playerMatchStats);
+                await updateManOfTheMatch(match.matchId);
               }
             }
           }
@@ -527,6 +530,7 @@ export default function HomeScreen() {
             await setItem(STORAGE_ITEMS.MATCHES, matches);
             if (!match.quickMatch) {
               await updatePlayerCareerStats(playerMatchStats);
+              await updateManOfTheMatch(match.matchId);
             }
           }
         }
@@ -617,6 +621,8 @@ export default function HomeScreen() {
           (playerMatchStatsLocalState[bowlerIndex].ballsBowled > 0
             ? playerMatchStatsLocalState[bowlerIndex].ballsBowled / 6
             : 1);
+        playerMatchStatsLocalState[bowlerIndex].dotBalls +=
+          scoreThisBall.run == 0 ? 1 : 0;
       }
       setPlayerMatchStats(playerMatchStatsLocalState);
 

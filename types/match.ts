@@ -15,6 +15,7 @@ type match = {
   wickets?: number;
   date: string;
   quickMatch: boolean;
+  manOfTheMatch: string;
 };
 
 export type { match };

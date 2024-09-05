@@ -11,6 +11,7 @@ import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { useTheme } from "@/context/ThemeContext";
+import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 
 type items = {
   label: string;
@@ -101,6 +102,7 @@ const MatchSettings = () => {
                 const lastPlayerMatchStats: playerStats[] =
                   playerMatchStats[0].playerMatchStats;
                 await updatePlayerCareerStats(lastPlayerMatchStats);
+                await updateManOfTheMatch(matches[0]);
               }
               Keyboard.dismiss();
               router.push("/");

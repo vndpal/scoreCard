@@ -1,6 +1,7 @@
 import { match } from "@/types/match";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { Animated } from "react-native";
 import {
   ScrollView,
   View,
@@ -12,13 +13,34 @@ import {
 import { useTheme } from "@/context/ThemeContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { player } from "@/types/player";
 
 const { width } = Dimensions.get("window");
 
-const Card = ({ match }: { match: match }) => {
+const Card = ({ match, players }: { match: match; players: player[] }) => {
   const router = useRouter();
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const opacityAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (match.status === "live") {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(opacityAnim, {
+            toValue: 0.2,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacityAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    }
+  }, [match.status]);
 
   const handlePress = () => {
     router.push({
@@ -57,6 +79,15 @@ const Card = ({ match }: { match: match }) => {
               </Text>
             </View>
           )}
+          {match.status === "live" && (
+            <View style={themeStyles.winnerContainer}>
+              <Animated.Text
+                style={[themeStyles.live, { opacity: opacityAnim }]}
+              >
+                Live
+              </Animated.Text>
+            </View>
+          )}
         </View>
         <View style={themeStyles.cardBody}>
           <View style={themeStyles.infoRow}>
@@ -67,14 +98,24 @@ const Card = ({ match }: { match: match }) => {
             />
             <Text style={themeStyles.info}>Overs: {match.overs}</Text>
           </View>
-          <View style={themeStyles.infoRow}>
-            <Ionicons
-              name="flag"
-              size={16}
-              color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
-            />
-            <Text style={themeStyles.info}>Status: {match.status}</Text>
-          </View>
+          {match.status === "completed" ? (
+            <View style={themeStyles.infoRow}>
+              <Ionicons
+                name="trophy"
+                size={16}
+                color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
+              />
+              <Text style={themeStyles.info}>
+                Man of the match:{" "}
+                {
+                  players.find((player) => player.id == match.manOfTheMatch)
+                    ?.name
+                }
+              </Text>
+            </View>
+          ) : (
+            ""
+          )}
           <View style={themeStyles.infoRow}>
             <Ionicons
               name="calendar"
@@ -96,7 +137,13 @@ const Card = ({ match }: { match: match }) => {
   );
 };
 
-const MatchHistory = ({ matches }: { matches: match[] }) => {
+const MatchHistory = ({
+  matches,
+  players,
+}: {
+  matches: match[];
+  players: player[];
+}) => {
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
@@ -105,7 +152,9 @@ const MatchHistory = ({ matches }: { matches: match[] }) => {
       <Text style={themeStyles.header}>Match History</Text>
       <ScrollView showsVerticalScrollIndicator={false}>
         {matches &&
-          matches.map((item, index) => <Card key={index} match={item} />)}
+          matches.map((item, index) => (
+            <Card key={index} match={item} players={players} />
+          ))}
       </ScrollView>
     </View>
   );
@@ -170,6 +219,12 @@ const darkStyles = StyleSheet.create({
     marginTop: 40,
     textAlign: "center",
   },
+  live: {
+    fontSize: 16,
+    color: "red",
+    fontWeight: "bold",
+    marginLeft: 6,
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -230,6 +285,12 @@ const lightStyles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 40,
     textAlign: "center",
+  },
+  live: {
+    fontSize: 16,
+    color: "red",
+    fontWeight: "bold",
+    marginLeft: 6,
   },
 });
 

@@ -59,7 +59,6 @@ const calculateMathPoints = (stats: playerStats): number => {
   if (stats.bowlingEconomy && stats.bowlingEconomy > 0) {
     if (stats.bowlingEconomy > 20) points -= 4;
     else if (stats.bowlingEconomy > 15) points -= 3;
-    else if (stats.bowlingEconomy > 10) points -= 1;
     else if (stats.bowlingEconomy < 6) points += 5;
     else if (stats.bowlingEconomy < 8) points += 3;
     else if (stats.bowlingEconomy < 10) points += 1;

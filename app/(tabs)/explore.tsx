@@ -27,7 +27,7 @@ export default function TabTwoScreen() {
       <View style={styles.container}>
         {<MatchHistory matches={matches} players={players} />}
       </View>
-      <FloatingMenu />
+      {/* <FloatingMenu /> */}
     </>
   );
 }

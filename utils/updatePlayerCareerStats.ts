@@ -37,6 +37,9 @@ export const updatePlayerCareerStats = async (
           playerCareerStats[playerCareerStatIndex].runs /
           (totalInnings === 0 ? 1 : totalInnings);
 
+        playerCareerStats[playerCareerStatIndex].innings +=
+          playerMatchStat.ballsFaced > 0 ? 1 : 0;
+
         playerCareerStats[playerCareerStatIndex].wickets +=
           playerMatchStat.wickets;
         playerCareerStats[playerCareerStatIndex].overs += playerMatchStat.overs;

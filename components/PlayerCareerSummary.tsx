@@ -57,7 +57,6 @@ const PlayerCareerSummary = () => {
 
   const exportAsImage = () => {
     setIsLoader(true);
-    //nsdfsdf
     const htmlContent = `
       <html>
         <head>
@@ -204,22 +203,27 @@ const PlayerCareerSummary = () => {
                 .join("")}
             </table>
           </div>
+          <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
           <script>
-            const content = document.body;
+            const content = document.querySelector('.container');
             const sendImage = () => {
-              html2canvas(content).then(canvas => {
-                const imageData = canvas.toDataURL('image/png');
+              html2canvas(content, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                logging: false,
+                width: content.offsetWidth,
+                height: content.offsetHeight
+              }).then(canvas => {
+                const imageData = canvas.toDataURL('image/png', 1.0);
                 window.ReactNativeWebView.postMessage(imageData);
               });
             };
-            if (typeof html2canvas !== 'undefined') {
-              sendImage();
-            } else {
-              const script = document.createElement('script');
-              script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
-              script.onload = sendImage;
-              document.body.appendChild(script);
-            }
+            // Wait for fonts and images to load
+            window.onload = () => {
+              setTimeout(sendImage, 500);
+            };
           </script>
         </body>
       </html>

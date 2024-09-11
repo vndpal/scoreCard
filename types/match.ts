@@ -13,7 +13,8 @@ type match = {
   status: "live" | "completed";
   isFirstInning: boolean;
   wickets?: number;
-  date: string;
+  startDateTime: string;
+  endDateTime: string;
   quickMatch: boolean;
   manOfTheMatch: string;
 };

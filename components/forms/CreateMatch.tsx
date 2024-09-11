@@ -129,7 +129,7 @@ export const CreateMatch = () => {
           team2score: [],
           status: "live",
           isFirstInning: true,
-          date: new Date().toString(),
+          startDateTime: new Date().toString(),
           quickMatch: quickMatch,
         },
         ...matches,
@@ -148,7 +148,7 @@ export const CreateMatch = () => {
           team2score: [],
           status: "live",
           isFirstInning: true,
-          date: new Date().toString(),
+          startDateTime: new Date().toString(),
           quickMatch: quickMatch,
         },
       ]);
@@ -183,6 +183,7 @@ export const CreateMatch = () => {
           extras: 0,
           foursConceded: 0,
           sixesConceded: 0,
+          dotBalls: 0,
         });
       });
 

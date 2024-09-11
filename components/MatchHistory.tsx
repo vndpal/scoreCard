@@ -53,13 +53,26 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
     });
   };
 
+  const getTimeDifference = (startDateTime: string, endDateTime: string) => {
+    if (!startDateTime || !endDateTime) {
+      return "-";
+    }
+    const start = new Date(startDateTime);
+    const end = new Date(endDateTime);
+    const diff = end.getTime() - start.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <LinearGradient
         colors={
           currentTheme === "dark"
             ? ["#2c3e50", "#34495e"]
-            : ["#ecf0f1", "#bdc3c7"]
+            : ["#ffffff", "#f5f5f5"]
         }
         style={themeStyles.card}
       >
@@ -80,7 +93,10 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
             </View>
           )}
           {match.status === "live" && (
-            <View style={themeStyles.winnerContainer}>
+            <View style={themeStyles.liveContainer}>
+              <Animated.View
+                style={[themeStyles.liveDot, { opacity: opacityAnim }]}
+              />
               <Animated.Text
                 style={[themeStyles.live, { opacity: opacityAnim }]}
               >
@@ -90,46 +106,70 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
           )}
         </View>
         <View style={themeStyles.cardBody}>
-          <View style={themeStyles.infoRow}>
-            <Ionicons
-              name="baseball"
-              size={16}
-              color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
-            />
-            <Text style={themeStyles.info}>Overs: {match.overs}</Text>
-          </View>
-          {match.status === "completed" ? (
-            <View style={themeStyles.infoRow}>
-              <Ionicons
-                name="trophy"
-                size={16}
-                color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
-              />
-              <Text style={themeStyles.info}>
-                Man of the match:{" "}
-                {
-                  players.find((player) => player.id == match.manOfTheMatch)
-                    ?.name
-                }
-              </Text>
+          <View style={themeStyles.row}>
+            <View style={themeStyles.column}>
+              <View style={themeStyles.infoRow}>
+                <Ionicons
+                  name="baseball-outline"
+                  size={18}
+                  color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
+                />
+                <Text style={themeStyles.info}>{match.overs} overs</Text>
+              </View>
             </View>
-          ) : (
-            ""
-          )}
-          <View style={themeStyles.infoRow}>
-            <Ionicons
-              name="calendar"
-              size={16}
-              color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
-            />
-            <Text style={themeStyles.info}>
-              {new Date(match.date).toLocaleDateString(undefined, {
-                weekday: "short",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
+            <View style={themeStyles.column}>
+              <View style={themeStyles.infoRow}>
+                <Ionicons
+                  name="calendar-outline"
+                  size={18}
+                  color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
+                />
+                <Text style={themeStyles.info}>
+                  {new Date(match.startDateTime).toLocaleDateString(undefined, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={themeStyles.row}>
+            <View style={themeStyles.column}>
+              {match.status === "completed" ? (
+                <View style={themeStyles.infoRow}>
+                  <Ionicons
+                    name="person-outline"
+                    size={18}
+                    color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
+                  />
+                  <Text style={themeStyles.info}>
+                    {
+                      players.find((player) => player.id == match.manOfTheMatch)
+                        ?.name
+                    }
+                  </Text>
+                </View>
+              ) : (
+                ""
+              )}
+            </View>
+            {match.status === "completed" ? (
+              <View style={themeStyles.column}>
+                <View style={themeStyles.infoRow}>
+                  <Ionicons
+                    name="time-outline"
+                    size={18}
+                    color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
+                  />
+                  <Text style={themeStyles.info}>
+                    {getTimeDifference(match.startDateTime, match.endDateTime)}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              ""
+            )}
           </View>
         </View>
       </LinearGradient>
@@ -167,14 +207,14 @@ const darkStyles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cardHeader: {
     borderBottomWidth: 1,
@@ -182,34 +222,60 @@ const darkStyles = StyleSheet.create({
     paddingBottom: 12,
     marginBottom: 12,
   },
-  cardBody: {
-    paddingTop: 8,
-  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#FFFFFF",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   winnerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4,
   },
   winner: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#F7E7A6",
-    fontWeight: "bold",
+    fontWeight: "600",
     marginLeft: 6,
+  },
+  liveContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ff4136",
+    marginRight: 6,
+  },
+  live: {
+    fontSize: 14,
+    color: "#ff4136",
+    fontWeight: "600",
+  },
+  cardBody: {
+    paddingTop: 8,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  column: {
+    flex: 1,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
   },
   info: {
     fontSize: 14,
     color: "#B0B0B0",
     marginLeft: 8,
+    fontWeight: "500",
   },
   header: {
     fontSize: 28,
@@ -218,12 +284,6 @@ const darkStyles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 40,
     textAlign: "center",
-  },
-  live: {
-    fontSize: 16,
-    color: "red",
-    fontWeight: "bold",
-    marginLeft: 6,
   },
 });
 
@@ -234,14 +294,15 @@ const lightStyles = StyleSheet.create({
     flex: 1,
   },
   card: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 4,
     elevation: 3,
+    backgroundColor: "#ffffff",
   },
   cardHeader: {
     borderBottomWidth: 1,
@@ -249,34 +310,60 @@ const lightStyles = StyleSheet.create({
     paddingBottom: 12,
     marginBottom: 12,
   },
-  cardBody: {
-    paddingTop: 8,
-  },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 8,
+    color: "#333333",
+    marginBottom: 4,
   },
   winnerContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4,
   },
   winner: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#f39c12",
-    fontWeight: "bold",
+    fontWeight: "600",
     marginLeft: 6,
+  },
+  liveContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ff4136",
+    marginRight: 6,
+  },
+  live: {
+    fontSize: 14,
+    color: "#ff4136",
+    fontWeight: "600",
+  },
+  cardBody: {
+    paddingTop: 8,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  column: {
+    flex: 1,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
   },
   info: {
     fontSize: 14,
-    color: "#666",
+    color: "#666666",
     marginLeft: 8,
+    fontWeight: "500",
   },
   header: {
     fontSize: 28,
@@ -285,12 +372,6 @@ const lightStyles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 40,
     textAlign: "center",
-  },
-  live: {
-    fontSize: 16,
-    color: "red",
-    fontWeight: "bold",
-    marginLeft: 6,
   },
 });
 

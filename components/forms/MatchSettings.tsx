@@ -89,6 +89,7 @@ const MatchSettings = () => {
               const updatedMatch: match = {
                 ...latestMatch,
                 status: "completed",
+                endDateTime: new Date().toString(),
                 winner: winner === latestMatch.team1 ? "team1" : "team2",
               };
 
@@ -102,7 +103,7 @@ const MatchSettings = () => {
                 const lastPlayerMatchStats: playerStats[] =
                   playerMatchStats[0].playerMatchStats;
                 await updatePlayerCareerStats(lastPlayerMatchStats);
-                await updateManOfTheMatch(matches[0]);
+                await updateManOfTheMatch(matches[0].matchId);
               }
               Keyboard.dismiss();
               router.push("/");

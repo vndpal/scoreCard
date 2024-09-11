@@ -43,7 +43,8 @@ export default function HomeScreen() {
     overs: 0,
     status: "completed",
     isFirstInning: true,
-    date: new Date().toDateString(),
+    startDateTime: new Date().toString(),
+    endDateTime: new Date().toString(),
     quickMatch: false,
     manOfTheMatch: "",
   });
@@ -490,6 +491,7 @@ export default function HomeScreen() {
                 team2score: scoreSecondInningsLocalState,
                 status: "completed",
                 winner: winner,
+                endDateTime: new Date().toString(),
               };
 
               matches[0] = updatedMatch;
@@ -513,7 +515,11 @@ export default function HomeScreen() {
       ) {
         console.log("Second Inning Completed");
         let winner = "team2";
-        setMatch({ ...match, status: "completed" });
+        setMatch({
+          ...match,
+          status: "completed",
+          endDateTime: new Date().toString(),
+        });
         const matches = await getItem(STORAGE_ITEMS.MATCHES);
         if (matches) {
           const latestMatch = matches[0];
@@ -523,6 +529,7 @@ export default function HomeScreen() {
               team1score: totalScore,
               team2score: scoreSecondInningsLocalState,
               status: "completed",
+              endDateTime: new Date().toString(),
               winner: winner,
             };
 

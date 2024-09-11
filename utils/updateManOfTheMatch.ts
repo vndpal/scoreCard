@@ -5,26 +5,30 @@ import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 
 export const updateManOfTheMatch = async (matchId: string) => {
-  const matches = await getItem(STORAGE_ITEMS.MATCHES);
-  const match: match = matches.find(
-    (match: match) => match.matchId === matchId
-  );
-  const playerMatchStats = await getItem(STORAGE_ITEMS.PLAYER_MATCH_STATS);
-  const playerMatchStat: playerMatchStats = playerMatchStats.find(
-    (playerMatchStat: playerMatchStats) => playerMatchStat.matchId === matchId
-  );
-  let maxPoints = 0;
-  let manOfTheMatch = "";
-  if (playerMatchStat && playerMatchStat.playerMatchStats.length > 0) {
-    playerMatchStat.playerMatchStats.forEach((playerStats: playerStats) => {
-      const points = calculateMathPoints(playerStats);
-      if (points > maxPoints) {
-        maxPoints = points;
-        manOfTheMatch = playerStats.playerId;
-      }
-    });
-    match.manOfTheMatch = manOfTheMatch;
-    await setItem(STORAGE_ITEMS.MATCHES, matches);
+  try {
+    const matches = await getItem(STORAGE_ITEMS.MATCHES);
+    const match: match = matches.find(
+      (match: match) => match.matchId === matchId
+    );
+    const playerMatchStats = await getItem(STORAGE_ITEMS.PLAYER_MATCH_STATS);
+    const playerMatchStat: playerMatchStats = playerMatchStats.find(
+      (playerMatchStat: playerMatchStats) => playerMatchStat.matchId == matchId
+    );
+    let maxPoints = 0;
+    let manOfTheMatch = "";
+    if (playerMatchStat && playerMatchStat.playerMatchStats.length > 0) {
+      playerMatchStat.playerMatchStats.forEach((playerStats: playerStats) => {
+        const points = calculateMathPoints(playerStats);
+        if (points > maxPoints) {
+          maxPoints = points;
+          manOfTheMatch = playerStats.playerId;
+        }
+      });
+      match.manOfTheMatch = manOfTheMatch;
+      await setItem(STORAGE_ITEMS.MATCHES, matches);
+    }
+  } catch (error) {
+    console.log("Error updating Man of the Match", error);
   }
 };
 
@@ -38,7 +42,6 @@ const calculateMathPoints = (stats: playerStats): number => {
     (stats.sixes || 0) * 3 +
     (stats.ballsFaced || 0) * 0.5;
   points += stats.isOut === false ? 5 : 0;
-
   // Strike rate points
   if (stats.strikeRate && stats.strikeRate > 0) {
     if (stats.strikeRate < 100) points -= 3;

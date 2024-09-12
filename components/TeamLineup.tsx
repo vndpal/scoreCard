@@ -17,6 +17,9 @@ import teams from "@/interfaces/teams";
 import { teamPlayerMapping } from "@/types/teamPlayerMapping";
 import { router } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
+import { match } from "@/types/match";
+import { playerMatchStats } from "@/types/playerMatchStats";
+import { playerStats } from "@/types/playerStats";
 
 const TeamLineUp: React.FC = () => {
   const [team1Players, setTeam1Players] = useState<player[]>([]);
@@ -29,6 +32,11 @@ const TeamLineUp: React.FC = () => {
   const [team2DropdownOpen, setTeam2DropdownOpen] = useState<boolean>(false);
   const [teamSelectionVisible, setTeamSelectionVisible] =
     useState<boolean>(false);
+  const [activePlayerIds, setActivePlayerIds] = useState<string[]>([]);
+  const [currentMatchId, setCurrentMatchId] = useState<string>("");
+  const [currentMatchPlayerStats, setCurrentMatchPlayerStats] = useState<
+    playerStats[]
+  >([]);
 
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -44,6 +52,38 @@ const TeamLineUp: React.FC = () => {
         setAllPlayers(playersFromStorage);
       }
       const teams: team[] = await getItem(STORAGE_ITEMS.TEAMS);
+
+      const matches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
+      if (matches && matches.length > 0 && matches[0].status === "live") {
+        const playerMatchStats: playerMatchStats[] = await getItem(
+          STORAGE_ITEMS.PLAYER_MATCH_STATS
+        );
+        if (playerMatchStats && playerMatchStats.length > 0) {
+          const playerStats = playerMatchStats.filter(
+            (x) => x.matchId === matches[0].matchId
+          );
+
+          if (playerStats && playerStats.length > 0) {
+            const currentMatchPlayerStats = playerStats[0].playerMatchStats;
+            setCurrentMatchPlayerStats(currentMatchPlayerStats);
+            const playedPlayers = currentMatchPlayerStats
+              .filter(
+                (x) =>
+                  x.ballsBowled > 0 ||
+                  x.overs > 0 ||
+                  x.extras > 0 ||
+                  x.runs > 0 ||
+                  x.ballsFaced > 0 ||
+                  x.isOut == true
+              )
+              .map((x) => x.playerId);
+            console.log("playerdPlayers", playedPlayers);
+            setActivePlayerIds(playedPlayers);
+            setCurrentMatchId(matches[0].matchId);
+          }
+        }
+      }
+
       const savedTeams = Object.keys(teamPlayersMapping || {});
       if (
         savedTeams.length >= 2 &&
@@ -139,15 +179,17 @@ const TeamLineUp: React.FC = () => {
       <Text style={[styles.playerName, themeStyles.playerName]}>
         {item.name}
       </Text>
-      <TouchableOpacity onPress={() => removePlayer(item.id, team)}>
-        <Icon
-          name="remove-circle"
-          type="Ionicons"
-          size={22}
-          color="#FF6F6F"
-          style={styles.removeIcon}
-        />
-      </TouchableOpacity>
+      {!activePlayerIds.includes(item.id) && (
+        <TouchableOpacity onPress={() => removePlayer(item.id, team)}>
+          <Icon
+            name="remove-circle"
+            type="Ionicons"
+            size={22}
+            color="#FF6F6F"
+            style={styles.removeIcon}
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -190,7 +232,69 @@ const TeamLineUp: React.FC = () => {
     };
 
     await setItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING, updatedTeamPlayerMapping);
-    router.back();
+
+    if (currentMatchId !== "") {
+      const updatedLiveMatchPlayerStats: playerStats[] =
+        currentMatchPlayerStats;
+      for (const teamInitials in updatedTeamPlayerMapping) {
+        for (const playerId of updatedTeamPlayerMapping[teamInitials]) {
+          if (!activePlayerIds.includes(playerId)) {
+            const existingPlayerStats = updatedLiveMatchPlayerStats.find(
+              (stats) => stats.playerId === playerId
+            );
+            if (!existingPlayerStats) {
+              updatedLiveMatchPlayerStats.push({
+                playerId: playerId,
+                runs: 0,
+                ballsFaced: 0,
+                fours: 0,
+                sixes: 0,
+                ballsBowled: 0,
+                runsConceded: 0,
+                wickets: 0,
+                overs: 0,
+                extras: 0,
+                isOut: false,
+                team: teamInitials,
+                strikeRate: 0,
+                average: 0,
+                foursConceded: 0,
+                sixesConceded: 0,
+                maidens: 0,
+                bowlingEconomy: 0,
+                dotBalls: 0,
+              });
+            } else {
+              const playerStats = updatedLiveMatchPlayerStats.find(
+                (x) => x.playerId === playerId
+              );
+              if (playerStats) {
+                playerStats.team = teamInitials;
+              }
+            }
+          }
+        }
+      }
+
+      const databasePlayerMatchStats: playerMatchStats[] = await getItem(
+        STORAGE_ITEMS.PLAYER_MATCH_STATS
+      );
+
+      if (databasePlayerMatchStats && databasePlayerMatchStats.length > 0) {
+        databasePlayerMatchStats[0].playerMatchStats =
+          updatedLiveMatchPlayerStats;
+        await setItem(
+          STORAGE_ITEMS.PLAYER_MATCH_STATS,
+          databasePlayerMatchStats
+        );
+      }
+    }
+
+    if (currentMatchId !== "") {
+      router.push("/");
+    } else {
+      router.back();
+    }
   };
 
   return (
@@ -283,6 +387,7 @@ const TeamLineUp: React.FC = () => {
         <TouchableOpacity
           style={[styles.configButton, themeStyles.configButton]}
           onPress={() => setTeamSelectionVisible(true)}
+          disabled={currentMatchId !== ""}
         >
           <Icon name="swap" type="entypo" color="white" size={20} />
           <Text style={[styles.buttonText, themeStyles.buttonText]}>
@@ -291,6 +396,7 @@ const TeamLineUp: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.configButton, themeStyles.configButton]}
+          disabled={currentMatchId !== ""}
           onPress={randomizeTeams}
         >
           <Icon name="random" type="font-awesome" color="white" size={20} />

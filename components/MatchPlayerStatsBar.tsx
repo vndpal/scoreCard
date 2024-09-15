@@ -17,12 +17,16 @@ const MatchPlayerStatsBar = ({
   nonStrikerBatsman,
   bowler,
   playerMatchStats,
+  isOut,
+  handleOutBatter,
   handleSwapBatters,
 }: {
   strikerBatsman: player | undefined;
   nonStrikerBatsman: player | undefined;
   bowler: player | undefined;
   playerMatchStats: playerStats[];
+  isOut: boolean;
+  handleOutBatter: (outBatter: player) => void;
   handleSwapBatters: () => void;
 }) => {
   const { currentTheme } = useTheme();
@@ -39,37 +43,53 @@ const MatchPlayerStatsBar = ({
 
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
+  const handleOut = (outBatter: player) => {
+    handleOutBatter(outBatter);
+  };
+
   return (
     <View style={[styles.statsBar, themeStyles.statsBar]}>
-      <View style={styles.batterContainer}>
-        <View style={[styles.batter, styles.striker]}>
-          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
-            {strikerBatsman?.name?.slice(0, 10)}
-          </Text>
-          <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
-            {batterStats?.runs} ({batterStats?.ballsFaced})
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.bubbleButton, themeStyles.bubbleButton]}
-          onPress={handleSwapBatters}
-        >
-          <Icon
-            name="swap"
-            type="entypo"
-            color={currentTheme == "dark" ? "#d0d0d0" : "black"}
-            size={20}
-          />
-        </TouchableOpacity>
-        <View style={styles.batter}>
-          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
-            {nonStrikerBatsman?.name?.slice(0, 10)}
-          </Text>
-          <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
-            {nonStrikerBatter?.runs} ({nonStrikerBatter?.ballsFaced})
-          </Text>
-        </View>
-      </View>
+      <TouchableOpacity
+        style={[
+          styles.batter,
+          styles.striker,
+          isOut && styles.highlightOutBatter,
+        ]}
+        disabled={!isOut}
+        onPress={() => handleOut(strikerBatsman!)} // Pass strikerBatsman to handleOutBatter
+      >
+        <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
+          {strikerBatsman?.name?.slice(0, 10)}
+        </Text>
+        <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
+          {batterStats?.runs} ({batterStats?.ballsFaced})
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.bubbleButton, themeStyles.bubbleButton]}
+        onPress={handleSwapBatters}
+      >
+        <Icon
+          name="swap"
+          type="entypo"
+          color={currentTheme == "dark" ? "#d0d0d0" : "black"}
+          size={20}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        disabled={!isOut}
+        style={[styles.batter, isOut && styles.highlightOutBatter]}
+        onPress={() => handleOut(nonStrikerBatsman!)} // Pass nonStrikerBatsman to handleOutBatter
+      >
+        <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
+          {nonStrikerBatsman?.name?.slice(0, 10)}
+        </Text>
+        <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
+          {nonStrikerBatter
+            ? `${nonStrikerBatter.runs} (${nonStrikerBatter.ballsFaced})`
+            : "N/A"}
+        </Text>
+      </TouchableOpacity>
       <View style={styles.bowlerContainer}>
         <Text style={[styles.bowlerName, themeStyles.bowlerName]}>
           {bowler?.name?.slice(0, 10)}
@@ -124,6 +144,7 @@ const styles = StyleSheet.create({
   },
   batsmanStats: {
     fontSize: 14,
+    textAlign: "center",
   },
   bowlerName: {
     fontSize: 16,
@@ -146,6 +167,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
     overflow: "hidden",
+  },
+  highlightOutBatter: {
+    backgroundColor: "#e0f7fa",
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
   },
 });
 

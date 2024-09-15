@@ -74,6 +74,7 @@ export default function HomeScreen() {
 
   const [batter1, setBatter1] = useState<player>();
   const [batter2, setBatter2] = useState<player>();
+  const [outBatter, setOutBatter] = useState<player>();
   const [bowler, setBowler] = useState<player>();
 
   const [pickPlayerVisible, setPickPlayerVisible] = useState<boolean>(false);
@@ -315,6 +316,9 @@ export default function HomeScreen() {
   };
 
   const handleWicket = () => {
+    if (isWicket) {
+      setOutBatter(undefined);
+    }
     setIsWicket((prev) => !prev);
     setIsEntryDone(true);
   };
@@ -390,9 +394,13 @@ export default function HomeScreen() {
       };
 
       if (!match.quickMatch) {
-        if (isWicket) {
-          setBatter1(undefined);
-        }
+        // if (isWicket) {
+        //   if (batter1?.id == outBatter?.id) {
+        //     setBatter1(undefined);
+        //   } else {
+        //     setBatter2(undefined);
+        //   }
+        // }
         await updatePlayerMatchStats(scoreThisBall);
       }
 
@@ -442,6 +450,7 @@ export default function HomeScreen() {
       setIsWicket(false);
       setIsNoBall(false);
       setIsWideBall(false);
+      setOutBatter(undefined);
 
       // This block of code is to check if current over is completed
       if (isValidBall && totalBalls == 5) {
@@ -600,7 +609,7 @@ export default function HomeScreen() {
           (playerMatchStatsLocalState[batterIndex].runs /
             playerMatchStatsLocalState[batterIndex].ballsFaced) *
           100;
-        playerMatchStatsLocalState[batterIndex].isOut = scoreThisBall.isWicket;
+        // playerMatchStatsLocalState[batterIndex].isOut = scoreThisBall.isWicket;
       }
       const bowlerIndex = playerMatchStatsLocalState.findIndex(
         (playerStats: playerStats) =>
@@ -631,6 +640,29 @@ export default function HomeScreen() {
         playerMatchStatsLocalState[bowlerIndex].dotBalls +=
           scoreThisBall.run == 0 ? 1 : 0;
       }
+
+      //check which batter is out
+      let localBatter1 = batter1;
+      let localBatter2 = batter2;
+
+      if (
+        scoreThisBall.isWicket &&
+        scoreThisBall.strikerBatter?.id == outBatter?.id
+      ) {
+        localBatter1 = undefined;
+        playerMatchStatsLocalState[batterIndex].isOut = true;
+      } else if (
+        scoreThisBall.isWicket &&
+        scoreThisBall.nonStrikerBatter?.id == outBatter?.id
+      ) {
+        localBatter2 = undefined;
+        const nonStrikerBatterIndex = playerMatchStatsLocalState.findIndex(
+          (playerStats: playerStats) =>
+            playerStats.playerId == scoreThisBall.nonStrikerBatter?.id
+        );
+        playerMatchStatsLocalState[nonStrikerBatterIndex].isOut = true;
+      }
+
       setPlayerMatchStats(playerMatchStatsLocalState);
 
       const playerMatchStatsFromDb = await getItem(
@@ -651,9 +683,7 @@ export default function HomeScreen() {
         }
       }
 
-      let localBatter1 = batter1;
-      let localBatter2 = batter2;
-      localBatter1 = scoreThisBall.isWicket ? undefined : localBatter1;
+      //handle swap logic for batters
       let swap = false;
       if (scoreThisBall.run == 1 || scoreThisBall.run == 3) {
         swap = !swap;
@@ -864,7 +894,10 @@ export default function HomeScreen() {
   };
 
   const isEntryButtonDisabled =
-    (!isEntryDone || showLoader || match.status === "completed") &&
+    (!isEntryDone ||
+      showLoader ||
+      match.status === "completed" ||
+      (!match.quickMatch && isWicket && !outBatter)) &&
     (match.status === "completed" ||
       match.quickMatch ||
       !!(batter1 && batter2 && bowler));
@@ -893,6 +926,8 @@ export default function HomeScreen() {
             nonStrikerBatsman={batter2}
             playerMatchStats={playerMatchStats}
             handleSwapBatters={swapBatters}
+            isOut={isWicket}
+            handleOutBatter={(outBatter: player) => setOutBatter(outBatter)}
           />
         ) : null}
 
@@ -920,9 +955,16 @@ export default function HomeScreen() {
           {bowler || match.quickMatch ? (
             batter1 || match.quickMatch ? (
               batter2 || match.quickMatch ? (
-                <Text style={styles.confirmationText}>
+                <Text
+                  style={[
+                    styles.confirmationText,
+                    isWicket && { fontSize: 30 },
+                  ]}
+                >
                   {isNoBall ? "NB + " : isWideBall ? "WD + " : ""}
-                  {isWicket ? "W + " : ""}
+                  {isWicket
+                    ? `W${outBatter ? "(" + outBatter.name + ")" : ""} + `
+                    : ""}
                   {run}
                 </Text>
               ) : (
@@ -1118,6 +1160,7 @@ const styles = StyleSheet.create({
   },
   confirmationText: {
     fontSize: 50,
+    textAlign: "center",
   },
   scoreBoardcontainer: {
     justifyContent: "flex-start",

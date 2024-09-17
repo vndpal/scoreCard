@@ -1,3 +1,4 @@
+import { matchResult } from "./matchResult";
 import { scorePerInning } from "./scorePerInnig";
 
 type match = {
@@ -10,7 +11,7 @@ type match = {
   choose: "batting" | "bowling";
   winner?: "team1" | "team2";
   overs: number;
-  status: "live" | "completed";
+  status: matchResult;
   isFirstInning: boolean;
   wickets?: number;
   startDateTime: string;

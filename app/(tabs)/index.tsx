@@ -21,6 +21,7 @@ import { playerStats } from "@/types/playerStats";
 import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
+import { matchResult } from "@/types/matchResult";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -483,13 +484,20 @@ export default function HomeScreen() {
         ) {
           console.log("Second Inning Completed");
           let winner: "team1" | "team2" | undefined = "team1";
+          let matchStatus: matchResult = "completed";
           if (
             finalSecondInningsScore.totalRuns + totalRun >
             finalFirstInningsScore.totalRuns
           ) {
             winner = "team2";
+          } else if (
+            finalSecondInningsScore.totalRuns + totalRun ==
+            finalFirstInningsScore.totalRuns
+          ) {
+            winner = undefined;
+            matchStatus = "tied";
           }
-          setMatch({ ...match, winner: winner, status: "completed" });
+          setMatch({ ...match, winner: winner, status: matchStatus });
           const matches = await getItem(STORAGE_ITEMS.MATCHES);
           if (matches) {
             const latestMatch = matches[0];
@@ -498,7 +506,7 @@ export default function HomeScreen() {
                 ...latestMatch,
                 team1score: totalScore,
                 team2score: scoreSecondInningsLocalState,
-                status: "completed",
+                status: matchStatus,
                 winner: winner,
                 endDateTime: new Date().toString(),
               };
@@ -850,7 +858,7 @@ export default function HomeScreen() {
         }
 
         const currentMatchStatus =
-          currentMath.status == "completed" ? "live" : currentMath.status;
+          currentMath.status !== "live" ? "live" : currentMath.status;
         const updatedMatch = {
           ...currentMath,
           team2score: currentMatchTeam2Score,
@@ -896,9 +904,9 @@ export default function HomeScreen() {
   const isEntryButtonDisabled =
     (!isEntryDone ||
       showLoader ||
-      match.status === "completed" ||
+      match.status !== "live" ||
       (!match.quickMatch && isWicket && !outBatter)) &&
-    (match.status === "completed" ||
+    (match.status !== "live" ||
       match.quickMatch ||
       !!(batter1 && batter2 && bowler));
 

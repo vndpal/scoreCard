@@ -12,6 +12,7 @@ import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
+import { matchResult } from "@/types/matchResult";
 
 type items = {
   label: string;
@@ -23,6 +24,7 @@ const MatchSettings = () => {
   const [declareInnings, setDeclareInnings] = useState<boolean>(false);
   const [currentMatch, setCurrentMatch] = useState<match>();
   const [items, setItems] = useState<items[]>([]);
+  const [matchStatus, setMatchStatus] = useState<matchResult>("completed");
   const [winner, setWinner] = useState<string>("");
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -32,7 +34,6 @@ const MatchSettings = () => {
   }, []);
 
   const fetchMatch = async () => {
-    console.log("Fetching match settings...");
     const matches = await getItem(STORAGE_ITEMS.MATCHES);
     if (!matches) {
       return;
@@ -43,8 +44,12 @@ const MatchSettings = () => {
     setCurrentMatch(matches[0]);
     setOvers(matches[0].overs);
     const items: items[] = [
-      { label: matches[0].team1, value: matches[0].team1 },
-      { label: matches[0].team2, value: matches[0].team2 },
+      { label: `${matches[0].team1} won`, value: matches[0].team1 },
+      { label: `${matches[0].team2} won`, value: matches[0].team2 },
+      { label: "Tied", value: "tied" },
+      { label: "Draw", value: "draw" },
+      { label: "No Result", value: "noResult" },
+      { label: "Cancelled", value: "abandoned" },
     ];
     setItems(items);
   };
@@ -88,9 +93,14 @@ const MatchSettings = () => {
 
               const updatedMatch: match = {
                 ...latestMatch,
-                status: "completed",
+                status: matchStatus,
                 endDateTime: new Date().toString(),
-                winner: winner === latestMatch.team1 ? "team1" : "team2",
+                winner:
+                  matchStatus === "completed"
+                    ? winner === latestMatch.team1
+                      ? "team1"
+                      : "team2"
+                    : "team1",
               };
 
               matches[0] = updatedMatch;
@@ -102,7 +112,9 @@ const MatchSettings = () => {
               if (playerMatchStats && playerMatchStats.length > 0) {
                 const lastPlayerMatchStats: playerStats[] =
                   playerMatchStats[0].playerMatchStats;
-                await updatePlayerCareerStats(lastPlayerMatchStats);
+                if (matchStatus !== "abandoned") {
+                  await updatePlayerCareerStats(lastPlayerMatchStats);
+                }
                 await updateManOfTheMatch(matches[0].matchId);
               }
               Keyboard.dismiss();
@@ -143,6 +155,14 @@ const MatchSettings = () => {
   };
 
   const handleDdlChange = (value: string) => {
+    if (
+      value === "tied" ||
+      value === "draw" ||
+      value === "noResult" ||
+      value === "abandoned"
+    ) {
+      setMatchStatus(value);
+    }
     setWinner(value);
   };
 
@@ -174,9 +194,9 @@ const MatchSettings = () => {
         </View>
         {declareInnings && !currentMatch?.isFirstInning && (
           <View style={[styles.settingItem, themeStyles.settingItem]}>
-            <Text style={[styles.label, themeStyles.label]}>Winner</Text>
+            <Text style={[styles.label, themeStyles.label]}>Result</Text>
             <Dropdown
-              label="Winner"
+              label="Result"
               options={items}
               value={winner}
               onSelect={handleDdlChange}

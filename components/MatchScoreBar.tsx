@@ -34,7 +34,7 @@ const MatchScoreBar = ({
 
   return (
     <View style={[styles.statusBar, themeStyles.statusBar]}>
-      {match.status == "completed" ? (
+      {match.status === "completed" ? (
         match.winner == "team1" ? (
           <Text style={[styles.resultText, themeStyles.resultText]}>
             {match.team1} won by{" "}
@@ -52,7 +52,7 @@ const MatchScoreBar = ({
             balls left
           </Text>
         )
-      ) : (
+      ) : match.status === "live" ? (
         <Text style={[styles.inProgressText, themeStyles.inProgressText]}>
           {match.team2} need{" "}
           {finalFirstInningsScore.totalRuns -
@@ -63,6 +63,10 @@ const MatchScoreBar = ({
             (finalSecondInningsScore.totalOvers * 6 +
               finalSecondInningsScore.totalBalls)}{" "}
           balls | R.R. {calculateRequiredRate()}
+        </Text>
+      ) : (
+        <Text style={[styles.noResultText, themeStyles.noResultText]}>
+          Match {match.status}
         </Text>
       )}
     </View>
@@ -92,6 +96,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
   },
+  noResultText: {
+    fontSize: 15,
+    fontWeight: "500",
+  },
 });
 
 const darkStyles = StyleSheet.create({
@@ -106,6 +114,9 @@ const darkStyles = StyleSheet.create({
   inProgressText: {
     color: "#64b5f6", // Light blue for in-progress status
   },
+  noResultText: {
+    color: "#ffeb3b", // Yellow for no result status
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -119,5 +130,8 @@ const lightStyles = StyleSheet.create({
   },
   inProgressText: {
     color: "#1976d2", // Blue for in-progress status
+  },
+  noResultText: {
+    color: "#ff9800", // Orange for no result status
   },
 });

@@ -104,6 +104,27 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
               </Animated.Text>
             </View>
           )}
+          {(match.status === "abandoned" ||
+            match.status === "draw" ||
+            match.status === "noResult" ||
+            match.status === "tied") && (
+            <View style={themeStyles.winnerContainer}>
+              <Ionicons
+                name="close-circle-outline"
+                size={18}
+                color={currentTheme === "dark" ? "#F7E7A6" : "red"}
+              />
+              <Text style={themeStyles.noResult}>
+                {match.status === "abandoned"
+                  ? "Abandoned"
+                  : match.status === "draw"
+                  ? "Draw"
+                  : match.status === "noResult"
+                  ? "No Result"
+                  : "Tied"}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={themeStyles.cardBody}>
           <View style={themeStyles.row}>
@@ -136,7 +157,7 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
           </View>
           <View style={themeStyles.row}>
             <View style={themeStyles.column}>
-              {match.status === "completed" ? (
+              {match.status !== "live" ? (
                 <View style={themeStyles.infoRow}>
                   <Ionicons
                     name="person-outline"
@@ -154,7 +175,7 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
                 ""
               )}
             </View>
-            {match.status === "completed" ? (
+            {match.status !== "live" ? (
               <View style={themeStyles.column}>
                 <View style={themeStyles.infoRow}>
                   <Ionicons
@@ -234,6 +255,12 @@ const darkStyles = StyleSheet.create({
     marginTop: 4,
   },
   winner: {
+    fontSize: 14,
+    color: "#F7E7A6",
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  noResult: {
     fontSize: 14,
     color: "#F7E7A6",
     fontWeight: "600",
@@ -324,6 +351,12 @@ const lightStyles = StyleSheet.create({
   winner: {
     fontSize: 14,
     color: "#f39c12",
+    fontWeight: "600",
+    marginLeft: 6,
+  },
+  noResult: {
+    fontSize: 14,
+    color: "red",
     fontWeight: "600",
     marginLeft: 6,
   },

@@ -48,6 +48,20 @@ export default function HomeScreen() {
     endDateTime: new Date().toString(),
     quickMatch: false,
     manOfTheMatch: "",
+    currentScore: {
+      team1: {
+        totalRuns: 0,
+        totalWickets: 0,
+        totalOvers: 0,
+        totalBalls: 0,
+      },
+      team2: {
+        totalRuns: 0,
+        totalWickets: 0,
+        totalOvers: 0,
+        totalBalls: 0,
+      },
+    },
   });
   const [playerMatchStats, setPlayerMatchStats] = useState<playerStats[]>([]);
 
@@ -357,23 +371,37 @@ export default function HomeScreen() {
       const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
       const totalRun = run + extra;
       let scoreSecondInningsLocalState;
+      let localFinalFirstInningsScore: currentTotalScore =
+        finalFirstInningsScore;
+      let localFinalSecondInningsScore: currentTotalScore =
+        finalSecondInningsScore;
       if (isFirstInning) {
-        setFinalFirstInningsScore((prev) => ({
-          ...prev,
-          totalRuns: prev.totalRuns + totalRun,
-          totalWickets: prev.totalWickets + (isWicket ? 1 : 0),
-        }));
+        localFinalFirstInningsScore = {
+          ...finalFirstInningsScore,
+          totalRuns: finalFirstInningsScore.totalRuns + totalRun,
+          totalWickets:
+            finalFirstInningsScore.totalWickets + (isWicket ? 1 : 0),
+        };
+        setFinalFirstInningsScore(localFinalFirstInningsScore);
       } else {
-        setFinalSecondInningsScore((prev) => ({
-          ...prev,
-          totalRuns: prev.totalRuns + totalRun,
-          totalWickets: prev.totalWickets + (isWicket ? 1 : 0),
-        }));
+        localFinalSecondInningsScore = {
+          ...finalSecondInningsScore,
+          totalRuns: finalSecondInningsScore.totalRuns + totalRun,
+          totalWickets:
+            finalSecondInningsScore.totalWickets + (isWicket ? 1 : 0),
+        };
+        setFinalSecondInningsScore(localFinalSecondInningsScore);
       }
 
       let isValidBall = false;
       if (!isNoBall && !isWideBall) {
-        increaseOver();
+        const { updatedFirstInningsScore, updatedSecondInningsScore } =
+          increaseOver(
+            localFinalFirstInningsScore,
+            localFinalSecondInningsScore
+          );
+        localFinalFirstInningsScore = updatedFirstInningsScore;
+        localFinalSecondInningsScore = updatedSecondInningsScore;
         isValidBall = true;
       }
       // else if (isNoBall && isWicket) {
@@ -435,11 +463,22 @@ export default function HomeScreen() {
         if (latestMatch) {
           let updatedMatch;
           if (isFirstInning) {
-            updatedMatch = { ...latestMatch, team1score: totalScore };
+            updatedMatch = {
+              ...latestMatch,
+              team1score: totalScore,
+              currentScore: {
+                team1: localFinalFirstInningsScore,
+                team2: localFinalSecondInningsScore,
+              },
+            };
           } else {
             updatedMatch = {
               ...latestMatch,
               team2score: scoreSecondInningsLocalState,
+              currentScore: {
+                team1: localFinalFirstInningsScore,
+                team2: localFinalSecondInningsScore,
+              },
             };
           }
           matches[0] = updatedMatch;
@@ -564,37 +603,51 @@ export default function HomeScreen() {
     }
   };
 
-  function increaseOver() {
+  function increaseOver(
+    localFinalFirstInningsScore: currentTotalScore,
+    localFinalSecondInningsScore: currentTotalScore
+  ): {
+    updatedFirstInningsScore: currentTotalScore;
+    updatedSecondInningsScore: currentTotalScore;
+  } {
     const currentOverBalls = totalBalls + 1;
     if (currentOverBalls == 6) {
       if (isFirstInning) {
-        setFinalFirstInningsScore((prev) => ({
-          ...prev,
-          totalOvers: prev.totalOvers + 1,
+        localFinalFirstInningsScore = {
+          ...localFinalFirstInningsScore,
+          totalOvers: localFinalFirstInningsScore.totalOvers + 1,
           totalBalls: 0,
-        }));
+        };
+        setFinalFirstInningsScore(localFinalFirstInningsScore);
       } else {
-        setFinalSecondInningsScore((prev) => ({
-          ...prev,
-          totalOvers: prev.totalOvers + 1,
+        localFinalSecondInningsScore = {
+          ...localFinalSecondInningsScore,
+          totalOvers: localFinalSecondInningsScore.totalOvers + 1,
           totalBalls: 0,
-        }));
+        };
+        setFinalSecondInningsScore(localFinalSecondInningsScore);
       }
       setTotalBalls(0);
     } else {
       if (isFirstInning) {
-        setFinalFirstInningsScore((prev) => ({
-          ...prev,
+        localFinalFirstInningsScore = {
+          ...localFinalFirstInningsScore,
           totalBalls: currentOverBalls,
-        }));
+        };
+        setFinalFirstInningsScore(localFinalFirstInningsScore);
       } else {
-        setFinalSecondInningsScore((prev) => ({
-          ...prev,
+        localFinalSecondInningsScore = {
+          ...localFinalSecondInningsScore,
           totalBalls: currentOverBalls,
-        }));
+        };
+        setFinalSecondInningsScore(localFinalSecondInningsScore);
       }
       setTotalBalls(currentOverBalls);
     }
+    return {
+      updatedFirstInningsScore: localFinalFirstInningsScore,
+      updatedSecondInningsScore: localFinalSecondInningsScore,
+    };
   }
 
   const updatePlayerMatchStats = async (scoreThisBall: scorePerBall) => {

@@ -1,5 +1,6 @@
 import { matchResult } from "./matchResult";
 import { scorePerInning } from "./scorePerInnig";
+import { currentTotalScore } from "./currentTotalScore";
 
 type match = {
   matchId: string;
@@ -18,6 +19,10 @@ type match = {
   endDateTime: string;
   quickMatch: boolean;
   manOfTheMatch: string;
+  currentScore: {
+    team1: currentTotalScore;
+    team2: currentTotalScore;
+  };
 };
 
 export type { match };

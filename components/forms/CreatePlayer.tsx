@@ -62,6 +62,9 @@ export const CreatePlayer = () => {
         runsConceded: 0,
         maidens: 0,
         bowlingEconomy: 0,
+        foursConceded: 0,
+        sixesConceded: 0,
+        dotBalls: 0,
       });
       await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, playerCareerStats);
     } else {
@@ -84,6 +87,9 @@ export const CreatePlayer = () => {
           runsConceded: 0,
           maidens: 0,
           bowlingEconomy: 0,
+          foursConceded: 0,
+          sixesConceded: 0,
+          dotBalls: 0,
         },
       ];
       await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, newPlayerCareerStats);

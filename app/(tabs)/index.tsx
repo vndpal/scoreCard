@@ -174,7 +174,15 @@ export default function HomeScreen() {
         });
         if (currentMatch.isFirstInning) {
           setTotalBalls(currnetInningstotalBalls);
-          setScorePerOver(currentMatch.team1score[0]);
+          if (
+            currentMatch.team1score.length > 0 &&
+            currentMatch.team1score[0].length > 0 &&
+            currentMatch.team1score[0][0].isOverEnd
+          ) {
+            setScorePerOver([]);
+          } else {
+            setScorePerOver(currentMatch.team1score[0]);
+          }
           if (currentMatch.team1score[0][0].isOverEnd) {
             setBowler(undefined);
           } else {
@@ -255,7 +263,15 @@ export default function HomeScreen() {
             totalBalls: currnetInningstotalBalls,
           });
           setTotalBalls(currnetInningstotalBalls);
-          setScorePerOver(currentMatch.team2score[0]);
+          if (
+            currentMatch.team2score.length > 0 &&
+            currentMatch.team2score[0].length > 0 &&
+            currentMatch.team2score[0][0].isOverEnd
+          ) {
+            setScorePerOver([]);
+          } else {
+            setScorePerOver(currentMatch.team2score[0]);
+          }
           if (currentMatch.team2score[0][0].isOverEnd) {
             setBowler(undefined);
           } else {

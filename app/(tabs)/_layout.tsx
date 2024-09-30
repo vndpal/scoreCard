@@ -1,13 +1,41 @@
-import React, { useState } from "react";
-import { Tabs } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { Tabs, useRouter, usePathname } from "expo-router";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import MenuScreen from "./menu";
+import { BackHandler, Alert } from "react-native";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const [menuVisible, setMenuVisible] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (pathname === "/") {
+      router.replace("/");
+
+      // Add back button handler
+      const backHandler = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          Alert.alert("Exit App", "Are you sure you want to exit the app?", [
+            {
+              text: "Cancel",
+              onPress: () => null,
+              style: "cancel",
+            },
+            { text: "YES", onPress: () => BackHandler.exitApp() },
+          ]);
+          return true; // Prevent default behavior
+        }
+      );
+
+      // Clean up the event listener
+      return () => backHandler.remove();
+    }
+  }, [pathname, router]);
 
   const showMenu = () => setMenuVisible(true);
   const hideMenu = () => setMenuVisible(false);

@@ -1115,6 +1115,7 @@ export default function HomeScreen() {
             <Icon name="delete" type="feather" color="black" size={28} />
           </TouchableOpacity>
           <TouchableOpacity
+            disabled={match.status !== "live"}
             style={styles.specialBubbleButton}
             onPress={handleMatchSettings}
           >

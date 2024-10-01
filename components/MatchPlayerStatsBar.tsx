@@ -20,6 +20,7 @@ const MatchPlayerStatsBar = ({
   isOut,
   handleOutBatter,
   handleSwapBatters,
+  handleEditPlayer,
 }: {
   strikerBatsman: player | undefined;
   nonStrikerBatsman: player | undefined;
@@ -28,6 +29,7 @@ const MatchPlayerStatsBar = ({
   isOut: boolean;
   handleOutBatter: (outBatter: player) => void;
   handleSwapBatters: () => void;
+  handleEditPlayer: (playerType: "striker" | "nonStriker" | "bowler") => void;
 }) => {
   const { currentTheme } = useTheme();
 
@@ -58,9 +60,24 @@ const MatchPlayerStatsBar = ({
         disabled={!isOut}
         onPress={() => handleOut(strikerBatsman!)} // Pass strikerBatsman to handleOutBatter
       >
-        <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
-          {strikerBatsman?.name?.slice(0, 10)}
-        </Text>
+        <View style={styles.playerNameContainer}>
+          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
+            {strikerBatsman?.name?.slice(0, 8)}
+          </Text>
+          {strikerBatsman &&
+            batterStats &&
+            batterStats.runs == 0 &&
+            batterStats.ballsFaced == 0 && (
+              <TouchableOpacity onPress={() => handleEditPlayer("striker")}>
+                <Icon
+                  name="shuffle"
+                  type="ionicon"
+                  size={24}
+                  color={currentTheme === "dark" ? "#d0d0d0" : "black"}
+                />
+              </TouchableOpacity>
+            )}
+        </View>
         <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
           {batterStats?.runs} ({batterStats?.ballsFaced})
         </Text>
@@ -81,9 +98,24 @@ const MatchPlayerStatsBar = ({
         style={[styles.batter, isOut && styles.highlightOutBatter]}
         onPress={() => handleOut(nonStrikerBatsman!)} // Pass nonStrikerBatsman to handleOutBatter
       >
-        <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
-          {nonStrikerBatsman?.name?.slice(0, 10)}
-        </Text>
+        <View style={styles.playerNameContainer}>
+          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
+            {nonStrikerBatsman?.name?.slice(0, 8)}
+          </Text>
+          {nonStrikerBatsman &&
+            nonStrikerBatter &&
+            nonStrikerBatter.runs == 0 &&
+            nonStrikerBatter.ballsFaced == 0 && (
+              <TouchableOpacity onPress={() => handleEditPlayer("nonStriker")}>
+                <Icon
+                  name="shuffle"
+                  type="ionicon"
+                  size={24}
+                  color={currentTheme === "dark" ? "#d0d0d0" : "black"}
+                />
+              </TouchableOpacity>
+            )}
+        </View>
         <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
           {nonStrikerBatter
             ? `${nonStrikerBatter.runs} (${nonStrikerBatter.ballsFaced})`
@@ -91,9 +123,24 @@ const MatchPlayerStatsBar = ({
         </Text>
       </TouchableOpacity>
       <View style={styles.bowlerContainer}>
-        <Text style={[styles.bowlerName, themeStyles.bowlerName]}>
-          {bowler?.name?.slice(0, 10)}
-        </Text>
+        <View style={styles.playerNameContainer}>
+          <Text style={[styles.bowlerName, themeStyles.bowlerName]}>
+            {bowler?.name?.slice(0, 8)}
+          </Text>
+          {bowler &&
+            bowlerStats &&
+            bowlerStats.ballsBowled == 0 &&
+            bowlerStats.runsConceded == 0 && (
+              <TouchableOpacity onPress={() => handleEditPlayer("bowler")}>
+                <Icon
+                  name="shuffle"
+                  type="ionicon"
+                  size={24}
+                  color={currentTheme === "dark" ? "#d0d0d0" : "black"}
+                />
+              </TouchableOpacity>
+            )}
+        </View>
         <Text style={[styles.bowlerStats, themeStyles.bowlerStats]}>
           {bowlerStats?.runsConceded}/{bowlerStats?.wickets} (
           {bowlerStats?.overs}.{bowlerStats?.ballsBowled})
@@ -178,6 +225,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
+  },
+  playerNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
   },
 });
 

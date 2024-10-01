@@ -979,6 +979,20 @@ export default function HomeScreen() {
       match.quickMatch ||
       !!(batter1 && batter2 && bowler));
 
+  const handleEditPlayer = (
+    playerType: "striker" | "nonStriker" | "bowler"
+  ) => {
+    if (playerType === "striker") {
+      setBatter1(undefined);
+    } else if (playerType === "nonStriker") {
+      setBatter2(undefined);
+    } else if (playerType === "bowler") {
+      setBowler(undefined);
+    }
+
+    setPickPlayerVisible(true);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.scoreBoardcontainer}>
@@ -1005,6 +1019,7 @@ export default function HomeScreen() {
             handleSwapBatters={swapBatters}
             isOut={isWicket}
             handleOutBatter={(outBatter: player) => setOutBatter(outBatter)}
+            handleEditPlayer={handleEditPlayer}
           />
         ) : null}
 

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Tabs, useRouter, usePathname } from "expo-router";
+import {
+  Tabs,
+  useRouter,
+  usePathname,
+  useRootNavigationState,
+} from "expo-router";
 import { TabBarIcon } from "@/components/navigation/TabBarIcon";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -11,9 +16,10 @@ export default function TabLayout() {
   const [menuVisible, setMenuVisible] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
-    if (pathname === "/") {
+    if (pathname === "/" && rootNavigationState?.key) {
       router.replace("/");
 
       // Add back button handler
@@ -35,7 +41,7 @@ export default function TabLayout() {
       // Clean up the event listener
       return () => backHandler.remove();
     }
-  }, [pathname, router]);
+  }, [pathname, router, rootNavigationState?.key]);
 
   const showMenu = () => setMenuVisible(true);
   const hideMenu = () => setMenuVisible(false);

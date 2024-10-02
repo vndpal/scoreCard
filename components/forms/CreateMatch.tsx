@@ -81,6 +81,29 @@ export const CreateMatch = () => {
     const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
     const { overs, wickets, team1, team2, quickMatch } = formik.values;
 
+    if (!quickMatch) {
+      const team1PlayerCount =
+        teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team1)
+          ? teamPlayerMapping[team1]?.length
+          : 0;
+      const team2PlayerCount =
+        teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team2)
+          ? teamPlayerMapping[team2]?.length
+          : 0;
+
+      if (
+        team1PlayerCount == 0 ||
+        team2PlayerCount == 0 ||
+        Math.abs(team1PlayerCount - team2PlayerCount) > 1
+      ) {
+        Alert.alert(
+          "Team is not created properly",
+          `Teams must have equal players or differ by at most 1 player!\n\n${team1}: ${team1PlayerCount}\n${team2}: ${team2PlayerCount}`
+        );
+        return;
+      }
+    }
+
     let matchId = "1";
     if (matches) {
       if (matches[0].status == "live") {
@@ -88,28 +111,6 @@ export const CreateMatch = () => {
           "There is already a live match. Please complete it before starting a new match."
         );
         return;
-      }
-
-      if (!quickMatch) {
-        const team1PlayerCount =
-          teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team1)
-            ? teamPlayerMapping[team1]?.length
-            : 0;
-        const team2PlayerCount =
-          teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team2)
-            ? teamPlayerMapping[team2]?.length
-            : 0;
-        if (
-          team1PlayerCount == 0 ||
-          team2PlayerCount == 0 ||
-          Math.abs(team1PlayerCount - team2PlayerCount) > 1
-        ) {
-          Alert.alert(
-            "Team is not created properly",
-            `Teams must have equal players or differ by at most 1 player!\n\n${team1}: ${team1PlayerCount}\n${team2}: ${team2PlayerCount}`
-          );
-          return;
-        }
       }
 
       matchId = Number.isNaN(matches[0].matchId)

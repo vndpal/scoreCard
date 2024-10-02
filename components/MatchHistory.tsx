@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { player } from "@/types/player";
 import MatchScoreBar from "./MatchScoreBar";
+import TournamentStandings from "./TournamentStandings";
 
 const { width } = Dimensions.get("window");
 
@@ -293,14 +294,27 @@ const MatchHistory = ({
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
+  const matchStandings =
+    matches?.reduce((acc, match) => {
+      if (match.winner) {
+        const winningTeam = match[match.winner as keyof typeof match];
+        const losingTeam = match[match.winner === "team1" ? "team2" : "team1"];
+        if (typeof winningTeam === "string" && typeof losingTeam === "string") {
+          acc[winningTeam] = (acc[winningTeam] || 0) + 1;
+          acc[losingTeam] = acc[losingTeam] || 0;
+        }
+      }
+      return acc;
+    }, {} as Record<string, number>) ?? {};
+
   return (
     <View style={themeStyles.container}>
       <Text style={themeStyles.header}>Match History</Text>
+      {matches && <TournamentStandings matchStandings={matchStandings} />}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {matches &&
-          matches.map((item, index) => (
-            <Card key={index} match={item} players={players} />
-          ))}
+        {matches?.map((item, index) => (
+          <Card key={index} match={item} players={players} />
+        ))}
       </ScrollView>
     </View>
   );

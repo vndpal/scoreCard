@@ -227,10 +227,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   playerNameContainer: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
   },
 });
 

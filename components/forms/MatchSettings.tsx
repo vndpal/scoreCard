@@ -100,7 +100,7 @@ const MatchSettings = () => {
                     ? winner === latestMatch.team1
                       ? "team1"
                       : "team2"
-                    : "team1",
+                    : undefined,
               };
 
               matches[0] = updatedMatch;

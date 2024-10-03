@@ -68,7 +68,10 @@ const MatchPlayerStatsBar = ({
             batterStats &&
             batterStats.runs == 0 &&
             batterStats.ballsFaced == 0 && (
-              <TouchableOpacity onPress={() => handleEditPlayer("striker")}>
+              <TouchableOpacity
+                disabled={isOut}
+                onPress={() => handleEditPlayer("striker")}
+              >
                 <Icon
                   name="shuffle"
                   type="ionicon"
@@ -106,7 +109,10 @@ const MatchPlayerStatsBar = ({
             nonStrikerBatter &&
             nonStrikerBatter.runs == 0 &&
             nonStrikerBatter.ballsFaced == 0 && (
-              <TouchableOpacity onPress={() => handleEditPlayer("nonStriker")}>
+              <TouchableOpacity
+                disabled={isOut}
+                onPress={() => handleEditPlayer("nonStriker")}
+              >
                 <Icon
                   name="shuffle"
                   type="ionicon"

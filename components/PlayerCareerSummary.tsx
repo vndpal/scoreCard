@@ -38,13 +38,24 @@ const PlayerCareerSummary = () => {
           playersMap.set(p.id.toString(), p.name);
         });
         setPlayersMap(playersMap);
-        // Sort battingStats by most runs
+        // Sort battingStats by most runs and then by best strike rate
         const sortedBattingStats = [...careerStats].sort(
-          (a: playerCareerStats, b: playerCareerStats) => b.runs - a.runs
+          (a: playerCareerStats, b: playerCareerStats) => {
+            if (b.runs !== a.runs) {
+              return b.runs - a.runs;
+            }
+            return b.strikeRate - a.strikeRate;
+          }
         );
 
+        // Sort bowlingStats by most wickets and then by best bowling economy
         const sortedBowlingStats = [...careerStats].sort(
-          (a: playerCareerStats, b: playerCareerStats) => b.wickets - a.wickets
+          (a: playerCareerStats, b: playerCareerStats) => {
+            if (b.wickets !== a.wickets) {
+              return b.wickets - a.wickets;
+            }
+            return a.bowlingEconomy - b.bowlingEconomy;
+          }
         );
 
         setBattingStats(sortedBattingStats);

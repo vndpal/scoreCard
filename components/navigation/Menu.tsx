@@ -26,6 +26,7 @@ const menuItems = [
   { id: "4", title: "🙌 New team", route: "/createTeam" },
   { id: "5", title: "👦 Players", route: "/players" },
   { id: "6", title: "📊 Stats", route: "/playerRecords" },
+  { id: "7", title: "⚙️ Settings", route: "/settings" },
 ];
 const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
   const slideAnim = useRef(new Animated.Value(width * 0.7)).current;

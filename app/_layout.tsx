@@ -9,10 +9,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { AppThemeProvider } from "@/context/ThemeContext";
-
+import { settings } from "@/types/settings";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
+import { useSettings } from "@/hooks/useSettings";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -24,6 +25,7 @@ export default function RootLayout() {
   });
 
   const { theme } = useMaterial3Theme();
+  const { settings } = useSettings();
 
   const [customTheme, setTheme] = useState(
     colorScheme === "dark" ? DarkTheme : DefaultTheme
@@ -31,10 +33,12 @@ export default function RootLayout() {
   const [currentTheme, setCurrentTheme] = useState<"dark" | "light">(
     colorScheme === "dark" ? "dark" : "light"
   );
+  const [currentSettings, setCurrentSettings] = useState<settings>(settings);
 
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      setCurrentSettings(settings);
     }
   }, [loaded]);
 
@@ -50,6 +54,10 @@ export default function RootLayout() {
     });
   };
 
+  const updateSettings = (settings: settings) => {
+    setCurrentSettings(settings);
+  };
+
   const paperTheme =
     currentTheme === "dark"
       ? { ...MD3DarkTheme, colors: theme.dark }
@@ -58,7 +66,12 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={customTheme}>
       <PaperProvider theme={paperTheme}>
-        <AppThemeProvider toggleTheme={toggleTheme} currentTheme={currentTheme}>
+        <AppThemeProvider
+          toggleTheme={toggleTheme}
+          currentTheme={currentTheme}
+          currentSettings={currentSettings}
+          applySettingsChanges={updateSettings}
+        >
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
@@ -126,6 +139,13 @@ export default function RootLayout() {
               name="playerRecords"
               options={{
                 headerTitle: "Player stats",
+                animation: "slide_from_right",
+              }}
+            />
+            <Stack.Screen
+              name="settings"
+              options={{
+                headerTitle: "Settings",
                 animation: "slide_from_right",
               }}
             />

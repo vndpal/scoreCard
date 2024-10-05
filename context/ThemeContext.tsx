@@ -1,8 +1,11 @@
+import { settings } from "@/types/settings";
 import React, { createContext, useContext } from "react";
 
 interface ThemeContextType {
   toggleTheme: () => void;
   currentTheme: "dark" | "light";
+  currentSettings: settings;
+  applySettingsChanges: (settings: settings) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -18,10 +21,25 @@ export const useTheme = () => {
 export const AppThemeProvider: React.FC<{
   toggleTheme: () => void;
   currentTheme: "dark" | "light";
+  currentSettings: settings;
+  applySettingsChanges: (settings: settings) => void;
   children: React.ReactNode;
-}> = ({ children, toggleTheme, currentTheme }) => {
+}> = ({
+  children,
+  toggleTheme,
+  currentTheme,
+  currentSettings,
+  applySettingsChanges,
+}) => {
   return (
-    <ThemeContext.Provider value={{ toggleTheme, currentTheme }}>
+    <ThemeContext.Provider
+      value={{
+        toggleTheme,
+        currentTheme,
+        currentSettings,
+        applySettingsChanges,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

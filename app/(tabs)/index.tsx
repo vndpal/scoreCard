@@ -22,6 +22,7 @@ import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
+import MatchTimer from "@/components/MatchTimer";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -95,8 +96,11 @@ export default function HomeScreen() {
   const [pickPlayerVisible, setPickPlayerVisible] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState<boolean>(false);
   const [isEntryDone, setIsEntryDone] = useState<boolean>(false);
+  const [lastActivityDateTime, setLastActivityDateTime] = useState<string>(
+    new Date().toString()
+  );
 
-  const { currentTheme } = useTheme();
+  const { currentTheme, currentSettings } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -616,6 +620,7 @@ export default function HomeScreen() {
       }
     } finally {
       setShowLoader(false);
+      setLastActivityDateTime(new Date().toString());
     }
   };
 
@@ -1137,6 +1142,19 @@ export default function HomeScreen() {
             <Icon name="settings" type="ionicon" color="black" size={28} />
           </TouchableOpacity>
         </View>
+        {currentSettings.showMatchTimer && match.status === "live" && (
+          <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
+            <MatchTimer
+              matchStartDateTime={match.startDateTime}
+              lastActivityDateTime={lastActivityDateTime}
+              thresholdIdleTime={
+                currentSettings.matchTime.seconds * 1000 +
+                currentSettings.matchTime.minutes * 60 * 1000 +
+                currentSettings.matchTime.hours * 60 * 60 * 1000
+              }
+            />
+          </View>
+        )}
       </View>
       {!bowler || !batter1 || !batter2 ? (
         <PickPlayer
@@ -1177,8 +1195,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    margin: 2,
-    padding: 4,
+    margin: 1,
+    padding: 2,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",

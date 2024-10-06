@@ -7,6 +7,12 @@ import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
 import { playerStats } from "@/types/playerStats";
 import { useTheme } from "@/context/ThemeContext";
+import { playerCareerStats } from "@/types/playerCareerStats";
+
+interface PlayerWithStats extends playerCareerStats {
+  isRecommendedBowler?: boolean;
+  isRecommendedBatter?: boolean;
+}
 
 interface PickPlayerProps {
   visible: boolean;
@@ -26,6 +32,7 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   onSubmit,
 }) => {
   const [players, setPlayers] = useState<player[]>([]);
+  const [playerStats, setPlayerStats] = useState<PlayerWithStats[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -34,6 +41,34 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
     (async () => {
       if (team) {
         let playersFromDb = await getItem(STORAGE_ITEMS.PLAYERS);
+        let playerStatsFromDb = await getItem(
+          STORAGE_ITEMS.PLAYER_CAREER_STATS
+        );
+        if (playerStatsFromDb && playerStatsFromDb.length > 0) {
+          const halfPlayers = Math.ceil(playerStatsFromDb.length / 3);
+
+          // Sort bowlers by least overs bowled
+          const sortedBowlers = [...playerStatsFromDb].sort(
+            (a: playerCareerStats, b: playerCareerStats) => a.overs - b.overs
+          );
+          sortedBowlers.slice(0, halfPlayers).forEach((bowler) => {
+            bowler.isRecommendedBowler = true;
+          });
+
+          // Sort batsmen by least (innings - notOuts)
+          const sortedBatsmen = [...playerStatsFromDb].sort(
+            (a: playerCareerStats, b: playerCareerStats) => {
+              const aValue = a.innings - a.notOuts;
+              const bValue = b.innings - b.notOuts;
+              return aValue - bValue;
+            }
+          );
+          sortedBatsmen.slice(0, halfPlayers).forEach((batsman) => {
+            batsman.isRecommendedBatter = true;
+          });
+
+          setPlayerStats(playerStatsFromDb);
+        }
         if (playersFromDb) {
           remainingPlayers = remainingPlayers.filter((p) => p.team === team);
           playersFromDb = playersFromDb.filter((p: player) =>
@@ -61,6 +96,37 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
       }}
     >
       <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
+      <Text style={[styles.playerName, themeStyles.text]}>
+        {playerType === "Batsman" ? (
+          playerStats.find((p) => p.playerId === item.id)
+            ?.isRecommendedBatter ? (
+            <View>
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: "green",
+                  borderRadius: 5,
+                }}
+              ></View>
+            </View>
+          ) : (
+            ""
+          )
+        ) : playerStats.find((p) => p.playerId === item.id)
+            ?.isRecommendedBowler ? (
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              backgroundColor: "green",
+              borderRadius: 5,
+            }}
+          ></View>
+        ) : (
+          ""
+        )}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -132,6 +198,9 @@ const styles = StyleSheet.create({
     marginRight: 4, // Increased margin to accommodate the scrollbar
   },
   playerItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,

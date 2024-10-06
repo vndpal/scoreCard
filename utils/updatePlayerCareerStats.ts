@@ -25,7 +25,12 @@ export const updatePlayerCareerStats = async (
         careerStat.ballsFaced += playerMatchStat.ballsFaced;
         careerStat.fours += playerMatchStat.fours;
         careerStat.sixes += playerMatchStat.sixes;
-        careerStat.notOuts += playerMatchStat.isOut ? 0 : 1;
+        careerStat.notOuts +=
+          playerMatchStat.ballsFaced == 0 && playerMatchStat.runs == 0
+            ? 0
+            : playerMatchStat.isOut
+            ? 0
+            : 1;
 
         careerStat.strikeRate = (careerStat.runs / careerStat.ballsFaced) * 100;
 

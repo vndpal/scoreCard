@@ -1,4 +1,5 @@
 type playerCareerStats = {
+  id?: string;
   playerId: string;
   matches: number;
   innings: number;

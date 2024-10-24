@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { player } from "@/types/player";
 import MatchScoreBar from "./MatchScoreBar";
 import TournamentStandings from "./TournamentStandings";
+import { Timestamp } from "firebase/firestore";
 
 const { width } = Dimensions.get("window");
 
@@ -55,12 +56,15 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
     });
   };
 
-  const getTimeDifference = (startDateTime: string, endDateTime: string) => {
+  const getTimeDifference = (
+    startDateTime: Timestamp,
+    endDateTime: Timestamp | undefined
+  ) => {
     if (!startDateTime || !endDateTime) {
       return "-";
     }
-    const start = new Date(startDateTime);
-    const end = new Date(endDateTime);
+    const start = startDateTime.toDate();
+    const end = endDateTime.toDate();
     const diff = end.getTime() - start.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -121,11 +125,9 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
                   color={currentTheme === "dark" ? "#B0B0B0" : "#666"}
                 />
                 <Text style={themeStyles.info}>
-                  {new Date(match.startDateTime).toLocaleDateString(undefined, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  })}
+                  {match.startDateTime
+                    ? match.startDateTime.toDate().toLocaleDateString()
+                    : "NA"}
                 </Text>
               </View>
             </View>

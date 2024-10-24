@@ -1,4 +1,3 @@
-import MatchSummary from "@/components/MatchSummary";
 import PlayerCareerSummary from "@/components/PlayerCareerSummary";
 import React from "react";
 

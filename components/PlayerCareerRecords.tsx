@@ -4,6 +4,7 @@ import { playerCareerStats } from "@/types/playerCareerStats";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useTheme } from "@/context/ThemeContext";
+import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 // Props for the PlayerCareerRecords component
 interface PlayerCareerRecordsProps {
@@ -19,12 +20,9 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
 
   useEffect(() => {
     const fetchStats = async () => {
-      const careerStats = await getItem(STORAGE_ITEMS.PLAYER_CAREER_STATS);
+      const careerStats = await PlayerCareerStats.getByPlayerId(playerId);
       if (careerStats) {
-        const playerStats = careerStats.find(
-          (stat: playerCareerStats) => stat.playerId === playerId
-        );
-        setStats(playerStats || null);
+        setStats(careerStats);
       }
     };
     fetchStats();

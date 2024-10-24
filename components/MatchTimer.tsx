@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+import { Timestamp } from "firebase/firestore";
 
 type MatchTimerProps = {
-  matchStartDateTime: string;
-  lastActivityDateTime: string;
+  matchStartDateTime: Timestamp;
+  lastActivityDateTime: Timestamp;
   thresholdIdleTime: number;
 };
 
@@ -19,8 +20,8 @@ const MatchTimer = ({
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
-    const matchStartTime = new Date(matchStartDateTime).getTime();
-    const lastActivityTime = new Date(lastActivityDateTime).getTime();
+    const matchStartTime = matchStartDateTime.toMillis();
+    const lastActivityTime = lastActivityDateTime.toMillis();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();

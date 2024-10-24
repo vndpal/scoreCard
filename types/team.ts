@@ -1,7 +1,7 @@
-
 type team = {
-    teamName: string;
-    teamInitials: string;
+  id?: string;
+  teamName: string;
+  teamInitials: string;
 };
 
 export type { team };

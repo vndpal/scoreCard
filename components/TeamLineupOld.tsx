@@ -16,9 +16,12 @@ import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { teamPlayerMapping } from "@/types/teamPlayerMapping";
 import { team } from "@/types/team";
 import PreviewTeam from "./PreviewTeam";
+import { Player } from "@/firebase/models/Player";
+import { Team } from "@/firebase/models/Team";
+import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
 
 // Define the Player type
-type Player = {
+type PlayerDetails = {
   id: string;
   name: string;
   team: "none" | "team1" | "team2";
@@ -27,7 +30,7 @@ type Player = {
 // Define the TeamLineup component
 const TeamLineup: React.FC = () => {
   // Initialize the state with a list of players
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<PlayerDetails[]>([]);
 
   const [teamSelectionVisible, setTeamSelectionVisible] =
     useState<boolean>(false);
@@ -40,17 +43,15 @@ const TeamLineup: React.FC = () => {
   useEffect(() => {
     (async () => {
       // Get the team player mapping from storage
-      const teamPlayersMapping = await getItem(
-        STORAGE_ITEMS.TEAM_PLAYER_MAPPING
-      );
+      const teamPlayersMapping = await TeamPlayerMapping.getAll();
 
       // Get the players, teams from storage
-      const playersFromStorage: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
+      const playersFromStorage: player[] = await Player.getAll();
       if (playersFromStorage && playersFromStorage.length > 0) {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
       }
       // Get the teams from storage
-      const teams: team[] = await getItem(STORAGE_ITEMS.TEAMS);
+      const teams: team[] = await Team.getAll();
 
       const savedTeams = Object.keys(teamPlayersMapping || {});
       if (
@@ -69,10 +70,15 @@ const TeamLineup: React.FC = () => {
         setTeam1(localTeam1);
         setTeam2(localTeam2);
 
-        const team1Players =
-          teamPlayersMapping[localTeam1?.teamInitials || ""] || [];
-        const team2Players =
-          teamPlayersMapping[localTeam2?.teamInitials || ""] || [];
+        const team1Players = await TeamPlayerMapping.getPlayersByTeamName(
+          localTeam1?.teamInitials || ""
+        );
+        const team2Players = await TeamPlayerMapping.getPlayersByTeamName(
+          localTeam2?.teamInitials || ""
+        );
+        if (!team1Players || !team2Players) {
+          return;
+        }
         const players = playersFromStorage.map((player) => ({
           id: player.id.toString(),
           name: player.name,
@@ -161,13 +167,8 @@ const TeamLineup: React.FC = () => {
       .filter((player) => player.team === "team2")
       .map((player) => player.id);
 
-    const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
-    const updatedTeamPlayerMapping: teamPlayerMapping = {
-      [team1!.teamInitials]: playersInTeam1,
-      [team2!.teamInitials]: playersInTeam2,
-    };
-
-    await setItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING, updatedTeamPlayerMapping);
+    await TeamPlayerMapping.create(team1!.teamInitials, playersInTeam1);
+    await TeamPlayerMapping.create(team2!.teamInitials, playersInTeam2);
   };
 
   const randomizeTeams = () => {
@@ -213,7 +214,7 @@ const TeamLineup: React.FC = () => {
   };
 
   // Render a single player card
-  const renderPlayer = ({ item }: { item: Player }) => (
+  const renderPlayer = ({ item }: { item: PlayerDetails }) => (
     <View style={styles.card}>
       <Text style={styles.playerName}>{item.name}</Text>
       <View style={styles.iconContainer}>

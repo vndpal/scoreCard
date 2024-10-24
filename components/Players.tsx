@@ -1,6 +1,7 @@
 import { Colors } from "@/constants/Colors";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useTheme } from "@/context/ThemeContext";
+import { Player } from "@/firebase/models/Player";
 import { player } from "@/types/player";
 import { getItem } from "@/utils/asyncStorage";
 import { useRouter } from "expo-router";
@@ -16,13 +17,13 @@ const Players = () => {
 
   useEffect(() => {
     (async () => {
-      const players: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
-      if (players) {
-        players.sort((a, b) => a.name.localeCompare(b.name));
-        setPlayers(players);
+      const playersFromDB: player[] = await Player.getAll();
+      if (playersFromDB) {
+        playersFromDB.sort((a, b) => a.name.localeCompare(b.name));
+        setPlayers(playersFromDB);
       }
     })();
-  });
+  }, []);
 
   const renderItem = ({ item }: { item: player }) => (
     <Card

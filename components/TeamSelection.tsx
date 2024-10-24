@@ -8,6 +8,7 @@ import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { team } from "@/types/team";
 import teams from "@/interfaces/teams";
 import { Dropdown } from "react-native-paper-dropdown";
+import { Team } from "@/firebase/models/Team";
 
 // Define validation schema with Yup
 const teamSelectionSchema = Yup.object().shape({
@@ -43,7 +44,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
 
   useEffect(() => {
     (async () => {
-      const teams = await getItem(STORAGE_ITEMS.TEAMS);
+      const teams = await Team.getAll();
       if (teams) {
         setTeams(teams);
         setItems(

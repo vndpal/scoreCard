@@ -11,8 +11,7 @@ import { Button, TextInput, HelperText, Snackbar } from "react-native-paper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { team } from "@/types/team";
-import { getItem, setItem } from "@/utils/asyncStorage";
-import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { Team } from "@/firebase/models/Team";
 
 const createTeamSchema = Yup.object().shape({
   teamName: Yup.string().required("Team name is required"),
@@ -28,24 +27,15 @@ export const CreateTeam = () => {
     Keyboard.dismiss();
 
     const team: team = formik.values;
-    const teams = await getItem(STORAGE_ITEMS.TEAMS);
 
-    if (
-      teams &&
-      teams.find(
-        (t: team) =>
-          t.teamInitials === team.teamInitials || t.teamName === team.teamName
-      )
-    ) {
+    const teamExists = await Team.findByInitials(team.teamInitials);
+    console.log("teamExists", teamExists);
+    if (teamExists.length > 0) {
       alert("Team with this name already exists");
       return;
     }
 
-    if (teams) {
-      await setItem(STORAGE_ITEMS.TEAMS, [...teams, team]);
-    } else {
-      await setItem(STORAGE_ITEMS.TEAMS, [team]);
-    }
+    await Team.create(team);
 
     setIsSuccess(true);
     router.push("/explore");

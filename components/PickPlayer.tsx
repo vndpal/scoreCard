@@ -8,6 +8,8 @@ import { player } from "@/types/player";
 import { playerStats } from "@/types/playerStats";
 import { useTheme } from "@/context/ThemeContext";
 import { playerCareerStats } from "@/types/playerCareerStats";
+import { Player } from "@/firebase/models/Player";
+import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 interface PlayerWithStats extends playerCareerStats {
   isRecommendedBowler?: boolean;
@@ -40,10 +42,11 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   useEffect(() => {
     (async () => {
       if (team) {
-        let playersFromDb = await getItem(STORAGE_ITEMS.PLAYERS);
-        let playerStatsFromDb = await getItem(
-          STORAGE_ITEMS.PLAYER_CAREER_STATS
-        );
+        let playersFromDb = await Player.getAll();
+        let playerStatsFromDb: (playerCareerStats & {
+          isRecommendedBowler?: boolean;
+          isRecommendedBatter?: boolean;
+        })[] = await PlayerCareerStats.getAll();
         if (playerStatsFromDb && playerStatsFromDb.length > 0) {
           const halfPlayers = Math.ceil(playerStatsFromDb.length / 3);
 

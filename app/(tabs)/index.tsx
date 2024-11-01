@@ -23,6 +23,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import MatchTimer from "@/components/MatchTimer";
+import { undoPlayerCareerStats } from "@/utils/undoPlayerCareerStats";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -923,6 +924,9 @@ export default function HomeScreen() {
         }
 
         if (!match.quickMatch) {
+          if (currentMath.status !== "live") {
+            await undoPlayerCareerStats(match.matchId);
+          }
           await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
         }
 
@@ -948,7 +952,7 @@ export default function HomeScreen() {
   };
 
   const handleMatchSettings = () => {
-    router.push("matchSettings");
+    router.push("/matchSettings");
   };
 
   const handlePlayerPick = (value: player | undefined) => {

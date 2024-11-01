@@ -3,10 +3,11 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "@react-navigation/native";
+import * as Font from "expo-font";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import "react-native-reanimated";
 import { AppThemeProvider } from "@/context/ThemeContext";
 import { settings } from "@/types/settings";
@@ -14,8 +15,9 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 import { useSettings } from "@/hooks/useSettings";
+import { Text, View } from "react-native";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+// Keep splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -23,6 +25,20 @@ export default function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  console.log("loaded", loaded);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (loaded) {
+      // Only hide splash screen after everything is setup
+      await SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  // Don't render anything until font is loaded
+  if (!loaded) {
+    return null;
+  }
 
   const { theme } = useMaterial3Theme();
   const { settings } = useSettings();
@@ -42,10 +58,6 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
-  }
-
   const toggleTheme = () => {
     setTheme((prevTheme) => {
       const newTheme = prevTheme === DarkTheme ? DefaultTheme : DarkTheme;
@@ -64,94 +76,96 @@ export default function RootLayout() {
       : { ...MD3LightTheme, colors: theme.light };
 
   return (
-    <ThemeProvider value={customTheme}>
-      <PaperProvider theme={paperTheme}>
-        <AppThemeProvider
-          toggleTheme={toggleTheme}
-          currentTheme={currentTheme}
-          currentSettings={currentSettings}
-          applySettingsChanges={updateSettings}
-        >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-            <Stack.Screen
-              name="createMatch"
-              options={{
-                headerTitle: "Create match",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="toss"
-              options={{ headerTitle: "Toss", animation: "slide_from_right" }}
-            />
-            <Stack.Screen
-              name="createTeam"
-              options={{
-                headerTitle: "Create team",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="teamLineup"
-              options={{
-                headerTitle: "Playing XI",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="matchSettings"
-              options={{
-                headerTitle: "Match settings",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="players"
-              options={{
-                headerTitle: "Players",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="createPlayer"
-              options={{
-                headerTitle: "Add new player",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="player/[id]"
-              options={{
-                headerTitle: "Player profile",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="matchSummary"
-              options={{
-                headerTitle: "Match summary",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="playerRecords"
-              options={{
-                headerTitle: "Player stats",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="settings"
-              options={{
-                headerTitle: "Settings",
-                animation: "slide_from_right",
-              }}
-            />
-          </Stack>
-        </AppThemeProvider>
-      </PaperProvider>
-    </ThemeProvider>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <ThemeProvider value={customTheme}>
+        <PaperProvider theme={paperTheme}>
+          <AppThemeProvider
+            toggleTheme={toggleTheme}
+            currentTheme={currentTheme}
+            currentSettings={currentSettings}
+            applySettingsChanges={updateSettings}
+          >
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+              <Stack.Screen
+                name="createMatch"
+                options={{
+                  headerTitle: "Create match",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="toss"
+                options={{ headerTitle: "Toss", animation: "slide_from_right" }}
+              />
+              <Stack.Screen
+                name="createTeam"
+                options={{
+                  headerTitle: "Create team",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="teamLineup"
+                options={{
+                  headerTitle: "Playing XI",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="matchSettings"
+                options={{
+                  headerTitle: "Match settings",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="players"
+                options={{
+                  headerTitle: "Players",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="createPlayer"
+                options={{
+                  headerTitle: "Add new player",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="player/[id]"
+                options={{
+                  headerTitle: "Player profile",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="matchSummary"
+                options={{
+                  headerTitle: "Match summary",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="playerRecords"
+                options={{
+                  headerTitle: "Player stats",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="settings"
+                options={{
+                  headerTitle: "Settings",
+                  animation: "slide_from_right",
+                }}
+              />
+            </Stack>
+          </AppThemeProvider>
+        </PaperProvider>
+      </ThemeProvider>
+    </View>
   );
 }

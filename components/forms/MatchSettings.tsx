@@ -23,7 +23,7 @@ import { matchResult } from "@/types/matchResult";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import Loader from "../Loader";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@react-native-firebase/firestore";
 
 type items = {
   label: string;

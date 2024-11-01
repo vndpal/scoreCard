@@ -1,6 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { firebaseConfig } from "./config";
+import firestore from "@react-native-firebase/firestore";
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const db = firestore();
+
+export default db;

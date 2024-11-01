@@ -1,57 +1,42 @@
-import { db } from "../index";
-import {
-  collection,
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  DocumentData,
-  QueryDocumentSnapshot,
-  DocumentReference,
-  orderBy,
-  limit,
-  Query,
-  WhereFilterOp,
-  getDocsFromCache,
-  getDocsFromServer,
-} from "firebase/firestore";
+import db from "../index";
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
 export const firestoreService = {
-  create: async <T extends DocumentData>(
+  create: async <T extends FirebaseFirestoreTypes.DocumentData>(
     collectionName: string,
     id: string,
     data: T
   ): Promise<void> => {
     try {
-      await setDoc(doc(db, collectionName, id), data);
-    } catch (error: any) {
-      console.log("error in creating doc", error);
+      await db.collection(collectionName).doc(id).set(data);
+    } catch (error) {
+      console.error("Error creating document:", error);
+      throw error;
     }
   },
 
-  createWithAutoId: async <T extends DocumentData>(
+  createWithAutoId: async <T extends FirebaseFirestoreTypes.DocumentData>(
     collectionName: string,
     data: T
   ): Promise<string> => {
-    const docRef = doc(collection(db, collectionName));
-    await setDoc(docRef, data);
-    return docRef.id;
+    // const docRef = doc(collection(db, collectionName));
+    // await setDoc(docRef, data);
+    // return docRef.id;
+    return "";
   },
 
   get: async <T>(collectionName: string, id: string): Promise<T | null> => {
-    const docSnap = await getDoc(doc(db, collectionName, id));
-    return docSnap.exists() ? (docSnap.data() as T) : null;
+    // const docSnap = await getDoc(doc(db, collectionName, id));
+    // return docSnap.exists() ? (docSnap.data() as T) : null;
+    return null;
   },
 
   getAll: async <T>(collectionName: string): Promise<T[]> => {
-    const querySnapshot = await getDocs(collection(db, collectionName));
-    return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as T)
-    );
+    // const querySnapshot = await getDocs(collection(db, collectionName));
+    // return querySnapshot.docs.map(
+    //   (doc) => ({ id: doc.id, ...doc.data() } as T)
+    // );
+    return [];
   },
 
   getAllOrderby: async <T>(
@@ -60,16 +45,17 @@ export const firestoreService = {
     direction: "asc" | "desc"
   ): Promise<T[]> => {
     try {
-      const q = query(
-        collection(db, collectionName),
-        orderBy(orderByField, direction)
-      );
+      // const q = query(
+      //   collection(db, collectionName),
+      //   orderBy(orderByField, direction)
+      // );
 
-      const querySnapshot = await getDocs(q);
+      // const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as T)
-      );
+      // return querySnapshot.docs.map(
+      //   (doc) => ({ id: doc.id, ...doc.data() } as T)
+      // );
+      return [];
     } catch (error: any) {
       throw error;
     }
@@ -80,8 +66,8 @@ export const firestoreService = {
     id: string,
     updates: Record<string, any>
   ): Promise<void> => {
-    const docRef = doc(db, collectionName, id);
-    await updateDoc(docRef, updates);
+    // const docRef = doc(db, collectionName, id);
+    // await updateDoc(docRef, updates);
   },
 
   upsert: async (
@@ -89,26 +75,31 @@ export const firestoreService = {
     id: string,
     updates: Record<string, any>
   ): Promise<void> => {
-    const docRef = doc(db, collectionName, id);
-    await setDoc(docRef, updates);
+    // const docRef = doc(db, collectionName, id);
+    // await setDoc(docRef, updates);
   },
 
   delete: async (collectionName: string, id: string): Promise<void> => {
-    await deleteDoc(doc(db, collectionName, id));
+    // await deleteDoc(doc(db, collectionName, id));
   },
 
   query: async <T>(
     collectionName: string,
-    filters: { field: string; operator: WhereFilterOp; value: any }[]
+    filters: {
+      field: string;
+      operator: FirebaseFirestoreTypes.WhereFilterOp;
+      value: any;
+    }[]
   ): Promise<T[]> => {
-    let q: Query<DocumentData> = collection(db, collectionName);
-    filters.forEach(({ field, operator, value }) => {
-      q = query(q, where(field, operator, value));
-    });
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as T)
-    );
+    // let q: Query<DocumentData> = collection(db, collectionName);
+    // filters.forEach(({ field, operator, value }) => {
+    //   q = query(q, where(field, operator, value));
+    // });
+    // const querySnapshot = await getDocs(q);
+    // return querySnapshot.docs.map(
+    //   (doc) => ({ id: doc.id, ...doc.data() } as T)
+    // );
+    return [];
   },
 
   getLatest: async <T>(
@@ -116,18 +107,19 @@ export const firestoreService = {
     orderByField: string,
     direction: "asc" | "desc"
   ): Promise<T | null> => {
-    const q = query(
-      collection(db, collectionName),
-      orderBy(orderByField, direction),
-      limit(1)
-    );
-    const querySnapshot = await getDocs(q);
+    // const q = query(
+    //   collection(db, collectionName),
+    //   orderBy(orderByField, direction),
+    //   limit(1)
+    // );
+    // const querySnapshot = await getDocs(q);
 
-    if (querySnapshot.empty) {
-      return null;
-    }
+    // if (querySnapshot.empty) {
+    //   return null;
+    // }
 
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as T;
+    // const doc = querySnapshot.docs[0];
+    // return { id: doc.id, ...doc.data() } as T;
+    return null;
   },
 };

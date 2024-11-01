@@ -10,6 +10,7 @@ import {
   Easing,
 } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
+//import { toggleNetworkConnectivity } from "@/firebase";
 
 export const FloatingMenu: React.FC = () => {
   const router = useRouter();
@@ -18,6 +19,7 @@ export const FloatingMenu: React.FC = () => {
 
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [animation] = useState(new Animated.Value(0));
+  const [isOnline, setIsOnline] = useState(true);
 
   const toggleMenu = () => {
     setIsMenuVisible(!isMenuVisible);
@@ -36,6 +38,11 @@ export const FloatingMenu: React.FC = () => {
 
   const changeTheme = () => {
     toggleTheme();
+  };
+
+  const toggleNetwork = async () => {
+    //await toggleNetworkConnectivity(isOnline);
+    setIsOnline(!isOnline);
   };
 
   const menuOptionsStyle = {
@@ -118,6 +125,11 @@ export const FloatingMenu: React.FC = () => {
           <TouchableOpacity onPress={changeTheme}>
             <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
               {currentTheme === "dark" ? "🌙" : "☀️"} Change theme
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={toggleNetwork}>
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              {isOnline ? "🌐 Online" : "🌐 Offline"}
             </Text>
           </TouchableOpacity>
         </Animated.View>

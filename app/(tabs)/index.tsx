@@ -23,7 +23,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import MatchTimer from "@/components/MatchTimer";
-import { collection, addDoc, getDocs, Timestamp } from "firebase/firestore";
+import firestore, { Timestamp } from "@react-native-firebase/firestore";
 import { Team } from "@/firebase/models/Team";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
@@ -31,7 +31,7 @@ import { MatchScore } from "@/firebase/models/MatchScores";
 
 export default function HomeScreen() {
   const router = useRouter();
-
+  console.log("HomeScreen");
   const [run, setRun] = useState(0);
   const [isWicket, setIsWicket] = useState(false);
   const [isNoBall, setIsNoBall] = useState(false);
@@ -48,8 +48,8 @@ export default function HomeScreen() {
     overs: 0,
     status: "completed",
     isFirstInning: true,
-    startDateTime: Timestamp.now(),
-    endDateTime: Timestamp.now(),
+    startDateTime: firestore.Timestamp.now(),
+    endDateTime: firestore.Timestamp.now(),
     quickMatch: false,
     manOfTheMatch: "",
     currentScore: {
@@ -943,7 +943,7 @@ export default function HomeScreen() {
   };
 
   const handleMatchSettings = () => {
-    router.push("matchSettings");
+    router.push("/matchSettings");
   };
 
   const handlePlayerPick = (value: player | undefined) => {

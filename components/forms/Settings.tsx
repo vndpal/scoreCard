@@ -6,6 +6,7 @@ import {
   Switch,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +15,7 @@ import TimePicker from "@/components/ui/timePicker";
 import { updateSettings } from "@/utils/updateSettings";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { firestoreService } from "@/firebase/services/firestore";
 
 const Settings = () => {
   const { currentTheme, toggleTheme, currentSettings, applySettingsChanges } =
@@ -47,6 +49,21 @@ const Settings = () => {
     fetchSettings();
   }, []);
 
+  const handleClearDatabase = async () => {
+    Alert.alert(
+      "Clear Database",
+      "Are you sure you want to clear the database?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: () => firestoreService.clearDatabase(),
+        },
+      ]
+    );
+  };
+
   const handleSettingChange = async (key: string, value: any) => {
     try {
       await updateSettings({ [key]: value });
@@ -67,6 +84,9 @@ const Settings = () => {
           break;
         case "autoUpdate":
           setAutoUpdate(value);
+          break;
+        case "clearDatabase":
+          handleClearDatabase();
           break;
         case "matchTime":
           setMatchTime({
@@ -124,7 +144,11 @@ const Settings = () => {
           onPress={() => handleSettingChange(settingKey, !value)}
         >
           <Text style={themeStyles.buttonText}>
-            {currentTheme === "dark" ? "Light Mode" : "Dark Mode"}
+            {settingKey === "darkMode"
+              ? currentTheme === "dark"
+                ? "Light Mode"
+                : "Dark Mode"
+              : title}
           </Text>
         </TouchableOpacity>
       )}
@@ -193,6 +217,14 @@ const Settings = () => {
             value={autoUpdate}
             onValueChange={setAutoUpdate}
             settingKey="autoUpdate"
+          />
+          <SettingItem
+            title="Clear Database"
+            icon="trash-outline"
+            value={false}
+            onValueChange={handleClearDatabase}
+            type="button"
+            settingKey="clearDatabase"
           />
         </LinearGradient>
       </ScrollView>

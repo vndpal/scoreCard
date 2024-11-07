@@ -42,11 +42,11 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   useEffect(() => {
     (async () => {
       if (team) {
-        let playersFromDb = await Player.getAll();
+        let playersFromDb = await Player.getAllFromCache();
         let playerStatsFromDb: (playerCareerStats & {
           isRecommendedBowler?: boolean;
           isRecommendedBatter?: boolean;
-        })[] = await PlayerCareerStats.getAll();
+        })[] = await PlayerCareerStats.getAllFromCache();
         if (playerStatsFromDb && playerStatsFromDb.length > 0) {
           const halfPlayers = Math.ceil(playerStatsFromDb.length / 3);
 

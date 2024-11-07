@@ -30,7 +30,7 @@ const Players = () => {
       style={[styles.card, themeStyles.card]}
       onPress={() =>
         router.push({
-          pathname: `/player/${item.id}`,
+          pathname: "/player/[id]",
           params: { playerId: item.id, playerName: item.name },
         })
       }

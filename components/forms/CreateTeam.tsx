@@ -29,7 +29,6 @@ export const CreateTeam = () => {
     const team: team = formik.values;
 
     const teamExists = await Team.findByInitials(team.teamInitials);
-    console.log("teamExists", teamExists);
     if (teamExists.length > 0) {
       alert("Team with this name already exists");
       return;

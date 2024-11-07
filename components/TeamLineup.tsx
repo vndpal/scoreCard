@@ -55,8 +55,10 @@ const TeamLineUp: React.FC = () => {
         setAllPlayers(playersFromStorage);
       }
       const teams: team[] = await Team.getAll();
-      let lastMatchTeam1 = "";
-      let lastMatchTeam2 = "";
+      let lastMatchTeam1 =
+        teamPlayersMapping.length > 0 ? teamPlayersMapping[0].teamName : "";
+      let lastMatchTeam2 =
+        teamPlayersMapping.length > 1 ? teamPlayersMapping[1].teamName : "";
       const lastMatch = await Match.getLatestMatch();
       if (lastMatch) {
         lastMatchTeam1 = lastMatch.team1;

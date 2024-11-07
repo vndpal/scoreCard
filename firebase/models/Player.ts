@@ -28,6 +28,13 @@ export class Player implements player {
     return players.map((player) => new Player(player.id, player));
   }
 
+  static async getAllFromCache(): Promise<Player[]> {
+    const players = await firestoreService.getAllFromCache<player>(
+      COLLECTION_NAME
+    );
+    return players.map((player) => new Player(player.id, player));
+  }
+
   static async update(id: string, data: Partial<player>): Promise<void> {
     await firestoreService.update(COLLECTION_NAME, id, data);
   }

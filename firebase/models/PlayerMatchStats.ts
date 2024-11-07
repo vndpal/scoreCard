@@ -52,8 +52,9 @@ export class PlayerMatchStats implements playerMatchStats {
     if (stats) {
       try {
         await firestoreService.update(COLLECTION_NAME, stats.id || "", data);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error updating PlayerMatchStats:", error);
+        throw error;
       }
     } else {
       throw new Error(`PlayerMatchStats not found for matchId: ${matchId}`);

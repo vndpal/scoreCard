@@ -2,7 +2,7 @@ import { firestoreService } from "../services/firestore";
 import { match } from "../../types/match";
 import { matchResult } from "@/types/matchResult";
 import { currentTotalScore } from "@/types/currentTotalScore";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@react-native-firebase/firestore";
 
 const COLLECTION_NAME = "matches";
 

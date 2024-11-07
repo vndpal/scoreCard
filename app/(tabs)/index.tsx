@@ -23,7 +23,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import MatchTimer from "@/components/MatchTimer";
-import { collection, addDoc, getDocs, Timestamp } from "firebase/firestore";
+import { Timestamp } from "@react-native-firebase/firestore";
 import { Team } from "@/firebase/models/Team";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
@@ -466,7 +466,6 @@ export default function HomeScreen() {
       }
 
       const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
-
       if (isFirstInning) {
         if (scorePerOver.length == 0) {
           const latestTotalScore = totalScore;

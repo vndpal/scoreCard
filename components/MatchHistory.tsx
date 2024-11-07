@@ -16,7 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { player } from "@/types/player";
 import MatchScoreBar from "./MatchScoreBar";
 import TournamentStandings from "./TournamentStandings";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from "@react-native-firebase/firestore";
 
 const { width } = Dimensions.get("window");
 

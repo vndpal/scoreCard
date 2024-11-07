@@ -78,6 +78,13 @@ export class PlayerCareerStats implements playerCareerStats {
     return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
   }
 
+  static async getAllFromCache(): Promise<PlayerCareerStats[]> {
+    const stats = await firestoreService.getAllFromCache<playerCareerStats>(
+      COLLECTION_NAME
+    );
+    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+  }
+
   static async update(
     playerId: string,
     data: Partial<playerCareerStats>

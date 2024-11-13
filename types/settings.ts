@@ -1,9 +1,9 @@
 type settings = {
   theme: "light" | "dark";
   notifications: boolean;
-  soundEffects: boolean;
   autoUpdate: boolean;
   showMatchTimer: boolean;
+  offlineMode: boolean;
   matchTime: { hours: number; minutes: number; seconds: number };
 };
 

@@ -32,7 +32,7 @@ export const CreatePlayer = () => {
     }
 
     router.dismissAll();
-    router.replace("/players");
+    router.push("/players");
   };
 
   const insertPlayerCareerStats = async (playerId: string) => {

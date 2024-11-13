@@ -179,6 +179,16 @@ export const firestoreService = {
 
         const batch = db.batch();
         snapshot.docs.forEach((doc) => {
+          if (collectionName === "matchScores") {
+            doc.ref
+              .collection("balls")
+              .get()
+              .then((subSnapshot) => {
+                subSnapshot.docs.forEach((subDoc) => {
+                  subDoc.ref.delete();
+                });
+              });
+          }
           batch.delete(doc.ref);
         });
 

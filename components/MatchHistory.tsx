@@ -298,7 +298,7 @@ const MatchHistory = ({
 
   const matchStandings =
     matches?.reduce((acc, match) => {
-      if (match.winner) {
+      if (match.winner && match.status === "completed") {
         const winningTeam = match[match.winner as keyof typeof match];
         const losingTeam = match[match.winner === "team1" ? "team2" : "team1"];
         if (typeof winningTeam === "string" && typeof losingTeam === "string") {

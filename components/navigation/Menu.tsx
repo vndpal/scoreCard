@@ -11,7 +11,6 @@ import { Text, Portal } from "react-native-paper";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { toggleCache, isNetworkEnabled } from "@/firebase";
 
 const { width } = Dimensions.get("window");
 
@@ -33,7 +32,6 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
   const slideAnim = useRef(new Animated.Value(width * 0.7)).current;
   const router = useRouter();
   const { currentTheme, toggleTheme } = useTheme();
-  const [networkEnabled, setNetworkEnabled] = useState(isNetworkEnabled);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -113,14 +111,6 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
                 ]}
               />
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.menuItem, themeStyles.menuItem]}
-            onPress={toggleCache}
-          >
-            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
-              {networkEnabled ? "🌐 Network" : "🌑 Cache"}
-            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.menuItem, themeStyles.menuItem]}

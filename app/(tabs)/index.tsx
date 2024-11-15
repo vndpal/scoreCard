@@ -28,6 +28,7 @@ import { Team } from "@/firebase/models/Team";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import { MatchScore } from "@/firebase/models/MatchScores";
+import { undoPlayerCareerStats } from "@/utils/undoPlayerCareerStats";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -911,6 +912,9 @@ export default function HomeScreen() {
         }
 
         if (!match.quickMatch) {
+          if (match.status !== "live") {
+            await undoPlayerCareerStats(match.matchId);
+          }
           await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
         }
 
@@ -942,7 +946,7 @@ export default function HomeScreen() {
   };
 
   const handleMatchSettings = () => {
-    router.push("matchSettings");
+    router.push("/matchSettings");
   };
 
   const handlePlayerPick = (value: player | undefined) => {

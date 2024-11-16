@@ -48,9 +48,9 @@ export const undoPlayerCareerStats = async (matchId: string) => {
         careerStat.ballsBowled = careerStat.ballsBowled % 6;
       }
 
-      careerStat.extras += playerMatchStat.extras;
-      careerStat.runsConceded += playerMatchStat.runsConceded;
-      careerStat.foursConceded += playerMatchStat.foursConceded;
+      careerStat.extras -= playerMatchStat.extras;
+      careerStat.runsConceded -= playerMatchStat.runsConceded;
+      careerStat.foursConceded -= playerMatchStat.foursConceded;
       careerStat.sixesConceded -= playerMatchStat.sixesConceded;
       careerStat.maidens -= playerMatchStat.maidens;
 

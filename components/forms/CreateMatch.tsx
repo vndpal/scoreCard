@@ -20,6 +20,11 @@ import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { useTheme } from "@/context/ThemeContext";
+import { Team } from "@/firebase/models/Team";
+import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
+import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
+import { Match } from "@/firebase/models/Match";
+import { Timestamp } from "@react-native-firebase/firestore";
 
 const createMatchSchema = Yup.object().shape({
   team1: Yup.string().required("Batting team is required"),
@@ -41,25 +46,22 @@ export const CreateMatch = () => {
 
   useEffect(() => {
     (async () => {
-      const matches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
-      if (matches && matches.length > 0) {
-        const lastMatch: match = matches[0];
-        if (lastMatch && lastMatch.status == "completed") {
-          const winner =
-            lastMatch.winner == "team1" ? lastMatch.team1 : lastMatch.team2;
-          const looser =
-            lastMatch.winner == "team1" ? lastMatch.team2 : lastMatch.team1;
-          formik.setValues({
-            team1: winner,
-            team2: looser,
-            overs: lastMatch.overs.toString(),
-            wickets: lastMatch.wickets?.toString() ?? "",
-            quickMatch: false,
-          });
-        }
+      const lastMatch: match | null = await Match.getLatestMatch();
+      if (lastMatch && lastMatch.status == "completed") {
+        const winner =
+          lastMatch.winner == "team1" ? lastMatch.team1 : lastMatch.team2;
+        const looser =
+          lastMatch.winner == "team1" ? lastMatch.team2 : lastMatch.team1;
+        formik.setValues({
+          team1: winner,
+          team2: looser,
+          overs: lastMatch.overs.toString(),
+          wickets: lastMatch.wickets?.toString() ?? "",
+          quickMatch: false,
+        });
       }
 
-      const teams = await getItem(STORAGE_ITEMS.TEAMS);
+      const teams = await Team.getAll();
       if (teams) {
         setTeams(
           teams.map((team: team) => ({
@@ -77,24 +79,28 @@ export const CreateMatch = () => {
       return;
     }
 
-    const matches = await getItem(STORAGE_ITEMS.MATCHES);
-    const teamPlayerMapping = await getItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING);
+    const lastMatch = await Match.getLatestMatch();
+    const teamPlayerMapping = await TeamPlayerMapping.getAll();
     const { overs, wickets, team1, team2, quickMatch } = formik.values;
 
     if (!quickMatch) {
       const team1PlayerCount =
         teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team1)
-          ? teamPlayerMapping[team1]?.length
+          ? teamPlayerMapping.find((mapping) => mapping.teamName === team1)
+              ?.players.length
           : 0;
       const team2PlayerCount =
         teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team2)
-          ? teamPlayerMapping[team2]?.length
+          ? teamPlayerMapping.find((mapping) => mapping.teamName === team2)
+              ?.players.length
           : 0;
 
       if (
-        team1PlayerCount == 0 ||
-        team2PlayerCount == 0 ||
-        Math.abs(team1PlayerCount - team2PlayerCount) > 1
+        team1PlayerCount &&
+        team2PlayerCount &&
+        (team1PlayerCount == 0 ||
+          team2PlayerCount == 0 ||
+          Math.abs(team1PlayerCount - team2PlayerCount) > 1)
       ) {
         Alert.alert(
           "Team is not created properly",
@@ -104,66 +110,56 @@ export const CreateMatch = () => {
       }
     }
 
-    let matchId = "1";
-    if (matches) {
-      if (matches[0].status == "live") {
+    if (lastMatch) {
+      if (lastMatch.status == "live") {
         alert(
           "There is already a live match. Please complete it before starting a new match."
         );
         return;
       }
-
-      matchId = Number.isNaN(matches[0].matchId)
-        ? "1"
-        : (parseInt(matches[0].matchId) + 1).toString();
-
-      await setItem(STORAGE_ITEMS.MATCHES, [
-        {
-          matchId,
-          overs,
-          wickets,
-          team1,
-          team2,
-          tossWin: "team1",
-          choose: "batting",
-          team1score: [],
-          team2score: [],
-          status: "live",
-          isFirstInning: true,
-          startDateTime: new Date().toString(),
-          quickMatch: quickMatch,
-        },
-        ...matches,
-      ]);
-    } else {
-      await setItem(STORAGE_ITEMS.MATCHES, [
-        {
-          matchId,
-          overs,
-          wickets,
-          team1,
-          team2,
-          tossWin: "team1",
-          choose: "batting",
-          team1score: [],
-          team2score: [],
-          status: "live",
-          isFirstInning: true,
-          startDateTime: new Date().toString(),
-          quickMatch: quickMatch,
-        },
-      ]);
     }
+
+    const newMatch = await Match.create({
+      manOfTheMatch: "",
+      currentScore: {
+        team1: {
+          totalBalls: 0,
+          totalRuns: 0,
+          totalWickets: 0,
+          totalOvers: 0,
+        },
+        team2: {
+          totalBalls: 0,
+          totalRuns: 0,
+          totalWickets: 0,
+          totalOvers: 0,
+        },
+      },
+      overs: parseInt(overs),
+      wickets: parseInt(wickets),
+      team1,
+      team2,
+      tossWin: "team1",
+      choose: "batting",
+      status: "live",
+      isFirstInning: true,
+      startDateTime: Timestamp.now(),
+      quickMatch: quickMatch,
+    });
 
     if (!quickMatch) {
       const playerStats: playerStats[] = [];
       const playerIds: { playerId: string; team: string }[] = [];
-      teamPlayerMapping[team1].forEach((player: string) => {
-        playerIds.push({ playerId: player, team: team1 });
-      });
-      teamPlayerMapping[team2].forEach((player: string) => {
-        playerIds.push({ playerId: player, team: team2 });
-      });
+      teamPlayerMapping
+        .find((mapping) => mapping.teamName === team1)
+        ?.players.forEach((player: string) => {
+          playerIds.push({ playerId: player, team: team1 });
+        });
+      teamPlayerMapping
+        .find((mapping) => mapping.teamName === team2)
+        ?.players.forEach((player: string) => {
+          playerIds.push({ playerId: player, team: team2 });
+        });
       playerIds.forEach((player: { playerId: string; team: string }) => {
         playerStats.push({
           playerId: player.playerId,
@@ -189,21 +185,11 @@ export const CreateMatch = () => {
       });
 
       const playerStatsInMatch: playerMatchStats = {
-        matchId,
+        matchId: newMatch.matchId,
         playerMatchStats: playerStats,
       };
 
-      const playerMatchStatsList = await getItem(
-        STORAGE_ITEMS.PLAYER_MATCH_STATS
-      );
-      if (playerMatchStatsList && playerMatchStatsList.length > 0) {
-        await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [
-          playerStatsInMatch,
-          ...playerMatchStatsList,
-        ]);
-      } else {
-        await setItem(STORAGE_ITEMS.PLAYER_MATCH_STATS, [playerStatsInMatch]);
-      }
+      await PlayerMatchStats.create(playerStatsInMatch);
     }
 
     await setItem(STORAGE_ITEMS.IS_NEW_MATCH, true);

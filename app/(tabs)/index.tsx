@@ -23,6 +23,11 @@ import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import MatchTimer from "@/components/MatchTimer";
+import { Timestamp } from "@react-native-firebase/firestore";
+import { Team } from "@/firebase/models/Team";
+import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
+import { Match } from "@/firebase/models/Match";
+import { MatchScore } from "@/firebase/models/MatchScores";
 import { undoPlayerCareerStats } from "@/utils/undoPlayerCareerStats";
 
 export default function HomeScreen() {
@@ -39,15 +44,13 @@ export default function HomeScreen() {
     matchId: "",
     team1: "",
     team2: "",
-    team1score: [],
-    team2score: [],
     tossWin: "team1",
     choose: "batting",
     overs: 0,
     status: "completed",
     isFirstInning: true,
-    startDateTime: new Date().toString(),
-    endDateTime: new Date().toString(),
+    startDateTime: Timestamp.now(),
+    endDateTime: Timestamp.now(),
     quickMatch: false,
     manOfTheMatch: "",
     currentScore: {
@@ -97,8 +100,8 @@ export default function HomeScreen() {
   const [pickPlayerVisible, setPickPlayerVisible] = useState<boolean>(false);
   const [showLoader, setShowLoader] = useState<boolean>(false);
   const [isEntryDone, setIsEntryDone] = useState<boolean>(false);
-  const [lastActivityDateTime, setLastActivityDateTime] = useState<string>(
-    new Date().toString()
+  const [lastActivityDateTime, setLastActivityDateTime] = useState<Timestamp>(
+    Timestamp.now()
   );
 
   const { currentTheme, currentSettings } = useTheme();
@@ -113,24 +116,43 @@ export default function HomeScreen() {
       setShowLoader(true);
       const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
       if (!isNewMatch) {
-        const matches = await getItem(STORAGE_ITEMS.MATCHES);
-        if (!matches) {
+        const currentMatch = await Match.getLatestMatch();
+        if (!currentMatch) {
           return;
         }
-        const currentMatch = matches[0];
+
+        const matchScoresFirstInning =
+          await MatchScore.getByMatchIdInningNumber(currentMatch.matchId, 1);
+
+        const matchScoresSecondInning =
+          await MatchScore.getByMatchIdInningNumber(currentMatch.matchId, 2);
+
+        let team1score: scorePerInning = [];
+        let team2score: scorePerInning = [];
+
+        if (matchScoresFirstInning) {
+          team1score = matchScoresFirstInning.map((score) => score.overSummary);
+        }
+
+        if (matchScoresSecondInning) {
+          team2score = matchScoresSecondInning.map(
+            (score) => score.overSummary
+          );
+        }
+
         setMatch(currentMatch);
         setIsFirstInning(currentMatch.isFirstInning);
-        setTotalScore(currentMatch.team1score);
+        setTotalScore(team1score);
 
         await initiatePlayerMatchStats(currentMatch.matchId);
 
-        if (currentMatch.team1score.length == 0) {
+        if (team1score.length == 0) {
           clearAllState();
           console.log("team1score is empty or not defined");
           return;
         }
 
-        const currnetInningstotalRuns = currentMatch.team1score.reduce(
+        const currnetInningstotalRuns = team1score.reduce(
           (acc: any, subArray: any[]) => {
             return (
               acc +
@@ -145,19 +167,19 @@ export default function HomeScreen() {
           },
           0
         );
-        let currnetInningstotalBalls = currentMatch.team1score[0].reduce(
+        let currnetInningstotalBalls = team1score[0].reduce(
           (acc: any, score: scorePerBall) =>
             acc + (score.isNoBall || score.isWideBall ? 0 : 1),
           0
         );
-        let currnetInningstotalOvers = currentMatch.team1score.length - 1;
+        let currnetInningstotalOvers = team1score.length - 1;
         currnetInningstotalOvers =
           currnetInningstotalBalls == 6
             ? currnetInningstotalOvers + 1
             : currnetInningstotalOvers;
         currnetInningstotalBalls =
           currnetInningstotalBalls == 6 ? 0 : currnetInningstotalBalls;
-        const currnetInningstotalWickets = currentMatch.team1score.reduce(
+        const currnetInningstotalWickets = team1score.reduce(
           (acc: any, subArray: scorePerBall[]) => {
             return (
               acc +
@@ -180,29 +202,29 @@ export default function HomeScreen() {
         if (currentMatch.isFirstInning) {
           setTotalBalls(currnetInningstotalBalls);
           if (
-            currentMatch.team1score.length > 0 &&
-            currentMatch.team1score[0].length > 0 &&
-            currentMatch.team1score[0][0].isOverEnd
+            team1score.length > 0 &&
+            team1score[0].length > 0 &&
+            team1score[0][0].isOverEnd
           ) {
             setScorePerOver([]);
           } else {
-            setScorePerOver(currentMatch.team1score[0]);
+            setScorePerOver(team1score[0]);
           }
-          if (currentMatch.team1score[0][0].isOverEnd) {
+          if (team1score[0][0].isOverEnd) {
             setBowler(undefined);
           } else {
-            setBowler(currentMatch.team1score[0][0].bowler);
+            setBowler(team1score[0][0].bowler);
           }
-          if (currentMatch.team1score[0][0].isWicket) {
+          if (team1score[0][0].isWicket) {
             setBatter1(undefined);
           } else {
-            setBatter1(currentMatch.team1score[0][0].strikerBatter);
+            setBatter1(team1score[0][0].strikerBatter);
           }
-          setBatter2(currentMatch.team1score[0][0].nonStrikerBatter);
+          setBatter2(team1score[0][0].nonStrikerBatter);
         }
 
         if (!currentMatch.isFirstInning) {
-          if (currentMatch.team2score.length == 0) {
+          if (team2score.length == 0) {
             setFinalSecondInningsScore({
               totalRuns: 0,
               totalWickets: 0,
@@ -215,12 +237,12 @@ export default function HomeScreen() {
             console.log("team2score is empty or not defined");
             return;
           }
-          setScoreSecondInnings(currentMatch.team2score);
-          if (currentMatch.team2score.length == 0) {
+          setScoreSecondInnings(team2score);
+          if (team2score.length == 0) {
             console.log("team2score is empty or not defined");
             return;
           }
-          const currnetInningstotalRuns = currentMatch.team2score.reduce(
+          const currnetInningstotalRuns = team2score.reduce(
             (acc: any, subArray: any[]) => {
               return (
                 acc +
@@ -235,19 +257,19 @@ export default function HomeScreen() {
             },
             0
           );
-          let currnetInningstotalBalls = currentMatch.team2score[0].reduce(
+          let currnetInningstotalBalls = team2score[0].reduce(
             (acc: any, score: scorePerBall) =>
               acc + (score.isNoBall || score.isWideBall ? 0 : 1),
             0
           );
-          let currnetInningstotalOvers = currentMatch.team2score.length - 1;
+          let currnetInningstotalOvers = team2score.length - 1;
           currnetInningstotalOvers =
             currnetInningstotalBalls == 6
               ? currnetInningstotalOvers + 1
               : currnetInningstotalOvers;
           currnetInningstotalBalls =
             currnetInningstotalBalls == 6 ? 0 : currnetInningstotalBalls;
-          const currnetInningstotalWickets = currentMatch.team2score.reduce(
+          const currnetInningstotalWickets = team2score.reduce(
             (acc: any, subArray: scorePerBall[]) => {
               return (
                 acc +
@@ -269,26 +291,26 @@ export default function HomeScreen() {
           });
           setTotalBalls(currnetInningstotalBalls);
           if (
-            currentMatch.team2score.length > 0 &&
-            currentMatch.team2score[0].length > 0 &&
-            currentMatch.team2score[0][0].isOverEnd
+            team2score.length > 0 &&
+            team2score[0].length > 0 &&
+            team2score[0][0].isOverEnd
           ) {
             setScorePerOver([]);
           } else {
-            setScorePerOver(currentMatch.team2score[0]);
+            setScorePerOver(team2score[0]);
           }
-          if (currentMatch.team2score[0][0].isOverEnd) {
+          if (team2score[0][0].isOverEnd) {
             setBowler(undefined);
           } else {
-            setBowler(currentMatch.team2score[0][0].bowler);
+            setBowler(team2score[0][0].bowler);
           }
 
-          if (currentMatch.team2score[0][0].isWicket) {
+          if (team2score[0][0].isWicket) {
             setBatter1(undefined);
           } else {
-            setBatter1(currentMatch.team2score[0][0].strikerBatter);
+            setBatter1(team2score[0][0].strikerBatter);
           }
-          setBatter2(currentMatch.team2score[0][0].nonStrikerBatter);
+          setBatter2(team2score[0][0].nonStrikerBatter);
         }
       }
     } finally {
@@ -302,10 +324,10 @@ export default function HomeScreen() {
         const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
         if (isNewMatch) {
           clearAllState();
-          const matches = await getItem(STORAGE_ITEMS.MATCHES);
-          if (matches) {
-            setMatch(matches[0]);
-            await initiatePlayerMatchStats(matches[0].matchId);
+          const latestMatch = await Match.getLatestMatch();
+          if (latestMatch) {
+            setMatch(latestMatch);
+            await initiatePlayerMatchStats(latestMatch.matchId);
           }
           await setItem(STORAGE_ITEMS.IS_NEW_MATCH, false);
         }
@@ -315,14 +337,11 @@ export default function HomeScreen() {
   );
 
   const initiatePlayerMatchStats = async (currentMatchId: string) => {
-    const playerMatchStats = await getItem(STORAGE_ITEMS.PLAYER_MATCH_STATS);
+    const playerMatchStats = await PlayerMatchStats.getByMatchId(
+      currentMatchId
+    );
     if (playerMatchStats) {
-      const currentMatchPlayerStats: playerMatchStats = playerMatchStats.find(
-        (playerStats: playerMatchStats) => playerStats.matchId == currentMatchId
-      );
-      if (currentMatchPlayerStats) {
-        setPlayerMatchStats(currentMatchPlayerStats.playerMatchStats);
-      }
+      setPlayerMatchStats(playerMatchStats.playerMatchStats);
     }
   };
 
@@ -444,18 +463,10 @@ export default function HomeScreen() {
       };
 
       if (!match.quickMatch) {
-        // if (isWicket) {
-        //   if (batter1?.id == outBatter?.id) {
-        //     setBatter1(undefined);
-        //   } else {
-        //     setBatter2(undefined);
-        //   }
-        // }
         await updatePlayerMatchStats(scoreThisBall);
       }
 
       const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
-
       if (isFirstInning) {
         if (scorePerOver.length == 0) {
           const latestTotalScore = totalScore;
@@ -478,33 +489,57 @@ export default function HomeScreen() {
         }
       }
 
-      const matches = await getItem(STORAGE_ITEMS.MATCHES);
-      if (matches) {
-        const latestMatch = matches[0];
-        if (latestMatch) {
-          let updatedMatch;
-          if (isFirstInning) {
-            updatedMatch = {
-              ...latestMatch,
-              team1score: totalScore,
-              currentScore: {
-                team1: localFinalFirstInningsScore,
-                team2: localFinalSecondInningsScore,
-              },
-            };
-          } else {
-            updatedMatch = {
-              ...latestMatch,
-              team2score: scoreSecondInningsLocalState,
-              currentScore: {
-                team1: localFinalFirstInningsScore,
-                team2: localFinalSecondInningsScore,
-              },
-            };
-          }
-          matches[0] = updatedMatch;
-          await setItem(STORAGE_ITEMS.MATCHES, matches);
+      await Match.update(match.matchId, {
+        currentScore: {
+          team1: localFinalFirstInningsScore,
+          team2: localFinalSecondInningsScore,
+        },
+      });
+
+      if (isFirstInning) {
+        if (scorePerOver.length == 0) {
+          await MatchScore.create({
+            matchId: match.matchId,
+            teamId: match.team1,
+            inningNumber: 1,
+            overNumber: totalScore.length,
+            overSummary: [],
+          });
         }
+
+        await MatchScore.addBallScore(
+          match.matchId,
+          match.team1,
+          1,
+          totalScore.length,
+          totalScore[0].length,
+          scoreThisBall
+        );
+      } else {
+        if (scorePerOver.length == 0) {
+          await MatchScore.create({
+            matchId: match.matchId,
+            teamId: match.team2,
+            inningNumber: 2,
+            overNumber: scoreSecondInningsLocalState
+              ? scoreSecondInningsLocalState.length
+              : 0,
+            overSummary: [],
+          });
+        }
+
+        await MatchScore.addBallScore(
+          match.matchId,
+          match.team2,
+          2,
+          scoreSecondInningsLocalState
+            ? scoreSecondInningsLocalState.length
+            : 0,
+          scoreSecondInningsLocalState
+            ? scoreSecondInningsLocalState[0].length
+            : 0,
+          scoreThisBall
+        );
       }
 
       setRun(0);
@@ -528,16 +563,9 @@ export default function HomeScreen() {
           setBatter1(undefined);
           setBatter2(undefined);
 
-          const matches = await getItem(STORAGE_ITEMS.MATCHES);
-          if (matches) {
-            const latestMatch = matches[0];
-            if (latestMatch) {
-              const updatedMatch = { ...latestMatch, isFirstInning: false };
-
-              matches[0] = updatedMatch;
-              await setItem(STORAGE_ITEMS.MATCHES, matches);
-            }
-          }
+          await Match.update(match.matchId, {
+            isFirstInning: false,
+          });
         } else if (
           !isFirstInning &&
           finalSecondInningsScore.totalOvers + 1 == match.overs
@@ -554,30 +582,18 @@ export default function HomeScreen() {
             finalSecondInningsScore.totalRuns + totalRun ==
             finalFirstInningsScore.totalRuns
           ) {
-            winner = undefined;
             matchStatus = "tied";
           }
           setMatch({ ...match, winner: winner, status: matchStatus });
-          const matches = await getItem(STORAGE_ITEMS.MATCHES);
-          if (matches) {
-            const latestMatch = matches[0];
-            if (latestMatch) {
-              const updatedMatch = {
-                ...latestMatch,
-                team1score: totalScore,
-                team2score: scoreSecondInningsLocalState,
-                status: matchStatus,
-                winner: winner,
-                endDateTime: new Date().toString(),
-              };
+          await Match.update(match.matchId, {
+            status: matchStatus,
+            winner: winner,
+            endDateTime: Timestamp.now(),
+          });
 
-              matches[0] = updatedMatch;
-              await setItem(STORAGE_ITEMS.MATCHES, matches);
-              if (!match.quickMatch) {
-                await updatePlayerCareerStats(playerMatchStats);
-                await updateManOfTheMatch(match.matchId);
-              }
-            }
+          if (!match.quickMatch) {
+            await updatePlayerCareerStats(playerMatchStats);
+            await updateManOfTheMatch(match.matchId);
           }
           return;
         }
@@ -591,37 +607,28 @@ export default function HomeScreen() {
           finalFirstInningsScore.totalRuns
       ) {
         console.log("Second Inning Completed");
-        let winner = "team2";
+        let winner: "team1" | "team2" | undefined = "team2";
         setMatch({
           ...match,
           status: "completed",
-          endDateTime: new Date().toString(),
+          endDateTime: Timestamp.now(),
+          winner: winner,
         });
-        const matches = await getItem(STORAGE_ITEMS.MATCHES);
-        if (matches) {
-          const latestMatch = matches[0];
-          if (latestMatch) {
-            const updatedMatch = {
-              ...latestMatch,
-              team1score: totalScore,
-              team2score: scoreSecondInningsLocalState,
-              status: "completed",
-              endDateTime: new Date().toString(),
-              winner: winner,
-            };
 
-            matches[0] = updatedMatch;
-            await setItem(STORAGE_ITEMS.MATCHES, matches);
-            if (!match.quickMatch) {
-              await updatePlayerCareerStats(playerMatchStats);
-              await updateManOfTheMatch(match.matchId);
-            }
-          }
+        await Match.update(match.matchId, {
+          status: "completed",
+          endDateTime: Timestamp.now(),
+          winner: winner,
+        });
+
+        if (!match.quickMatch) {
+          await updatePlayerCareerStats(playerMatchStats);
+          await updateManOfTheMatch(match.matchId);
         }
       }
     } finally {
       setShowLoader(false);
-      setLastActivityDateTime(new Date().toString());
+      setLastActivityDateTime(Timestamp.now());
     }
   };
 
@@ -692,7 +699,6 @@ export default function HomeScreen() {
           (playerMatchStatsLocalState[batterIndex].runs /
             playerMatchStatsLocalState[batterIndex].ballsFaced) *
           100;
-        // playerMatchStatsLocalState[batterIndex].isOut = scoreThisBall.isWicket;
       }
       const bowlerIndex = playerMatchStatsLocalState.findIndex(
         (playerStats: playerStats) =>
@@ -748,23 +754,9 @@ export default function HomeScreen() {
 
       setPlayerMatchStats(playerMatchStatsLocalState);
 
-      const playerMatchStatsFromDb = await getItem(
-        STORAGE_ITEMS.PLAYER_MATCH_STATS
-      );
-      if (playerMatchStatsFromDb) {
-        const playerMatchStatsIndex = playerMatchStatsFromDb.findIndex(
-          (playerStats: playerMatchStats) =>
-            playerStats.matchId == match.matchId
-        );
-        if (playerMatchStatsIndex > -1) {
-          playerMatchStatsFromDb[playerMatchStatsIndex].playerMatchStats =
-            playerMatchStatsLocalState;
-          await setItem(
-            STORAGE_ITEMS.PLAYER_MATCH_STATS,
-            playerMatchStatsFromDb
-          );
-        }
-      }
+      await PlayerMatchStats.update(match.matchId, {
+        playerMatchStats: playerMatchStatsLocalState,
+      });
 
       //handle swap logic for batters
       let swap = false;
@@ -840,23 +832,9 @@ export default function HomeScreen() {
 
       setPlayerMatchStats(playerMatchStatsLocalState);
 
-      const playerMatchStatsFromDb = await getItem(
-        STORAGE_ITEMS.PLAYER_MATCH_STATS
-      );
-      if (playerMatchStatsFromDb) {
-        const playerMatchStatsIndex = playerMatchStatsFromDb.findIndex(
-          (playerStats: playerMatchStats) =>
-            playerStats.matchId == match.matchId
-        );
-        if (playerMatchStatsIndex > -1) {
-          playerMatchStatsFromDb[playerMatchStatsIndex].playerMatchStats =
-            playerMatchStatsLocalState;
-          await setItem(
-            STORAGE_ITEMS.PLAYER_MATCH_STATS,
-            playerMatchStatsFromDb
-          );
-        }
-      }
+      await PlayerMatchStats.update(match.matchId, {
+        playerMatchStats: playerMatchStatsLocalState,
+      });
     }
   };
 
@@ -879,13 +857,13 @@ export default function HomeScreen() {
   const undoAction = async () => {
     try {
       setShowLoader(true);
-      const allMatches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
-      if (!allMatches || allMatches.length == 0) {
+      if (!match) {
         return;
       }
-      const currentMath: match = allMatches[0];
-      const currentMatchTeam1Score: scorePerInning = currentMath.team1score;
-      const currentMatchTeam2Score: scorePerInning = currentMath.team2score;
+
+      let currentMatchTeam1Score: scorePerInning = totalScore;
+      let currentMatchTeam2Score: scorePerInning = scoreSecondInnings;
+
       if (
         currentMatchTeam1Score.length == 0 &&
         currentMatchTeam2Score.length == 0
@@ -893,10 +871,11 @@ export default function HomeScreen() {
         return;
       }
 
-      if (currentMatchTeam2Score.length == 0 && !currentMath.isFirstInning) {
-        currentMath.isFirstInning = true;
+      let isLocalFirstInning = isFirstInning;
+      if (currentMatchTeam2Score.length == 0 && !isLocalFirstInning) {
+        isLocalFirstInning = true;
       }
-      if (currentMath.isFirstInning) {
+      if (isLocalFirstInning) {
         if (currentMatchTeam1Score.length == 0) {
           console.log("No ball to undo");
           return;
@@ -906,17 +885,26 @@ export default function HomeScreen() {
           await undoPlayerStatsUpdate(currentMatchTeam1Score[0][0]);
         }
 
-        currentMatchTeam1Score[0].shift();
-        if (currentMatchTeam1Score[0].length == 0) {
-          currentMatchTeam1Score.shift();
+        if (!isFirstInning) {
+          await Match.update(match.matchId, {
+            isFirstInning: isLocalFirstInning,
+          });
         }
-
-        const updatedMatch = {
-          ...currentMath,
-          team1score: currentMatchTeam1Score,
-        };
-        allMatches[0] = updatedMatch;
-        await setItem(STORAGE_ITEMS.MATCHES, allMatches);
+        await MatchScore.deleteBallScore(
+          match.matchId,
+          match.team1,
+          1,
+          currentMatchTeam1Score.length,
+          currentMatchTeam1Score[0].length
+        );
+        if (currentMatchTeam1Score[0].length == 1) {
+          await MatchScore.delete(
+            match.matchId,
+            match.team1,
+            1,
+            currentMatchTeam1Score.length
+          );
+        }
       } else {
         if (currentMatchTeam2Score.length == 0) {
           console.log("No ball to undo");
@@ -924,26 +912,32 @@ export default function HomeScreen() {
         }
 
         if (!match.quickMatch) {
-          if (currentMath.status !== "live") {
+          if (match.status !== "live") {
             await undoPlayerCareerStats(match.matchId);
           }
           await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
         }
 
-        currentMatchTeam2Score[0].shift();
-        if (currentMatchTeam2Score[0].length == 0) {
-          currentMatchTeam2Score.shift();
+        if (match.status !== "live") {
+          await Match.update(match.matchId, {
+            status: "live",
+          });
         }
-
-        const currentMatchStatus =
-          currentMath.status !== "live" ? "live" : currentMath.status;
-        const updatedMatch = {
-          ...currentMath,
-          team2score: currentMatchTeam2Score,
-          status: currentMatchStatus,
-        };
-        allMatches[0] = updatedMatch;
-        await setItem(STORAGE_ITEMS.MATCHES, allMatches);
+        await MatchScore.deleteBallScore(
+          match.matchId,
+          match.team2,
+          2,
+          currentMatchTeam2Score.length,
+          currentMatchTeam2Score[0].length
+        );
+        if (currentMatchTeam2Score[0].length == 1) {
+          await MatchScore.delete(
+            match.matchId,
+            match.team2,
+            2,
+            currentMatchTeam2Score.length
+          );
+        }
       }
       await fetchMatch();
     } finally {
@@ -1097,6 +1091,7 @@ export default function HomeScreen() {
                 isEntryDone &&
                   run == parseInt(score) && { backgroundColor: "#019999" },
               ]}
+              disabled={showLoader}
               onPress={() => handleRunPress(score)}
             >
               <Text style={styles.buttonText}>{score}</Text>
@@ -1109,6 +1104,7 @@ export default function HomeScreen() {
               styles.specialBubbleButton,
               isWicket && { backgroundColor: "#019999" },
             ]}
+            disabled={showLoader}
             onPress={handleWicket}
           >
             <Text style={styles.buttonText}>Out</Text>
@@ -1118,6 +1114,7 @@ export default function HomeScreen() {
               styles.specialBubbleButton,
               isNoBall && { backgroundColor: "#019999" },
             ]}
+            disabled={showLoader}
             onPress={handleNoBall}
           >
             <Text style={styles.buttonText}>NoBall</Text>
@@ -1127,13 +1124,14 @@ export default function HomeScreen() {
               styles.specialBubbleButton,
               isWideBall && { backgroundColor: "#019999" },
             ]}
+            disabled={showLoader}
             onPress={handleWideBall}
           >
             <Text style={styles.buttonText}>Wide</Text>
           </TouchableOpacity>
           <TouchableOpacity
             disabled={showLoader}
-            style={styles.specialBubbleButton}
+            style={[styles.specialBubbleButton]}
             onPress={handleUndoSubmit}
           >
             <Icon name="delete" type="feather" color="black" size={28} />

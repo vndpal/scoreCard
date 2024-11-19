@@ -7,6 +7,8 @@ import { playerStats } from "@/types/playerStats";
 import { player } from "@/types/player"; // Import the player type
 import { getItem } from "@/utils/asyncStorage";
 import { useTheme } from "@/context/ThemeContext";
+import { Player } from "@/firebase/models/Player";
+import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 
 const MatchSummary = () => {
   const { matchId, team1, team2 } = useLocalSearchParams();
@@ -29,10 +31,10 @@ const MatchSummary = () => {
 
   useEffect(() => {
     (async () => {
-      const playerMatchStats = await getItem(STORAGE_ITEMS.PLAYER_MATCH_STATS);
-      const players = await getItem(STORAGE_ITEMS.PLAYERS); // Adjust this to the actual key if needed
-
-      if (playerMatchStats && players) {
+      const players = await Player.getAll();
+      // Filter and sort records based on match and team
+      const matchStats = await PlayerMatchStats.getByMatchId(matchId as string);
+      if (matchStats && players) {
         // Create a map from player IDs to player names
         const playersMap = new Map<string, string>();
         players.forEach((p: player) => {
@@ -40,10 +42,6 @@ const MatchSummary = () => {
         });
         setPlayersMap(playersMap);
 
-        // Filter and sort records based on match and team
-        const matchStats = playerMatchStats.find(
-          (stats: playerMatchStats) => stats.matchId === matchId
-        );
         if (matchStats) {
           const sortByRuns = (a: playerStats, b: playerStats) =>
             b.runs - a.runs;

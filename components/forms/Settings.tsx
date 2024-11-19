@@ -6,6 +6,7 @@ import {
   Switch,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useTheme } from "@/context/ThemeContext";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +15,9 @@ import TimePicker from "@/components/ui/timePicker";
 import { updateSettings } from "@/utils/updateSettings";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { firestoreService } from "@/firebase/services/firestore";
+import Loader from "../Loader";
+import { toggleCache } from "@/firebase";
 
 const Settings = () => {
   const { currentTheme, toggleTheme, currentSettings, applySettingsChanges } =
@@ -28,24 +32,45 @@ const Settings = () => {
     minutes: 0,
     seconds: 30,
   });
-  const [soundEffects, setSoundEffects] = useState(false);
   const [autoUpdate, setAutoUpdate] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
-      // const settings = await getItem(STORAGE_ITEMS.SETTINGS);
       setNotifications(currentSettings.notifications);
       setShowMatchTimer(currentSettings.showMatchTimer);
-      setSoundEffects(currentSettings.soundEffects);
       setAutoUpdate(currentSettings.autoUpdate);
       setMatchTime({
         hours: currentSettings?.matchTime?.hours || 0,
         minutes: currentSettings?.matchTime?.minutes || 0,
         seconds: currentSettings?.matchTime?.seconds || 0,
       });
+      setOfflineMode(currentSettings.offlineMode);
     };
     fetchSettings();
   }, []);
+
+  const handleClearDatabase = async () => {
+    Alert.alert(
+      "Clear Database",
+      "Are you sure you want to clear the database?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: clearDatabase,
+        },
+      ]
+    );
+  };
+
+  const clearDatabase = async () => {
+    setShowLoader(true);
+    await firestoreService.clearDatabase();
+    setShowLoader(false);
+  };
 
   const handleSettingChange = async (key: string, value: any) => {
     try {
@@ -62,11 +87,15 @@ const Settings = () => {
         case "showMatchTimer":
           setShowMatchTimer(value);
           break;
-        case "soundEffects":
-          setSoundEffects(value);
+        case "offlineMode":
+          setOfflineMode(value);
+          toggleCache(value);
           break;
         case "autoUpdate":
           setAutoUpdate(value);
+          break;
+        case "clearDatabase":
+          handleClearDatabase();
           break;
         case "matchTime":
           setMatchTime({
@@ -124,7 +153,11 @@ const Settings = () => {
           onPress={() => handleSettingChange(settingKey, !value)}
         >
           <Text style={themeStyles.buttonText}>
-            {currentTheme === "dark" ? "Light Mode" : "Dark Mode"}
+            {settingKey === "darkMode"
+              ? currentTheme === "dark"
+                ? "Light Mode"
+                : "Dark Mode"
+              : title}
           </Text>
         </TouchableOpacity>
       )}
@@ -152,7 +185,7 @@ const Settings = () => {
           />
           <SettingItem
             title="Notifications"
-            icon="notifications-outline"
+            icon={notifications ? "notifications" : "notifications-off"}
             value={notifications}
             onValueChange={setNotifications}
             settingKey="notifications"
@@ -181,18 +214,26 @@ const Settings = () => {
             </TouchableOpacity>
           )}
           <SettingItem
-            title="Sound Effects"
-            icon="volume-high-outline"
-            value={soundEffects}
-            onValueChange={setSoundEffects}
-            settingKey="soundEffects"
+            title="Offline mode"
+            icon={offlineMode ? "cloud-offline-outline" : "wifi-outline"}
+            value={currentSettings.offlineMode}
+            onValueChange={setOfflineMode}
+            settingKey="offlineMode"
           />
           <SettingItem
             title="Auto Update"
-            icon="refresh-outline"
+            icon="refresh"
             value={autoUpdate}
             onValueChange={setAutoUpdate}
             settingKey="autoUpdate"
+          />
+          <SettingItem
+            title="Clear Database"
+            icon="trash"
+            value={false}
+            onValueChange={handleClearDatabase}
+            type="button"
+            settingKey="clearDatabase"
           />
         </LinearGradient>
       </ScrollView>
@@ -211,6 +252,7 @@ const Settings = () => {
           />
         </View>
       )}
+      {showLoader && <Loader />}
     </View>
   );
 };

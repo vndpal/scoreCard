@@ -7,6 +7,8 @@ import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
 import { useTheme as currentSelectedTheme } from "@/context/ThemeContext";
 import { Colors } from "@/constants/Colors";
+import { Player } from "@/firebase/models/Player";
+import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 export const CreatePlayer = () => {
   const { colors } = useTheme();
@@ -17,83 +19,45 @@ export const CreatePlayer = () => {
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
-    const players: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
-    if (players && players.length > 0) {
-      if (players.find((p: any) => p.name == name)) {
-        alert("Player with this name already exists");
-        return;
-      }
-      const playerId = Number.isNaN(players[players.length - 1].id)
-        ? "1"
-        : (parseInt(players[players.length - 1].id) + 1).toString();
+    const isPlayerExists = await Player.findByName(name);
 
-      players.push({ name, id: playerId });
-      await setItem(STORAGE_ITEMS.PLAYERS, players);
-      await insertPlayerCareerStats(playerId);
-    } else {
-      const newPlayer = [{ name, id: "1" }];
-      await setItem(STORAGE_ITEMS.PLAYERS, newPlayer);
-      await insertPlayerCareerStats("1");
+    if (isPlayerExists.length > 0) {
+      alert("Player with this name already exists");
+      return;
     }
 
-    router.back();
+    const player = await Player.create({ name });
+    if (player) {
+      await insertPlayerCareerStats(player.id);
+    }
+
+    router.dismissAll();
+    router.push("/players");
   };
 
   const insertPlayerCareerStats = async (playerId: string) => {
-    const playerCareerStats = await getItem(STORAGE_ITEMS.PLAYER_CAREER_STATS);
-    console.log(playerCareerStats);
-    console.log(playerId);
-    if (playerCareerStats) {
-      playerCareerStats.push({
-        playerId: playerId,
-        matches: 0,
-        innings: 0,
-        runs: 0,
-        ballsFaced: 0,
-        fours: 0,
-        sixes: 0,
-        strikeRate: 0,
-        average: 0,
-        notOuts: 0,
-        wickets: 0,
-        overs: 0,
-        ballsBowled: 0,
-        extras: 0,
-        runsConceded: 0,
-        maidens: 0,
-        bowlingEconomy: 0,
-        foursConceded: 0,
-        sixesConceded: 0,
-        dotBalls: 0,
-      });
-      await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, playerCareerStats);
-    } else {
-      const newPlayerCareerStats = [
-        {
-          playerId: playerId,
-          matches: 0,
-          innings: 0,
-          runs: 0,
-          ballsFaced: 0,
-          fours: 0,
-          sixes: 0,
-          strikeRate: 0,
-          average: 0,
-          notOuts: 0,
-          wickets: 0,
-          overs: 0,
-          ballsBowled: 0,
-          extras: 0,
-          runsConceded: 0,
-          maidens: 0,
-          bowlingEconomy: 0,
-          foursConceded: 0,
-          sixesConceded: 0,
-          dotBalls: 0,
-        },
-      ];
-      await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, newPlayerCareerStats);
-    }
+    const playerCareerStats = await PlayerCareerStats.create({
+      playerId,
+      matches: 0,
+      innings: 0,
+      runs: 0,
+      ballsFaced: 0,
+      fours: 0,
+      sixes: 0,
+      strikeRate: 0,
+      average: 0,
+      notOuts: 0,
+      wickets: 0,
+      overs: 0,
+      ballsBowled: 0,
+      extras: 0,
+      runsConceded: 0,
+      maidens: 0,
+      bowlingEconomy: 0,
+      foursConceded: 0,
+      sixesConceded: 0,
+      dotBalls: 0,
+    });
   };
 
   return (

@@ -6,12 +6,20 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "GOOGLE_SERVICES_JSON_DEV": "{{ GOOGLE_SERVICES_JSON_DEV }}",
+        "APP_ENV": "development"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "GOOGLE_SERVICES_JSON": "{{ GOOGLE_SERVICES_JSON }}",
+        "APP_ENV": "preview"
       }
     },
     "testing": {
@@ -19,7 +27,11 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "GOOGLE_SERVICES_JSON": "{{ GOOGLE_SERVICES_JSON }}",
+        "APP_ENV": "testing"
+      }
     },
     "production": {}
   },

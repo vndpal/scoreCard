@@ -7,6 +7,8 @@ import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import PlayerCareerRecords from "../PlayerCareerRecords";
 import { useTheme } from "@/context/ThemeContext";
+import { Player } from "@/firebase/models/Player";
+import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 export default function PlayerProfile() {
   const router = useRouter();
@@ -18,28 +20,31 @@ export default function PlayerProfile() {
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
-    const players = await getItem(STORAGE_ITEMS.PLAYERS);
-    const player = players.find((p: any) => p.id == playerId);
-    player.name = name;
-    await setItem(STORAGE_ITEMS.PLAYERS, players);
-    router.back();
+    if (name == "") {
+      alert("Player name cannot be empty");
+      return;
+    }
+    if (playerId && name) {
+      const playerIdToBeUpdated: string = playerId?.toString();
+      await Player.update(playerIdToBeUpdated, {
+        name: name,
+      });
+    }
+    router.dismissAll();
+    router.push("/players");
   };
 
   const handleDelete = async () => {
-    const players = await getItem(STORAGE_ITEMS.PLAYERS);
-    const updatedPlayers = players.filter((p: any) => p.id != playerId);
-    await removePlayerStats(playerId?.toString());
-    await setItem(STORAGE_ITEMS.PLAYERS, updatedPlayers);
-    setIsEditing(false);
-    router.back();
+    if (playerId) {
+      await Player.delete(playerId?.toString());
+      setIsEditing(false);
+      router.dismissAll();
+      router.push("/players");
+    }
   };
 
   const removePlayerStats = async (playerId: string | undefined) => {
-    const playerStats = await getItem(STORAGE_ITEMS.PLAYER_CAREER_STATS);
-    const updatedPlayerStats = playerStats.filter(
-      (p: any) => p.playerId != playerId
-    );
-    await setItem(STORAGE_ITEMS.PLAYER_CAREER_STATS, updatedPlayerStats);
+    await PlayerCareerStats.delete(playerId?.toString() || "");
   };
 
   return (

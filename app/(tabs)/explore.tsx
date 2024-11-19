@@ -4,17 +4,22 @@ import { getItem } from "@/utils/asyncStorage";
 import { useFocusEffect } from "expo-router";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import MatchHistory from "@/components/MatchHistory";
+import { Player } from "@/firebase/models/Player";
+import { Match } from "@/firebase/models/Match";
+import { match } from "@/types/match";
 
 export default function TabTwoScreen() {
-  const [matches, setMatches] = useState([]);
-  const [players, setPlayers] = useState([]);
+  const [matches, setMatches] = useState<match[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   useFocusEffect(
     useCallback(() => {
       const fetchMatch = async () => {
-        const matches = await getItem(STORAGE_ITEMS.MATCHES);
-        const players = await getItem(STORAGE_ITEMS.PLAYERS);
+        const matches = await Match.getAllOrderby("startDateTime", "desc");
+        const playersFromDB = await Player.getAll();
         setMatches(matches);
-        setPlayers(players);
+        if (playersFromDB && playersFromDB.length > 0) {
+          setPlayers(playersFromDB);
+        }
       };
       fetchMatch();
     }, [])

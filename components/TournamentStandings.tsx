@@ -11,8 +11,6 @@ const TournamentStandings = ({
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
-  console.log(matchStandings);
-
   return (
     <View style={themeStyles.container}>
       <View style={themeStyles.matchContainer}>

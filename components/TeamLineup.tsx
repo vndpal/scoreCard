@@ -8,8 +8,6 @@ import {
 } from "react-native";
 import { Menu } from "react-native-paper";
 import { Icon } from "react-native-elements";
-import { getItem, setItem } from "@/utils/asyncStorage";
-import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
 import { team } from "@/types/team";
 import TeamSelection from "./TeamSelection";
@@ -20,6 +18,13 @@ import { useTheme } from "@/context/ThemeContext";
 import { match } from "@/types/match";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
+import { Player } from "@/firebase/models/Player";
+import { Team } from "@/firebase/models/Team";
+import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
+import { getItem, setItem } from "@/utils/asyncStorage";
+import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
+import { Match } from "@/firebase/models/Match";
 
 const TeamLineUp: React.FC = () => {
   const [team1Players, setTeam1Players] = useState<player[]>([]);
@@ -43,79 +48,89 @@ const TeamLineUp: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      const teamPlayersMapping = await getItem(
-        STORAGE_ITEMS.TEAM_PLAYER_MAPPING
-      );
-      const playersFromStorage: player[] = await getItem(STORAGE_ITEMS.PLAYERS);
+      const teamPlayersMapping = await TeamPlayerMapping.getAll();
+      const playersFromStorage: player[] = await Player.getAll();
       if (playersFromStorage && playersFromStorage.length > 0) {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
         setAllPlayers(playersFromStorage);
       }
-      const teams: team[] = await getItem(STORAGE_ITEMS.TEAMS);
-
-      const matches: match[] = await getItem(STORAGE_ITEMS.MATCHES);
-      if (matches && matches.length > 0 && matches[0].status === "live") {
-        const playerMatchStats: playerMatchStats[] = await getItem(
-          STORAGE_ITEMS.PLAYER_MATCH_STATS
+      const teams: team[] = await Team.getAll();
+      let lastMatchTeam1 =
+        teamPlayersMapping.length > 0 ? teamPlayersMapping[0].teamName : "";
+      let lastMatchTeam2 =
+        teamPlayersMapping.length > 1 ? teamPlayersMapping[1].teamName : "";
+      const lastMatch = await Match.getLatestMatch();
+      if (lastMatch) {
+        lastMatchTeam1 = lastMatch.team1;
+        lastMatchTeam2 = lastMatch.team2;
+      }
+      if (lastMatch && lastMatch.status === "live") {
+        const playerStats = await PlayerMatchStats.getByMatchId(
+          lastMatch.matchId
         );
-        if (playerMatchStats && playerMatchStats.length > 0) {
-          const playerStats = playerMatchStats.filter(
-            (x) => x.matchId === matches[0].matchId
-          );
 
-          if (playerStats && playerStats.length > 0) {
-            const currentMatchPlayerStats = playerStats[0].playerMatchStats;
-            setCurrentMatchPlayerStats(currentMatchPlayerStats);
-            const playedPlayers = currentMatchPlayerStats
-              .filter(
-                (x) =>
-                  x.ballsBowled > 0 ||
-                  x.overs > 0 ||
-                  x.extras > 0 ||
-                  x.runs > 0 ||
-                  x.ballsFaced > 0 ||
-                  x.isOut == true
-              )
-              .map((x) => x.playerId);
-            console.log("playerdPlayers", playedPlayers);
-            setActivePlayerIds(playedPlayers);
-            setCurrentMatchId(matches[0].matchId);
-          }
+        if (playerStats) {
+          const currentMatchPlayerStats = playerStats.playerMatchStats;
+          setCurrentMatchPlayerStats(currentMatchPlayerStats);
+          const playedPlayers = currentMatchPlayerStats
+            .filter(
+              (x) =>
+                x.ballsBowled > 0 ||
+                x.overs > 0 ||
+                x.extras > 0 ||
+                x.runs > 0 ||
+                x.ballsFaced > 0 ||
+                x.isOut == true
+            )
+            .map((x) => x.playerId);
+          setActivePlayerIds(playedPlayers);
+          setCurrentMatchId(lastMatch.matchId);
         }
       }
 
-      const savedTeams = Object.keys(teamPlayersMapping || {});
       if (
-        savedTeams.length >= 2 &&
+        teamPlayersMapping.length >= 2 &&
         teams &&
         teams.length > 1 &&
         playersFromStorage &&
         playersFromStorage.length > 0
       ) {
         const localTeam1 = teams.find(
-          (team) => team.teamInitials === savedTeams[0]
+          (team) => team.teamInitials === lastMatchTeam1
         );
         const localTeam2 = teams.find(
-          (team) => team.teamInitials === savedTeams[1]
+          (team) => team.teamInitials === lastMatchTeam2
         );
         setTeam1(localTeam1);
         setTeam2(localTeam2);
 
         setTeam1Players(
           playersFromStorage.filter((player) =>
-            teamPlayersMapping[savedTeams[0]].includes(player.id)
+            teamPlayersMapping
+              .find((mapping) => mapping.teamName === localTeam1?.teamInitials)
+              ?.players.includes(player.id)
           )
         );
         setTeam2Players(
           playersFromStorage.filter((player) =>
-            teamPlayersMapping[savedTeams[1]].includes(player.id)
+            teamPlayersMapping
+              .find((mapping) => mapping.teamName === localTeam2?.teamInitials)
+              ?.players.includes(player.id)
           )
         );
         setAvailablePlayers(
           playersFromStorage.filter(
             (player) =>
-              !teamPlayersMapping[savedTeams[0]].includes(player.id) &&
-              !teamPlayersMapping[savedTeams[1]].includes(player.id)
+              !teamPlayersMapping
+                .find(
+                  (mapping) => mapping.teamName === localTeam1?.teamInitials
+                )
+                ?.players.includes(player.id) &&
+              !teamPlayersMapping
+                .find(
+                  (mapping) => mapping.teamName === localTeam2?.teamInitials
+                )
+                ?.players.includes(player.id)
           )
         );
       } else if (playersFromStorage && playersFromStorage.length > 0) {
@@ -231,7 +246,14 @@ const TeamLineUp: React.FC = () => {
       [team2!.teamInitials]: team2Players.map((player: player) => player.id),
     };
 
-    await setItem(STORAGE_ITEMS.TEAM_PLAYER_MAPPING, updatedTeamPlayerMapping);
+    await TeamPlayerMapping.create(
+      team1!.teamInitials,
+      team1Players.map((player: player) => player.id)
+    );
+    await TeamPlayerMapping.create(
+      team2!.teamInitials,
+      team2Players.map((player: player) => player.id)
+    );
 
     if (currentMatchId !== "") {
       const updatedLiveMatchPlayerStats: playerStats[] =
@@ -276,18 +298,10 @@ const TeamLineUp: React.FC = () => {
         }
       }
 
-      const databasePlayerMatchStats: playerMatchStats[] = await getItem(
-        STORAGE_ITEMS.PLAYER_MATCH_STATS
-      );
-
-      if (databasePlayerMatchStats && databasePlayerMatchStats.length > 0) {
-        databasePlayerMatchStats[0].playerMatchStats =
-          updatedLiveMatchPlayerStats;
-        await setItem(
-          STORAGE_ITEMS.PLAYER_MATCH_STATS,
-          databasePlayerMatchStats
-        );
-      }
+      await PlayerMatchStats.update(currentMatchId, {
+        matchId: currentMatchId,
+        playerMatchStats: updatedLiveMatchPlayerStats,
+      });
     }
 
     if (currentMatchId !== "") {

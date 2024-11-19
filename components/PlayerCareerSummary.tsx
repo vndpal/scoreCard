@@ -17,6 +17,8 @@ import { useTheme } from "@/context/ThemeContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { ActivityIndicator, Icon } from "react-native-paper";
 import Loader from "./Loader";
+import { Player } from "@/firebase/models/Player";
+import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 const PlayerCareerSummary = () => {
   const [battingStats, setBattingStats] = useState<playerCareerStats[]>([]);
@@ -30,8 +32,8 @@ const PlayerCareerSummary = () => {
 
   useEffect(() => {
     (async () => {
-      const careerStats = await getItem(STORAGE_ITEMS.PLAYER_CAREER_STATS);
-      const players = await getItem(STORAGE_ITEMS.PLAYERS);
+      const careerStats = await PlayerCareerStats.getAll();
+      const players = await Player.getAll();
       if (careerStats && players) {
         const playersMap = new Map<string, string>();
         players.forEach((p: player) => {

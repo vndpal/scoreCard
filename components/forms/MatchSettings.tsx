@@ -5,7 +5,14 @@ import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useRoute } from "@react-navigation/native";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Keyboard } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Keyboard,
+  ActivityIndicator,
+} from "react-native";
 import { Switch, Button, TextInput } from "react-native-paper";
 import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
@@ -13,6 +20,10 @@ import { playerStats } from "@/types/playerStats";
 import { useTheme } from "@/context/ThemeContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
+import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
+import { Match } from "@/firebase/models/Match";
+import Loader from "../Loader";
+import { Timestamp } from "@react-native-firebase/firestore";
 
 type items = {
   label: string;
@@ -28,24 +39,22 @@ const MatchSettings = () => {
   const [winner, setWinner] = useState<string>("");
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     fetchMatch();
   }, []);
 
   const fetchMatch = async () => {
-    const matches = await getItem(STORAGE_ITEMS.MATCHES);
-    if (!matches) {
+    const match = await Match.getLatestMatch();
+    if (!match) {
       return;
     }
-    if (matches.length === 0) {
-      return;
-    }
-    setCurrentMatch(matches[0]);
-    setOvers(matches[0].overs);
+    setCurrentMatch(match);
+    setOvers(match.overs.toString());
     const items: items[] = [
-      { label: `${matches[0].team1} won`, value: matches[0].team1 },
-      { label: `${matches[0].team2} won`, value: matches[0].team2 },
+      { label: `${match.team1} won`, value: match.team1 },
+      { label: `${match.team2} won`, value: match.team2 },
       { label: "Tied", value: "tied" },
       { label: "Draw", value: "draw" },
       { label: "No Result", value: "noResult" },
@@ -68,88 +77,68 @@ const MatchSettings = () => {
 
   const handleSaveSettings = async () => {
     if (currentMatch) {
-      const matches = await getItem(STORAGE_ITEMS.MATCHES);
-      if (matches) {
-        const latestMatch: match = matches[0];
-
-        if (declareInnings) {
-          // declare innings handling
-          if (latestMatch) {
-            if (latestMatch.isFirstInning) {
-              const updatedMatch: match = {
-                ...latestMatch,
-                isFirstInning: !latestMatch.isFirstInning,
-              };
-
-              matches[0] = updatedMatch;
-              await setItem(STORAGE_ITEMS.MATCHES, matches);
-              Keyboard.dismiss();
-              router.push("/");
-            } else {
-              if (winner === "") {
-                alert("Winner cannot be empty");
-                return;
-              }
-
-              const updatedMatch: match = {
-                ...latestMatch,
-                status: matchStatus,
-                endDateTime: new Date().toString(),
-                winner:
-                  matchStatus === "completed"
-                    ? winner === latestMatch.team1
-                      ? "team1"
-                      : "team2"
-                    : undefined,
-              };
-
-              matches[0] = updatedMatch;
-              await setItem(STORAGE_ITEMS.MATCHES, matches);
-
-              const playerMatchStats: playerMatchStats[] = await getItem(
-                STORAGE_ITEMS.PLAYER_MATCH_STATS
-              );
-              if (playerMatchStats && playerMatchStats.length > 0) {
-                const lastPlayerMatchStats: playerStats[] =
-                  playerMatchStats[0].playerMatchStats;
-                if (matchStatus !== "abandoned") {
-                  await updatePlayerCareerStats(lastPlayerMatchStats);
-                }
-                await updateManOfTheMatch(matches[0].matchId);
-              }
-              Keyboard.dismiss();
-              router.push("/");
-            }
-          }
+      setLoading(true);
+      if (declareInnings) {
+        // declare innings handling
+        if (currentMatch.isFirstInning) {
+          await Match.update(currentMatch.matchId, {
+            isFirstInning: !currentMatch.isFirstInning,
+          });
+          Keyboard.dismiss();
+          router.push("/");
         } else {
-          // overs change handling
-          if (overs === "" || parseInt(overs) != currentMatch.overs) {
-            if (overs === "") {
-              alert("Overs cannot be empty");
-              return;
-            } else if (!latestMatch.isFirstInning) {
-              alert("Overs can only be changed during first innings only");
-              return;
-            } else if (parseInt(overs) < currentMatch.team1score.length) {
-              alert(
-                `${currentMatch.team1score.length} overs have already been bowled. Overs cannot be less than that`
-              );
-              return;
-            }
+          if (winner === "") {
+            alert("Winner cannot be empty");
+            return;
           }
 
-          if (latestMatch) {
-            const updatedMatch: match = {
-              ...latestMatch,
-              overs: parseInt(overs),
-            };
+          const updateData: Partial<Match> = {
+            status: matchStatus,
+            endDateTime: Timestamp.now(),
+          };
 
-            matches[0] = updatedMatch;
-            await setItem(STORAGE_ITEMS.MATCHES, matches);
-            Keyboard.dismiss();
-            router.push("/");
+          if (matchStatus === "completed") {
+            updateData.winner =
+              winner === currentMatch.team1 ? "team1" : "team2";
+          }
+
+          await Match.update(currentMatch.matchId, updateData);
+
+          const playerMatchStats: playerMatchStats | null =
+            await PlayerMatchStats.getByMatchId(currentMatch.matchId);
+          if (playerMatchStats) {
+            if (matchStatus !== "abandoned") {
+              await updatePlayerCareerStats(playerMatchStats.playerMatchStats);
+            }
+            await updateManOfTheMatch(currentMatch.matchId);
+          }
+          Keyboard.dismiss();
+          setLoading(false);
+          router.push("/");
+        }
+      } else {
+        // overs change handling
+        if (overs === "" || parseInt(overs) != currentMatch.overs) {
+          if (overs === "") {
+            alert("Overs cannot be empty");
+            return;
+          } else if (!currentMatch.isFirstInning) {
+            alert("Overs can only be changed during first innings only");
+            return;
+          } else if (
+            parseInt(overs) < currentMatch.currentScore.team1.totalOvers
+          ) {
+            alert(
+              `${currentMatch.currentScore.team1.totalOvers} overs have already been bowled. Overs cannot be less than that`
+            );
+            return;
           }
         }
+
+        await Match.update(currentMatch.matchId, { overs: parseInt(overs) });
+        Keyboard.dismiss();
+        router.push("/");
+        setLoading(false);
       }
     }
   };
@@ -215,6 +204,11 @@ const MatchSettings = () => {
           Save settings
         </Button>
       </View>
+      {loading && (
+        <View style={styles.loaderOverlay}>
+          <Loader />
+        </View>
+      )}
     </View>
   );
 };
@@ -257,6 +251,16 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 16,
     backgroundColor: "#121212",
+  },
+  loaderOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
 });
 

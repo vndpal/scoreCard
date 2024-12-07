@@ -18,6 +18,7 @@ import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { firestoreService } from "@/firebase/services/firestore";
 import Loader from "../Loader";
 import { toggleCache } from "@/firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Settings = () => {
   const { currentTheme, toggleTheme, currentSettings, applySettingsChanges } =
@@ -69,6 +70,7 @@ const Settings = () => {
   const clearDatabase = async () => {
     setShowLoader(true);
     await firestoreService.clearDatabase();
+    await AsyncStorage.clear();
     setShowLoader(false);
   };
 

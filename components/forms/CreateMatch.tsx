@@ -139,6 +139,8 @@ export const CreateMatch = () => {
       wickets: parseInt(wickets),
       team1,
       team2,
+      team1Fullname: teams.find((team) => team.value === team1)?.label ?? "",
+      team2Fullname: teams.find((team) => team.value === team2)?.label ?? "",
       tossWin: "team1",
       choose: "batting",
       status: "live",

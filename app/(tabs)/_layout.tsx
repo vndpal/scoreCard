@@ -10,6 +10,8 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import MenuScreen from "./menu";
 import { BackHandler, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_ITEMS } from "@/constants/StorageItems";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -20,7 +22,15 @@ export default function TabLayout() {
 
   useEffect(() => {
     if (pathname === "/" && rootNavigationState?.key) {
-      router.replace("/");
+      const checkClub = async () => {
+        const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
+        if (!club) {
+          router.replace("/club");
+          return;
+        }
+        router.replace("/");
+      };
+      checkClub();
 
       // Add back button handler
       const backHandler = BackHandler.addEventListener(

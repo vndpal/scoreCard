@@ -10,6 +10,8 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
   matchId: string;
   team1: string;
   team2: string;
+  team1Fullname: string;
+  team2Fullname: string;
   tossWin: "team1" | "team2";
   choose: "batting" | "bowling";
   winner?: "team1" | "team2";
@@ -30,6 +32,8 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     this.matchId = matchId;
     this.team1 = data.team1;
     this.team2 = data.team2;
+    this.team1Fullname = data.team1Fullname;
+    this.team2Fullname = data.team2Fullname;
     this.tossWin = data.tossWin;
     this.choose = data.choose;
     this.overs = data.overs;

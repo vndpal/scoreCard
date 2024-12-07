@@ -44,6 +44,8 @@ export default function HomeScreen() {
     matchId: "",
     team1: "",
     team2: "",
+    team1Fullname: "",
+    team2Fullname: "",
     tossWin: "team1",
     choose: "batting",
     overs: 0,

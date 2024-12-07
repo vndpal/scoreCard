@@ -151,6 +151,7 @@ export const firestoreService = {
         "playerMatchStats",
         "teams",
         "teamPlayerMapping",
+        "clubs",
       ];
 
       // Clear each collection

@@ -7,6 +7,8 @@ type match = {
   matchId: string;
   team1: string;
   team2: string;
+  team1Fullname: string;
+  team2Fullname: string;
   tossWin: "team1" | "team2";
   choose: "batting" | "bowling";
   winner?: "team1" | "team2";

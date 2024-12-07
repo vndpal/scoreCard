@@ -99,37 +99,27 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
       }}
     >
       <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
-      <Text style={[styles.playerName, themeStyles.text]}>
+      <View style={styles.statsContainer}>
         {playerType === "Batsman" ? (
-          playerStats.find((p) => p.playerId === item.id)
-            ?.isRecommendedBatter ? (
-            <View>
-              <View
-                style={{
-                  width: 10,
-                  height: 10,
-                  backgroundColor: "green",
-                  borderRadius: 5,
-                }}
-              ></View>
-            </View>
-          ) : (
-            ""
-          )
-        ) : playerStats.find((p) => p.playerId === item.id)
-            ?.isRecommendedBowler ? (
-          <View
-            style={{
-              width: 10,
-              height: 10,
-              backgroundColor: "green",
-              borderRadius: 5,
-            }}
-          ></View>
+          <>
+            <Text style={[styles.statsText, themeStyles.text]}>
+              {playerStats.find((p) => p.playerId === item.id)?.innings || 0}{" "}
+              innings
+            </Text>
+            {playerStats.find((p) => p.playerId === item.id)
+              ?.isRecommendedBatter && <View style={styles.recommendedDot} />}
+          </>
         ) : (
-          ""
+          <>
+            <Text style={[styles.statsText, themeStyles.text]}>
+              {playerStats.find((p) => p.playerId === item.id)?.overs || 0}{" "}
+              overs
+            </Text>
+            {playerStats.find((p) => p.playerId === item.id)
+              ?.isRecommendedBowler && <View style={styles.recommendedDot} />}
+          </>
         )}
-      </Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -219,6 +209,19 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 16,
     fontWeight: "600",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statsText: {
+    marginRight: 8,
+  },
+  recommendedDot: {
+    width: 8,
+    height: 8,
+    backgroundColor: "green",
+    borderRadius: 4,
   },
 });
 

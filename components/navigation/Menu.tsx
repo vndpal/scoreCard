@@ -6,11 +6,17 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
   StyleSheet,
+  StyleProp,
+  ViewStyle,
+  Platform,
+  StatusBar,
+  Alert,
 } from "react-native";
 import { Text, Portal } from "react-native-paper";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
@@ -32,8 +38,14 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
   const slideAnim = useRef(new Animated.Value(width * 0.7)).current;
   const router = useRouter();
   const { currentTheme, toggleTheme } = useTheme();
+  const [group, setGroup] = useState<string | null>(null);
 
   useEffect(() => {
+    const getGroup = async () => {
+      const group = await AsyncStorage.getItem("userClub");
+      setGroup(group);
+    };
+    getGroup();
     Animated.timing(slideAnim, {
       toValue: visible ? 0 : width * 0.7,
       duration: 300,
@@ -52,10 +64,29 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
     toggleTheme();
   };
 
+  const exitClub = async () => {
+    Alert.alert("Leave Group", "Are you sure you want to leave this group?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Leave",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("userClub");
+          router.replace("/club");
+        },
+      },
+    ]);
+  };
+
   if (!visible) return null;
 
   return (
-    <View style={styles.modalContainer}>
+    <View
+      style={[
+        styles.modalContainer,
+        { marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 },
+      ]}
+    >
       <TouchableWithoutFeedback onPress={hideMenu}>
         <View style={[styles.overlay, themeStyles.overlay]} />
       </TouchableWithoutFeedback>
@@ -68,13 +99,20 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
       >
         <View style={styles.menuContent}>
           <View style={[styles.header, themeStyles.header]}>
-            <Text style={[styles.headerText, themeStyles.headerText]}>
-              Menu
-            </Text>
+            <View style={styles.profileSection}>
+              <Ionicons
+                name="person-circle"
+                size={40}
+                color={themeStyles.text.color}
+              />
+              <Text style={[styles.headerText, themeStyles.headerText]}>
+                {group}
+              </Text>
+            </View>
             <TouchableOpacity style={styles.closeButton} onPress={hideMenu}>
               <Ionicons
                 name="close-circle"
-                size={32}
+                size={24}
                 color={themeStyles.text.color}
               />
             </TouchableOpacity>
@@ -95,6 +133,14 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
               />
             </TouchableOpacity>
           ))}
+          <TouchableOpacity
+            style={[styles.menuItem, themeStyles.menuItem]}
+            onPress={exitClub}
+          >
+            <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
+              🚶‍♂️ Leave Group
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.menuItem, themeStyles.menuItem]}
             onPress={changeTheme}
@@ -166,20 +212,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
   },
   headerText: {
-    fontSize: 32,
+    fontSize: 16,
     fontWeight: "bold",
   },
   closeButton: {
-    padding: 4,
+    padding: 8,
+    paddingLeft: 12,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    paddingHorizontal: 12,
   },
   menuOptionText: {
     fontSize: 18,
@@ -197,6 +244,11 @@ const styles = StyleSheet.create({
   },
   switchKnobActive: {
     transform: [{ translateX: 22 }],
+  },
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
 });
 

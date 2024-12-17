@@ -43,23 +43,23 @@ const TeamLineUp: React.FC = () => {
     playerStats[]
   >([]);
 
-  const { currentTheme } = useTheme();
+  const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
       const teamPlayersMapping = await TeamPlayerMapping.getAll();
-      const playersFromStorage: player[] = await Player.getAll();
+      const playersFromStorage: player[] = await Player.getAllFromClub(club.id);
       if (playersFromStorage && playersFromStorage.length > 0) {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
         setAllPlayers(playersFromStorage);
       }
-      const teams: team[] = await Team.getAll();
+      const teams: team[] = await Team.getAllByClubId(club.id);
       let lastMatchTeam1 =
         teamPlayersMapping.length > 0 ? teamPlayersMapping[0].teamName : "";
       let lastMatchTeam2 =
         teamPlayersMapping.length > 1 ? teamPlayersMapping[1].teamName : "";
-      const lastMatch = await Match.getLatestMatch();
+      const lastMatch = await Match.getLatestMatch(club.id);
       if (lastMatch) {
         lastMatchTeam1 = lastMatch.team1;
         lastMatchTeam2 = lastMatch.team2;

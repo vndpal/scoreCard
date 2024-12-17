@@ -1,20 +1,18 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
-import { TextInput, Button, useTheme } from "react-native-paper";
+import { TextInput, Button } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
-import { useTheme as currentSelectedTheme } from "@/context/ThemeContext";
-import { Colors } from "@/constants/Colors";
+import { useTheme } from "@/context/ThemeContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 export const CreatePlayer = () => {
-  const { colors } = useTheme();
-  const { currentTheme } = currentSelectedTheme();
   const [name, setName] = useState("");
   const router = useRouter();
+  const { currentTheme, club } = useTheme();
 
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
@@ -26,7 +24,7 @@ export const CreatePlayer = () => {
       return;
     }
 
-    const player = await Player.create({ name });
+    const player = await Player.create({ name, clubId: club.id });
     if (player) {
       await insertPlayerCareerStats(player.id);
     }
@@ -57,6 +55,7 @@ export const CreatePlayer = () => {
       foursConceded: 0,
       sixesConceded: 0,
       dotBalls: 0,
+      clubId: club.id,
     });
   };
 
@@ -66,7 +65,7 @@ export const CreatePlayer = () => {
         label="Player Name"
         value={name}
         onChangeText={setName}
-        style={[{ backgroundColor: colors.background }, themeStyles.input]}
+        style={[{ backgroundColor: "#fff" }, themeStyles.input]}
         mode="outlined"
       />
       <Button mode="contained" onPress={handleSave} style={styles.button}>
@@ -88,12 +87,12 @@ const styles = StyleSheet.create({
 
 const lightStyles = StyleSheet.create({
   input: {
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#fff",
   },
 });
 
 const darkStyles = StyleSheet.create({
   input: {
-    backgroundColor: Colors.dark.background,
+    backgroundColor: "#151718",
   },
 });

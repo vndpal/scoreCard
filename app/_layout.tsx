@@ -14,6 +14,9 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 import { useSettings } from "@/hooks/useSettings";
+import { Club } from "@/firebase/models/Club";
+import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,10 +38,22 @@ export default function RootLayout() {
   );
   const [currentSettings, setCurrentSettings] = useState<settings>(settings);
 
+  const [club, setClub] = useState<Club>({
+    id: "",
+    name: "",
+  });
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
       setCurrentSettings(settings);
+      const club = async () => {
+        const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
+        if (club) {
+          setClub(JSON.parse(club));
+        }
+      };
+      club();
     }
   }, [loaded]);
 
@@ -58,6 +73,10 @@ export default function RootLayout() {
     setCurrentSettings(settings);
   };
 
+  const updateClub = (club: Club) => {
+    setClub(club);
+  };
+
   const paperTheme =
     currentTheme === "dark"
       ? { ...MD3DarkTheme, colors: theme.dark }
@@ -71,6 +90,8 @@ export default function RootLayout() {
           currentTheme={currentTheme}
           currentSettings={currentSettings}
           applySettingsChanges={updateSettings}
+          club={club}
+          updateClub={updateClub}
         >
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

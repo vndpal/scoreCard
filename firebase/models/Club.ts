@@ -24,8 +24,10 @@ export class Club implements Club {
   }
 
   static async getByName(name: string): Promise<Club | null> {
-    const club = await firestoreService.get<Club>(COLLECTION_NAME, name);
-    return club ? new Club(club.name, club.id) : null;
+    const clubs = await firestoreService.query<Club>(COLLECTION_NAME, [
+      { field: "name", operator: "==", value: name },
+    ]);
+    return clubs.length > 0 ? new Club(clubs[0].name, clubs[0].id) : null;
   }
 
   static async delete(name: string): Promise<void> {

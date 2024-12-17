@@ -7,10 +7,11 @@ import { playerStats } from "@/types/playerStats";
 export const updatePlayerCareerStats = async (
   playerMatchStats: playerStats[]
 ) => {
-  for (const playerMatchStat of playerMatchStats) {
+  const updatePromises = playerMatchStats.map(async (playerMatchStat) => {
     const playerCareerStat = await PlayerCareerStats.getByPlayerId(
       playerMatchStat.playerId
     );
+
     if (playerCareerStat) {
       const careerStat = playerCareerStat;
 
@@ -56,9 +57,10 @@ export const updatePlayerCareerStats = async (
       );
 
       careerStat.dotBalls += playerMatchStat.dotBalls;
-      await PlayerCareerStats.update(careerStat.playerId, careerStat);
+      return PlayerCareerStats.update(careerStat.playerId, careerStat);
     }
-  }
+  });
+  await Promise.all(updatePromises.filter(Boolean));
 };
 
 const calculateBowlingEconomy = (

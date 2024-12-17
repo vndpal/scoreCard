@@ -20,6 +20,7 @@ type playerCareerStats = {
   maidens: number;
   bowlingEconomy: number;
   dotBalls: number;
+  clubId: string;
 };
 
 export type { playerCareerStats };

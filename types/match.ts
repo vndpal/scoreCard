@@ -24,6 +24,7 @@ type match = {
     team1: currentTotalScore;
     team2: currentTotalScore;
   };
+  clubId: string;
 };
 
 export type { match };

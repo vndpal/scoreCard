@@ -12,16 +12,19 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { team } from "@/types/team";
 import { Team } from "@/firebase/models/Team";
+import { useTheme } from "@/context/ThemeContext";
 
 const createTeamSchema = Yup.object().shape({
   teamName: Yup.string().required("Team name is required"),
   teamInitials: Yup.string()
     .max(3)
     .required("Short form of the team is required"),
+  clubId: Yup.string(),
 });
 
 export const CreateTeam = () => {
   const [isSuccess, setIsSuccess] = useState(false);
+  const { club } = useTheme();
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
@@ -34,6 +37,8 @@ export const CreateTeam = () => {
       return;
     }
 
+    team.clubId = club.id;
+
     await Team.create(team);
 
     setIsSuccess(true);
@@ -44,6 +49,7 @@ export const CreateTeam = () => {
     initialValues: {
       teamName: "",
       teamInitials: "",
+      clubId: "",
     },
     validationSchema: createTeamSchema,
     onSubmit: async (values, { resetForm }) => {

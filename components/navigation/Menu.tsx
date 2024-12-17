@@ -37,12 +37,12 @@ const menuItems = [
 const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
   const slideAnim = useRef(new Animated.Value(width * 0.7)).current;
   const router = useRouter();
-  const { currentTheme, toggleTheme } = useTheme();
+  const { currentTheme, toggleTheme, club } = useTheme();
   const [group, setGroup] = useState<string | null>(null);
 
   useEffect(() => {
     const getGroup = async () => {
-      const group = await AsyncStorage.getItem("userClub");
+      const group = club?.name;
       setGroup(group);
     };
     getGroup();
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   },
   modal: {
     position: "absolute",
-    right: 0, // Change from left: 0 to right: 0
+    right: 0,
     top: 0,
     bottom: 0,
     width: width * 0.7,
@@ -195,8 +195,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 5,
     elevation: 5,
-    borderTopRightRadius: 20, // Change from borderTopLeftRadius
-    borderBottomRightRadius: 20, // Change from borderBottomLeftRadius
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
   },
   menuContent: {
     flex: 1,

@@ -9,6 +9,7 @@ import { team } from "@/types/team";
 import teams from "@/interfaces/teams";
 import { Dropdown } from "react-native-paper-dropdown";
 import { Team } from "@/firebase/models/Team";
+import { useTheme } from "@/context/ThemeContext";
 
 // Define validation schema with Yup
 const teamSelectionSchema = Yup.object().shape({
@@ -41,10 +42,11 @@ const TeamSelection: React.FC<PopupFormProps> = ({
 }) => {
   const [items, setItems] = useState<items[]>([]);
   const [teams, setTeams] = useState<team[]>([]);
+  const { club } = useTheme();
 
   useEffect(() => {
     (async () => {
-      const teams = await Team.getAll();
+      const teams = await Team.getAllByClubId(club.id);
       if (teams) {
         setTeams(teams);
         setItems(
@@ -75,12 +77,14 @@ const TeamSelection: React.FC<PopupFormProps> = ({
       ) || {
         teamName: "",
         teamInitials: "",
+        clubId: club.id,
       },
       team2: teams.find(
         (team) => team.teamInitials === formik.values.team2
       ) || {
         teamName: "",
         teamInitials: "",
+        clubId: club.id,
       },
     };
     onSubmit(result);

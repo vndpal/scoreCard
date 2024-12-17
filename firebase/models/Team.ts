@@ -7,11 +7,13 @@ export class Team implements team {
   id: string;
   teamName: string;
   teamInitials: string;
+  clubId: string;
 
   constructor(id: string, data: team) {
     this.id = id;
     this.teamName = data.teamName;
     this.teamInitials = data.teamInitials;
+    this.clubId = data.clubId;
   }
 
   static async create(data: Omit<team, "id">): Promise<Team> {
@@ -23,6 +25,13 @@ export class Team implements team {
     console.log("id", id);
     const data = await firestoreService.get<team>(COLLECTION_NAME, id);
     return data ? new Team(id, data) : null;
+  }
+
+  static async getAllByClubId(clubId: string): Promise<Team[]> {
+    const teams = await firestoreService.query<team>(COLLECTION_NAME, [
+      { field: "clubId", operator: "==", value: clubId },
+    ]);
+    return teams.map((team) => new Team(team.id ?? "", team));
   }
 
   static async getAll(): Promise<Team[]> {
@@ -58,6 +67,7 @@ export class Team implements team {
       id: this.id,
       teamName: this.teamName,
       teamInitials: this.teamInitials,
+      clubId: this.clubId,
     };
   }
 }

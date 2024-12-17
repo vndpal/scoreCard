@@ -7,14 +7,20 @@ import MatchHistory from "@/components/MatchHistory";
 import { Player } from "@/firebase/models/Player";
 import { Match } from "@/firebase/models/Match";
 import { match } from "@/types/match";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function TabTwoScreen() {
   const [matches, setMatches] = useState<match[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
+  const { club } = useTheme();
   useFocusEffect(
     useCallback(() => {
       const fetchMatch = async () => {
-        const matches = await Match.getAllOrderby("startDateTime", "desc");
+        const matches = await Match.getAllOrderby(
+          club.id,
+          "startDateTime",
+          "desc"
+        );
         const playersFromDB = await Player.getAll();
         setMatches(matches);
         if (playersFromDB && playersFromDB.length > 0) {

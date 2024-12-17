@@ -24,6 +24,7 @@ export class PlayerCareerStats implements playerCareerStats {
   maidens: number;
   bowlingEconomy: number;
   dotBalls: number;
+  clubId: string;
 
   constructor(playerId: string, data: playerCareerStats) {
     this.playerId = playerId;
@@ -46,6 +47,7 @@ export class PlayerCareerStats implements playerCareerStats {
     this.maidens = data.maidens;
     this.bowlingEconomy = data.bowlingEconomy;
     this.dotBalls = data.dotBalls;
+    this.clubId = data.clubId;
   }
 
   static async create(
@@ -74,6 +76,20 @@ export class PlayerCareerStats implements playerCareerStats {
   static async getAll(): Promise<PlayerCareerStats[]> {
     const stats = await firestoreService.getAll<playerCareerStats>(
       COLLECTION_NAME
+    );
+    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+  }
+
+  static async getAllFromClub(clubId: string): Promise<PlayerCareerStats[]> {
+    const stats = await firestoreService.query<playerCareerStats>(
+      COLLECTION_NAME,
+      [
+        {
+          field: "clubId",
+          operator: "==",
+          value: clubId,
+        },
+      ]
     );
     return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
   }
@@ -132,6 +148,7 @@ export class PlayerCareerStats implements playerCareerStats {
       maidens: this.maidens,
       bowlingEconomy: this.bowlingEconomy,
       dotBalls: this.dotBalls,
+      clubId: this.clubId,
     };
   }
 }

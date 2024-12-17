@@ -65,12 +65,16 @@ export const firestoreService = {
   getAllOrderby: async <T>(
     collectionName: string,
     orderByField: string,
-    direction: "asc" | "desc"
+    direction: "asc" | "desc",
+    filters: { field: string; operator: WhereFilterOp; value: any }[]
   ): Promise<T[]> => {
     try {
       const q = query(
         collection(db, collectionName),
-        orderBy(orderByField, direction)
+        orderBy(orderByField, direction),
+        ...filters.map(({ field, operator, value }) =>
+          where(field, operator, value)
+        )
       );
 
       const querySnapshot = await getDocs(q);
@@ -122,22 +126,31 @@ export const firestoreService = {
 
   getLatest: async <T>(
     collectionName: string,
+    filters: { field: string; operator: WhereFilterOp; value: any }[],
     orderByField: string,
     direction: "asc" | "desc"
   ): Promise<T | null> => {
     const q = query(
       collection(db, collectionName),
+      ...filters.map(({ field, operator, value }) =>
+        where(field, operator, value)
+      ),
       orderBy(orderByField, direction),
       limit(1)
     );
-    const querySnapshot = await getDocs(q);
+    try {
+      const querySnapshot = await getDocs(q);
 
-    if (querySnapshot.empty) {
+      if (querySnapshot.empty) {
+        return null;
+      }
+
+      const doc = querySnapshot.docs[0];
+      return { id: doc.id, ...doc.data() } as T;
+    } catch (error: any) {
+      console.log("error in getting latest", error);
       return null;
     }
-
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as T;
   },
 
   clearDatabase: async (): Promise<void> => {

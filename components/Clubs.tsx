@@ -17,11 +17,14 @@ import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { Club } from "@/firebase/models/Club";
 import { getUniqueClubName } from "@/utils/getUniqueClubName";
+import { useTheme } from "@/context/ThemeContext";
+import { STORAGE_ITEMS } from "@/constants/StorageItems";
 
 export default function ClubsScreen() {
   const [clubName, setClubName] = useState("");
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const router = useRouter();
+  const { updateClub } = useTheme();
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -42,18 +45,23 @@ export default function ClubsScreen() {
   const handleContinueWithClub = async () => {
     if (clubName.trim()) {
       const isClubExists = await Club.isClubExists(clubName.trim());
+      let club: Club | null = null;
       if (!isClubExists) {
-        await Club.create(clubName.trim());
+        club = await Club.create(clubName.trim());
+      } else {
+        club = await Club.getByName(clubName.trim());
       }
-      await AsyncStorage.setItem("userClub", clubName.trim());
+      await AsyncStorage.setItem(STORAGE_ITEMS.USER_CLUB, JSON.stringify(club));
+      updateClub(club ?? { id: "", name: "" });
       router.replace("/");
     }
   };
 
   const handleContinueAsGuest = async () => {
     const randomClubName = await getUniqueClubName();
-    await Club.create(randomClubName);
-    await AsyncStorage.setItem("userClub", randomClubName);
+    const club = await Club.create(randomClubName);
+    await AsyncStorage.setItem(STORAGE_ITEMS.USER_CLUB, JSON.stringify(club));
+    updateClub(club);
     router.replace("/");
   };
 

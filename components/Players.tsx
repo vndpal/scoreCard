@@ -15,9 +15,11 @@ const Players = () => {
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
+  const { club } = useTheme();
+
   useEffect(() => {
     (async () => {
-      const playersFromDB: player[] = await Player.getAll();
+      const playersFromDB: player[] = await Player.getAllFromClub(club.id);
       if (playersFromDB) {
         playersFromDB.sort((a, b) => a.name.localeCompare(b.name));
         setPlayers(playersFromDB);

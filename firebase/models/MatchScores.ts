@@ -166,7 +166,8 @@ export class MatchScore implements MatchScoresData {
     const ballsData = await firestoreService.getAllOrderby<any>(
       `${COLLECTION_NAME}/${overId}/${BALLS_SUBCOLLECTION}`,
       "__name__",
-      "asc"
+      "asc",
+      []
     );
 
     return ballsData

@@ -69,6 +69,7 @@ export default function HomeScreen() {
         totalBalls: 0,
       },
     },
+    clubId: "",
   });
   const [playerMatchStats, setPlayerMatchStats] = useState<playerStats[]>([]);
 
@@ -106,11 +107,15 @@ export default function HomeScreen() {
     Timestamp.now()
   );
 
-  const { currentTheme, currentSettings } = useTheme();
+  const { currentTheme, currentSettings, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
-    fetchMatch();
+    try {
+      fetchMatch();
+    } catch (error) {
+      console.log("error", error);
+    }
   }, []);
 
   const fetchMatch = async () => {
@@ -118,7 +123,7 @@ export default function HomeScreen() {
       setShowLoader(true);
       const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
       if (!isNewMatch) {
-        const currentMatch = await Match.getLatestMatch();
+        const currentMatch = await Match.getLatestMatch(club.id);
         if (!currentMatch) {
           return;
         }
@@ -326,7 +331,7 @@ export default function HomeScreen() {
         const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
         if (isNewMatch) {
           clearAllState();
-          const latestMatch = await Match.getLatestMatch();
+          const latestMatch = await Match.getLatestMatch(club.id);
           if (latestMatch) {
             setMatch(latestMatch);
             await initiatePlayerMatchStats(latestMatch.matchId);

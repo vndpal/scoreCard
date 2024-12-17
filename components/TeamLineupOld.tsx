@@ -19,6 +19,7 @@ import PreviewTeam from "./PreviewTeam";
 import { Player } from "@/firebase/models/Player";
 import { Team } from "@/firebase/models/Team";
 import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
+import { useTheme } from "@/context/ThemeContext";
 
 // Define the Player type
 type PlayerDetails = {
@@ -40,6 +41,8 @@ const TeamLineup: React.FC = () => {
   const [team1, setTeam1] = useState<team>();
   const [team2, setTeam2] = useState<team>();
 
+  const { club } = useTheme();
+
   useEffect(() => {
     (async () => {
       // Get the team player mapping from storage
@@ -51,7 +54,7 @@ const TeamLineup: React.FC = () => {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
       }
       // Get the teams from storage
-      const teams: team[] = await Team.getAll();
+      const teams: team[] = await Team.getAllByClubId(club.id);
 
       const savedTeams = Object.keys(teamPlayersMapping || {});
       if (

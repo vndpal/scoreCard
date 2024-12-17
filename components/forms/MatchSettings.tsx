@@ -37,7 +37,7 @@ const MatchSettings = () => {
   const [items, setItems] = useState<items[]>([]);
   const [matchStatus, setMatchStatus] = useState<matchResult>("completed");
   const [winner, setWinner] = useState<string>("");
-  const { currentTheme } = useTheme();
+  const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -46,7 +46,7 @@ const MatchSettings = () => {
   }, []);
 
   const fetchMatch = async () => {
-    const match = await Match.getLatestMatch();
+    const match = await Match.getLatestMatch(club.id);
     if (!match) {
       return;
     }
@@ -110,7 +110,7 @@ const MatchSettings = () => {
             if (matchStatus !== "abandoned") {
               await updatePlayerCareerStats(playerMatchStats.playerMatchStats);
             }
-            await updateManOfTheMatch(currentMatch.matchId);
+            updateManOfTheMatch(currentMatch.matchId);
           }
           Keyboard.dismiss();
           setLoading(false);

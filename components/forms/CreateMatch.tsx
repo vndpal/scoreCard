@@ -41,12 +41,12 @@ type items = {
 
 export const CreateMatch = () => {
   const [teams, setTeams] = useState<items[]>([]);
-  const { currentTheme } = useTheme();
+  const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
-      const lastMatch: match | null = await Match.getLatestMatch();
+      const lastMatch: match | null = await Match.getLatestMatch(club.id);
       if (lastMatch && lastMatch.status == "completed") {
         const winner =
           lastMatch.winner == "team1" ? lastMatch.team1 : lastMatch.team2;
@@ -61,7 +61,7 @@ export const CreateMatch = () => {
         });
       }
 
-      const teams = await Team.getAll();
+      const teams = await Team.getAllByClubId(club.id);
       if (teams) {
         setTeams(
           teams.map((team: team) => ({
@@ -79,7 +79,7 @@ export const CreateMatch = () => {
       return;
     }
 
-    const lastMatch = await Match.getLatestMatch();
+    const lastMatch = await Match.getLatestMatch(club.id);
     const teamPlayerMapping = await TeamPlayerMapping.getAll();
     const { overs, wickets, team1, team2, quickMatch } = formik.values;
 
@@ -147,6 +147,7 @@ export const CreateMatch = () => {
       isFirstInning: true,
       startDateTime: Timestamp.now(),
       quickMatch: quickMatch,
+      clubId: club?.id ?? "",
     });
 
     if (!quickMatch) {

@@ -7,15 +7,17 @@ const COLLECTION_NAME = "players";
 export class Player implements player {
   id: string;
   name: string;
+  clubId: string;
 
   constructor(id: string, data: player) {
     this.id = id;
     this.name = data.name;
+    this.clubId = data.clubId;
   }
 
   static async create(data: Omit<player, "id">): Promise<Player> {
     const id = await firestoreService.createWithAutoId(COLLECTION_NAME, data);
-    return new Player(id, { id, name: data.name });
+    return new Player(id, { id, name: data.name, clubId: data.clubId });
   }
 
   static async getById(id: string): Promise<Player | null> {
@@ -25,6 +27,17 @@ export class Player implements player {
 
   static async getAll(): Promise<Player[]> {
     const players = await firestoreService.getAll<player>(COLLECTION_NAME);
+    return players.map((player) => new Player(player.id, player));
+  }
+
+  static async getAllFromClub(clubId: string): Promise<Player[]> {
+    const players = await firestoreService.query<player>(COLLECTION_NAME, [
+      {
+        field: "clubId",
+        operator: "==",
+        value: clubId,
+      },
+    ]);
     return players.map((player) => new Player(player.id, player));
   }
 
@@ -61,6 +74,7 @@ export class Player implements player {
     return {
       id: this.id,
       name: this.name,
+      clubId: this.clubId,
     };
   }
 }

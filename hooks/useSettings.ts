@@ -14,8 +14,8 @@ const defaultSettings: settings = {
   notifications: false,
   showMatchTimer: false,
   matchTime: { hours: 0, minutes: 0, seconds: 30 },
-  soundEffects: false,
   autoUpdate: false,
+  offlineMode: false,
 };
 
 export const useSettings = () => {

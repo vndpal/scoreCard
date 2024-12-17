@@ -2,7 +2,10 @@ import { firestoreService } from "../services/firestore";
 import { match } from "../../types/match";
 import { matchResult } from "@/types/matchResult";
 import { currentTotalScore } from "@/types/currentTotalScore";
-import { Timestamp } from "@react-native-firebase/firestore";
+import {
+  FirebaseFirestoreTypes,
+  Timestamp,
+} from "@react-native-firebase/firestore";
 
 const COLLECTION_NAME = "matches";
 
@@ -27,6 +30,7 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     team1: currentTotalScore;
     team2: currentTotalScore;
   };
+  clubId: string;
 
   constructor(matchId: string, data: match) {
     this.matchId = matchId;
@@ -44,6 +48,7 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     this.quickMatch = data.quickMatch;
     this.manOfTheMatch = data.manOfTheMatch;
     this.currentScore = data.currentScore;
+    this.clubId = data.clubId;
     Object.assign(this, data);
   }
 
@@ -60,10 +65,15 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     return data ? new Match(matchId, data) : null;
   }
 
-  static async getLatestMatch(): Promise<match | null> {
+  static async getLatestMatch(clubId: string): Promise<match | null> {
     const latestMatch = await firestoreService.getLatest<
       match & { id: string }
-    >(COLLECTION_NAME, "startDateTime", "desc");
+    >(
+      COLLECTION_NAME,
+      [{ field: "clubId", operator: "==", value: clubId }],
+      "startDateTime",
+      "desc"
+    );
     return latestMatch ? { ...latestMatch, matchId: latestMatch.id } : null;
   }
 
@@ -75,12 +85,15 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
   }
 
   static async getAllOrderby(
+    clubId: string,
     fieldItem: string,
     direction: "asc" | "desc"
   ): Promise<match[]> {
     const matches = await firestoreService.getAllOrderby<
       match & { id: string }
-    >(COLLECTION_NAME, fieldItem, direction);
+    >(COLLECTION_NAME, fieldItem, direction, [
+      { field: "clubId", operator: "==", value: clubId },
+    ]);
     return matches.map((match) => ({
       ...match,
       matchId: match.id,

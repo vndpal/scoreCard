@@ -1,3 +1,4 @@
+import { Club } from "@/types/club";
 import { settings } from "@/types/settings";
 import React, { createContext, useContext } from "react";
 
@@ -5,6 +6,8 @@ interface ThemeContextType {
   toggleTheme: () => void;
   currentTheme: "dark" | "light";
   currentSettings: settings;
+  club: Club;
+  updateClub: (club: Club) => void;
   applySettingsChanges: (settings: settings) => void;
 }
 
@@ -22,6 +25,8 @@ export const AppThemeProvider: React.FC<{
   toggleTheme: () => void;
   currentTheme: "dark" | "light";
   currentSettings: settings;
+  club: Club;
+  updateClub: (club: Club) => void;
   applySettingsChanges: (settings: settings) => void;
   children: React.ReactNode;
 }> = ({
@@ -30,6 +35,8 @@ export const AppThemeProvider: React.FC<{
   currentTheme,
   currentSettings,
   applySettingsChanges,
+  club,
+  updateClub,
 }) => {
   return (
     <ThemeContext.Provider
@@ -38,6 +45,8 @@ export const AppThemeProvider: React.FC<{
         currentTheme,
         currentSettings,
         applySettingsChanges,
+        club: club,
+        updateClub,
       }}
     >
       {children}

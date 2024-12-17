@@ -29,11 +29,12 @@ const PlayerCareerSummary = () => {
 
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const { club } = useTheme();
 
   useEffect(() => {
     (async () => {
-      const careerStats = await PlayerCareerStats.getAll();
-      const players = await Player.getAll();
+      const careerStats = await PlayerCareerStats.getAllFromClub(club.id);
+      const players = await Player.getAllFromClub(club.id);
       if (careerStats && players) {
         const playersMap = new Map<string, string>();
         players.forEach((p: player) => {

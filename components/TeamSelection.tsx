@@ -10,6 +10,7 @@ import teams from "@/interfaces/teams";
 import { Dropdown } from "react-native-paper-dropdown";
 import { Team } from "@/firebase/models/Team";
 import { useTheme } from "@/context/ThemeContext";
+import { useRouter } from "expo-router";
 
 // Define validation schema with Yup
 const teamSelectionSchema = Yup.object().shape({
@@ -43,18 +44,23 @@ const TeamSelection: React.FC<PopupFormProps> = ({
   const [items, setItems] = useState<items[]>([]);
   const [teams, setTeams] = useState<team[]>([]);
   const { club } = useTheme();
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
       const teams = await Team.getAllByClubId(club.id);
       if (teams) {
-        setTeams(teams);
-        setItems(
-          teams.map((team: team) => ({
-            label: team.teamName,
-            value: team.teamInitials,
-          }))
-        );
+        if (teams.length < 2) {
+          router.push("/createTeam");
+        } else {
+          setTeams(teams);
+          setItems(
+            teams.map((team: team) => ({
+              label: team.teamName,
+              value: team.teamInitials,
+            }))
+          );
+        }
       }
     })();
   }, []);
@@ -132,7 +138,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
             mode="contained"
             onPress={formik.handleSubmit as (e?: GestureResponderEvent) => void}
           >
-            Create new team
+            Start selecting players
           </Button>
         </View>
       </Dialog.Content>

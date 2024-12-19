@@ -5,6 +5,7 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Menu } from "react-native-paper";
 import { Icon } from "react-native-elements";
@@ -25,6 +26,7 @@ import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
+import Loader from "./Loader";
 
 const TeamLineUp: React.FC = () => {
   const [team1Players, setTeam1Players] = useState<player[]>([]);
@@ -42,12 +44,14 @@ const TeamLineUp: React.FC = () => {
   const [currentMatchPlayerStats, setCurrentMatchPlayerStats] = useState<
     playerStats[]
   >([]);
+  const [loader, setLoader] = useState<boolean>(false);
 
   const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
+      setLoader(true);
       const teamPlayersMapping = await TeamPlayerMapping.getAll();
       const playersFromStorage: player[] = await Player.getAllFromClub(club.id);
       if (playersFromStorage && playersFromStorage.length > 0) {
@@ -136,6 +140,7 @@ const TeamLineUp: React.FC = () => {
       } else if (playersFromStorage && playersFromStorage.length > 0) {
         setAvailablePlayers(playersFromStorage);
       }
+      setLoader(false);
     })();
   }, []);
 
@@ -159,6 +164,10 @@ const TeamLineUp: React.FC = () => {
   };
 
   const openMenu = (team: "team1" | "team2") => {
+    if (!team1 || !team2) {
+      setTeamSelectionVisible(true);
+      return;
+    }
     if (team === "team1") {
       setTeam1DropdownOpen(true);
     } else {
@@ -405,7 +414,7 @@ const TeamLineUp: React.FC = () => {
         >
           <Icon name="swap" type="entypo" color="white" size={20} />
           <Text style={[styles.buttonText, themeStyles.buttonText]}>
-            Change Team
+            Setup Team
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -432,6 +441,7 @@ const TeamLineUp: React.FC = () => {
         onDismiss={() => setTeamSelectionVisible(false)}
         onSubmit={teamSelectionSubmit}
       />
+      {loader && <Loader />}
     </View>
   );
 };

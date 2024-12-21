@@ -29,6 +29,8 @@ import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import { MatchScore } from "@/firebase/models/MatchScores";
 import { undoPlayerCareerStats } from "@/utils/undoPlayerCareerStats";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Club } from "@/types/club";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -107,7 +109,7 @@ export default function HomeScreen() {
     Timestamp.now()
   );
 
-  const { currentTheme, currentSettings, club } = useTheme();
+  const { currentTheme, currentSettings } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -123,6 +125,16 @@ export default function HomeScreen() {
       setShowLoader(true);
       const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
       if (!isNewMatch) {
+        let club: Club | null = null;
+        const clubFromStroage = await AsyncStorage.getItem(
+          STORAGE_ITEMS.USER_CLUB
+        );
+        if (clubFromStroage) {
+          club = JSON.parse(clubFromStroage);
+        }
+        if (!club || !club.id) {
+          return;
+        }
         const currentMatch = await Match.getLatestMatch(club.id);
         if (!currentMatch) {
           return;
@@ -331,6 +343,16 @@ export default function HomeScreen() {
         const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
         if (isNewMatch) {
           clearAllState();
+          let club: Club | null = null;
+          const clubFromStroage = await AsyncStorage.getItem(
+            STORAGE_ITEMS.USER_CLUB
+          );
+          if (clubFromStroage) {
+            club = JSON.parse(clubFromStroage);
+          }
+          if (!club || !club.id) {
+            return;
+          }
           const latestMatch = await Match.getLatestMatch(club.id);
           if (latestMatch) {
             setMatch(latestMatch);

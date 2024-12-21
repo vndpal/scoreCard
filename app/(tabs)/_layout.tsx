@@ -13,19 +13,26 @@ import { BackHandler, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useTheme } from "@/context/ThemeContext";
+import { Club } from "@/firebase/models/Club";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const [menuVisible, setMenuVisible] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { club } = useTheme();
   const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
     if (pathname === "/" && rootNavigationState?.key) {
       const checkClub = async () => {
-        if (!club.id) {
+        let club: Club | null = null;
+        const clubFromStorage = await AsyncStorage.getItem(
+          STORAGE_ITEMS.USER_CLUB
+        );
+        if (clubFromStorage) {
+          club = JSON.parse(clubFromStorage);
+        }
+        if (!club || !club.id) {
           router.replace("/club");
           return;
         }

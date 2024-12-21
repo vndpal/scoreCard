@@ -110,14 +110,14 @@ export default function RootLayout() {
             <Stack.Screen
               name="createTeam"
               options={{
-                headerTitle: "Create team",
+                headerTitle: "Create new team",
                 animation: "slide_from_right",
               }}
             />
             <Stack.Screen
               name="teamLineup"
               options={{
-                headerTitle: "Playing XI",
+                headerTitle: "Team Selection",
                 animation: "slide_from_right",
               }}
             />

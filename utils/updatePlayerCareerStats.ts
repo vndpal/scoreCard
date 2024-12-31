@@ -29,11 +29,12 @@ export const updatePlayerCareerStats = async (
 
       careerStat.strikeRate = (careerStat.runs / careerStat.ballsFaced) * 100;
 
-      const totalInnings = careerStat.matches - careerStat.notOuts;
+      careerStat.innings += playerMatchStat.ballsFaced > 0 ? 1 : 0;
+
+      const totalInnings =
+        careerStat.innings > 0 ? careerStat.innings - careerStat.notOuts : 0;
       careerStat.average =
         careerStat.runs / (totalInnings === 0 ? 1 : totalInnings);
-
-      careerStat.innings += playerMatchStat.ballsFaced > 0 ? 1 : 0;
 
       careerStat.wickets += playerMatchStat.wickets;
       careerStat.overs += playerMatchStat.overs;

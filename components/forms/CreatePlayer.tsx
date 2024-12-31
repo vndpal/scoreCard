@@ -69,7 +69,7 @@ export const CreatePlayer = () => {
         mode="outlined"
       />
       <Button mode="contained" onPress={handleSave} style={styles.button}>
-        Save
+        Add new player
       </Button>
     </View>
   );

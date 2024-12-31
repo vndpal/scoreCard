@@ -153,6 +153,7 @@ const PlayerCareerSummary = () => {
                 <th>Fours</th>
                 <th>SR</th>
                 <th>Avg</th>
+                <th>NO</th>
                 <th>Innings</th>
                 <th>Matches</th>
               </tr>
@@ -170,6 +171,7 @@ const PlayerCareerSummary = () => {
                     player.strikeRate ? player.strikeRate.toFixed(2) : "-"
                   }</td>
                   <td>${player.average ? player.average.toFixed(2) : "-"}</td>
+                  <td>${player.notOuts}</td>
                   <td>${player.innings}</td>
                   <td>${player.matches}</td>
                 </tr>
@@ -297,6 +299,7 @@ const PlayerCareerSummary = () => {
           <Text style={[styles.cell, themeStyles.cell]}>
             {item.average ? item.average.toFixed(2) : "-"}
           </Text>
+          <Text style={[styles.cell, themeStyles.cell]}>{item.notOuts}</Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.innings}</Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.matches}</Text>
         </>
@@ -368,6 +371,9 @@ const PlayerCareerSummary = () => {
                 </Text>
                 <Text style={[styles.headerCell, themeStyles.headerCell]}>
                   Avg
+                </Text>
+                <Text style={[styles.headerCell, themeStyles.headerCell]}>
+                  NO
                 </Text>
                 <Text style={[styles.headerCell, themeStyles.headerCell]}>
                   Innings

@@ -112,14 +112,16 @@ const TeamLineUp: React.FC = () => {
           playersFromStorage.filter((player) =>
             teamPlayersMapping
               .find((mapping) => mapping.teamName === localTeam1?.teamInitials)
-              ?.players.includes(player.id)
+              ?.players.map((p) => p.id)
+              .includes(player.id)
           )
         );
         setTeam2Players(
           playersFromStorage.filter((player) =>
             teamPlayersMapping
               .find((mapping) => mapping.teamName === localTeam2?.teamInitials)
-              ?.players.includes(player.id)
+              ?.players.map((p) => p.id)
+              .includes(player.id)
           )
         );
         setAvailablePlayers(
@@ -129,12 +131,14 @@ const TeamLineUp: React.FC = () => {
                 .find(
                   (mapping) => mapping.teamName === localTeam1?.teamInitials
                 )
-                ?.players.includes(player.id) &&
+                ?.players.map((p) => p.id)
+                .includes(player.id) &&
               !teamPlayersMapping
                 .find(
                   (mapping) => mapping.teamName === localTeam2?.teamInitials
                 )
-                ?.players.includes(player.id)
+                ?.players.map((p) => p.id)
+                .includes(player.id)
           )
         );
       } else if (playersFromStorage && playersFromStorage.length > 0) {
@@ -251,31 +255,26 @@ const TeamLineUp: React.FC = () => {
     }
 
     const updatedTeamPlayerMapping: teamPlayerMapping = {
-      [team1!.teamInitials]: team1Players.map((player: player) => player.id),
-      [team2!.teamInitials]: team2Players.map((player: player) => player.id),
+      [team1!.teamInitials]: team1Players,
+      [team2!.teamInitials]: team2Players,
     };
 
-    await TeamPlayerMapping.create(
-      team1!.teamInitials,
-      team1Players.map((player: player) => player.id)
-    );
-    await TeamPlayerMapping.create(
-      team2!.teamInitials,
-      team2Players.map((player: player) => player.id)
-    );
+    await TeamPlayerMapping.create(team1!.teamInitials, team1Players);
+    await TeamPlayerMapping.create(team2!.teamInitials, team2Players);
 
     if (currentMatchId !== "") {
       const updatedLiveMatchPlayerStats: playerStats[] =
         currentMatchPlayerStats;
       for (const teamInitials in updatedTeamPlayerMapping) {
-        for (const playerId of updatedTeamPlayerMapping[teamInitials]) {
-          if (!activePlayerIds.includes(playerId)) {
+        for (const player of updatedTeamPlayerMapping[teamInitials]) {
+          if (!activePlayerIds.includes(player.id)) {
             const existingPlayerStats = updatedLiveMatchPlayerStats.find(
-              (stats) => stats.playerId === playerId
+              (stats) => stats.playerId === player.id
             );
             if (!existingPlayerStats) {
               updatedLiveMatchPlayerStats.push({
-                playerId: playerId,
+                playerId: player.id,
+                name: player.name,
                 runs: 0,
                 ballsFaced: 0,
                 fours: 0,
@@ -297,7 +296,7 @@ const TeamLineUp: React.FC = () => {
               });
             } else {
               const playerStats = updatedLiveMatchPlayerStats.find(
-                (x) => x.playerId === playerId
+                (x) => x.playerId === player.id
               );
               if (playerStats) {
                 playerStats.team = teamInitials;

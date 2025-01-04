@@ -1,5 +1,6 @@
 type playerStats = {
   playerId: string;
+  name: string;
   team: string;
   runs: number;
   ballsFaced: number;

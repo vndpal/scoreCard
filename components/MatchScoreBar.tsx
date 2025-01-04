@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { match } from "@/types/match";
 import { currentTotalScore } from "@/types/currentTotalScore";
 import { useTheme } from "@/context/ThemeContext";
+import { getMatchResultText } from "@/utils/getMatchResultText";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -35,23 +36,13 @@ const MatchScoreBar = ({
   return (
     <View style={[styles.statusBar, themeStyles.statusBar]}>
       {match.status === "completed" ? (
-        match.winner == "team1" ? (
-          <Text style={[styles.resultText, themeStyles.resultText]}>
-            {match.team1} won by{" "}
-            {finalFirstInningsScore.totalRuns -
-              finalSecondInningsScore.totalRuns}{" "}
-            runs
-          </Text>
-        ) : (
-          <Text style={[styles.resultText, themeStyles.resultText]}>
-            {match.team2} won by{" "}
-            {match.wickets! - finalSecondInningsScore.totalWickets} wickets &{" "}
-            {match.overs * 6 -
-              (finalSecondInningsScore.totalOvers * 6 +
-                finalSecondInningsScore.totalBalls)}{" "}
-            balls left
-          </Text>
-        )
+        <Text style={[styles.resultText, themeStyles.resultText]}>
+          {getMatchResultText(
+            match,
+            finalFirstInningsScore,
+            finalSecondInningsScore
+          )}
+        </Text>
       ) : match.status === "live" ? (
         <Text style={[styles.inProgressText, themeStyles.inProgressText]}>
           {match.team2} need{" "}

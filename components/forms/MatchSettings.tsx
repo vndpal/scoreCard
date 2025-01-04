@@ -110,7 +110,7 @@ const MatchSettings = () => {
             if (matchStatus !== "abandoned") {
               await updatePlayerCareerStats(playerMatchStats.playerMatchStats);
             }
-            updateManOfTheMatch(currentMatch.matchId);
+            await updateManOfTheMatch(currentMatch.matchId);
           }
           Keyboard.dismiss();
           setLoading(false);

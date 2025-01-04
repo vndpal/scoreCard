@@ -6,7 +6,7 @@ import { playerStats } from "@/types/playerStats";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 
-export const updateManOfTheMatch = async (matchId: string) => {
+export const updateManOfTheMatch = async (matchId: string): Promise<string> => {
   try {
     const match: Match | null = await Match.getById(matchId);
     const playerMatchStat: playerMatchStats | null =
@@ -26,9 +26,12 @@ export const updateManOfTheMatch = async (matchId: string) => {
         }
       });
       await Match.update(matchId, { manOfTheMatch: manOfTheMatch });
+      return manOfTheMatch;
     }
+    return "";
   } catch (error) {
     console.log("Error updating Man of the Match", error);
+    return "";
   }
 };
 
@@ -52,7 +55,7 @@ const calculateMathPoints = (stats: playerStats): number => {
   }
 
   // Bowling points
-  points += (stats.wickets || 0) * 8 + (stats.maidens || 0) * 6;
+  points += (stats.wickets || 0) * 10 + (stats.maidens || 0) * 6;
   points -=
     (stats.runsConceded || 0) * 0.4 +
     (stats.sixesConceded || 0) * 1.5 +
@@ -60,11 +63,11 @@ const calculateMathPoints = (stats: playerStats): number => {
 
   // Economy rate points
   if (stats.bowlingEconomy && stats.bowlingEconomy > 0) {
-    if (stats.bowlingEconomy > 20) points -= 4;
-    else if (stats.bowlingEconomy > 15) points -= 3;
-    else if (stats.bowlingEconomy < 6) points += 5;
-    else if (stats.bowlingEconomy < 8) points += 3;
-    else if (stats.bowlingEconomy < 10) points += 1;
+    if (stats.bowlingEconomy > 20) points -= 10;
+    else if (stats.bowlingEconomy > 15) points -= 5;
+    else if (stats.bowlingEconomy < 6) points += 20;
+    else if (stats.bowlingEconomy < 8) points += 15;
+    else if (stats.bowlingEconomy < 10) points += 10;
   }
 
   // Dot balls points

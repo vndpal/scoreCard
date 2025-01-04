@@ -17,6 +17,7 @@ import { player } from "@/types/player";
 import MatchScoreBar from "./MatchScoreBar";
 import TournamentStandings from "./TournamentStandings";
 import { Timestamp } from "@react-native-firebase/firestore";
+import { getMatchResultText } from "@/utils/getMatchResultText";
 
 const { width } = Dimensions.get("window");
 
@@ -228,11 +229,15 @@ const StatusBadge = ({
 
   if (status == "completed") {
     return (
-      <MatchScoreBar
-        match={match}
-        finalFirstInningsScore={match.currentScore?.team1}
-        finalSecondInningsScore={match.currentScore?.team2}
-      />
+      <View>
+        <Text style={themeStyles.resultText}>
+          {getMatchResultText(
+            match,
+            match.currentScore?.team1,
+            match.currentScore?.team2
+          )}
+        </Text>
+      </View>
     );
   }
 
@@ -459,6 +464,11 @@ const darkStyles = StyleSheet.create({
     fontSize: 14,
     color: "#8A8A8A",
   },
+  resultText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "300",
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -598,6 +608,11 @@ const lightStyles = StyleSheet.create({
   overs: {
     fontSize: 14,
     color: "#888888",
+  },
+  resultText: {
+    fontSize: 14,
+    color: "#000000",
+    fontWeight: "700",
   },
 });
 

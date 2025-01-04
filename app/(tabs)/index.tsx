@@ -31,6 +31,8 @@ import { MatchScore } from "@/firebase/models/MatchScores";
 import { undoPlayerCareerStats } from "@/utils/undoPlayerCareerStats";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Club } from "@/types/club";
+import MatchResult from "@/components/MatchResult";
+import { getMatchResultText } from "@/utils/getMatchResultText";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -51,7 +53,7 @@ export default function HomeScreen() {
     tossWin: "team1",
     choose: "batting",
     overs: 0,
-    status: "completed",
+    status: "noResult",
     isFirstInning: true,
     startDateTime: Timestamp.now(),
     endDateTime: Timestamp.now(),
@@ -108,6 +110,7 @@ export default function HomeScreen() {
   const [lastActivityDateTime, setLastActivityDateTime] = useState<Timestamp>(
     Timestamp.now()
   );
+  const [manOfTheMatch, setManOfTheMatch] = useState<string>("");
 
   const { currentTheme, currentSettings } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -160,6 +163,7 @@ export default function HomeScreen() {
         }
 
         setMatch(currentMatch);
+        setManOfTheMatch(currentMatch.manOfTheMatch);
         setIsFirstInning(currentMatch.isFirstInning);
         setTotalScore(team1score);
 
@@ -622,7 +626,8 @@ export default function HomeScreen() {
 
           if (!match.quickMatch) {
             await updatePlayerCareerStats(playerMatchStats);
-            await updateManOfTheMatch(match.matchId);
+            const manOfTheMatch = await updateManOfTheMatch(match.matchId);
+            setManOfTheMatch(manOfTheMatch);
           }
           return;
         }
@@ -652,7 +657,8 @@ export default function HomeScreen() {
 
         if (!match.quickMatch) {
           await updatePlayerCareerStats(playerMatchStats);
-          await updateManOfTheMatch(match.matchId);
+          const manOfTheMatch = await updateManOfTheMatch(match.matchId);
+          setManOfTheMatch(manOfTheMatch);
         }
       }
     } finally {
@@ -1025,6 +1031,10 @@ export default function HomeScreen() {
     setPickPlayerVisible(true);
   };
 
+  const handleNewMatch = () => {
+    router.push("/createMatch");
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.scoreBoardcontainer}>
@@ -1042,7 +1052,7 @@ export default function HomeScreen() {
           balls={finalSecondInningsScore.totalBalls}
           scorePerInning={scoreSecondInnings}
         />
-        {bowler || batter1 || batter2 ? (
+        {(bowler || batter1 || batter2) && match.status === "live" ? (
           <MatchPlayerStatsBar
             bowler={bowler}
             strikerBatsman={batter1}
@@ -1055,7 +1065,7 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        {!isFirstInning ? (
+        {!isFirstInning && match.status === "live" ? (
           <MatchScoreBar
             match={match}
             finalFirstInningsScore={finalFirstInningsScore}
@@ -1067,30 +1077,36 @@ export default function HomeScreen() {
       </View>
       <View style={{ flex: 0.1 }}></View>
       <View style={styles.subContainer}>
-        <TouchableOpacity
-          disabled={isEntryButtonDisabled}
-          style={[
-            styles.ConfirmationButton,
-            themeStyles.ConfirmationButton,
-            isEntryButtonDisabled && themeStyles.entryButtonDisabled,
-          ]}
-          onPress={handleSubmit}
-        >
-          {bowler || match.quickMatch ? (
-            batter1 || match.quickMatch ? (
-              batter2 || match.quickMatch ? (
-                <Text
-                  style={[
-                    styles.confirmationText,
-                    isWicket && { fontSize: 30 },
-                  ]}
-                >
-                  {isNoBall ? "NB + " : isWideBall ? "WD + " : ""}
-                  {isWicket
-                    ? `W${outBatter ? "(" + outBatter.name + ")" : ""} + `
-                    : ""}
-                  {run}
-                </Text>
+        {match.status === "live" || match.status === "noResult" ? (
+          <TouchableOpacity
+            disabled={isEntryButtonDisabled}
+            style={[
+              styles.ConfirmationButton,
+              themeStyles.ConfirmationButton,
+              isEntryButtonDisabled && themeStyles.entryButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+          >
+            {bowler || match.quickMatch ? (
+              batter1 || match.quickMatch ? (
+                batter2 || match.quickMatch ? (
+                  <Text
+                    style={[
+                      styles.confirmationText,
+                      isWicket && { fontSize: 30 },
+                    ]}
+                  >
+                    {isNoBall ? "NB + " : isWideBall ? "WD + " : ""}
+                    {isWicket
+                      ? `W${outBatter ? "(" + outBatter.name + ")" : ""} + `
+                      : ""}
+                    {run}
+                  </Text>
+                ) : (
+                  <View style={styles.pickPlayerContainer}>
+                    <Text style={styles.pickPlayerText}>Select Batsman</Text>
+                  </View>
+                )
               ) : (
                 <View style={styles.pickPlayerContainer}>
                   <Text style={styles.pickPlayerText}>Select Batsman</Text>
@@ -1098,15 +1114,33 @@ export default function HomeScreen() {
               )
             ) : (
               <View style={styles.pickPlayerContainer}>
-                <Text style={styles.pickPlayerText}>Select Batsman</Text>
+                <Text style={styles.pickPlayerText}>Select Bowler</Text>
               </View>
-            )
-          ) : (
-            <View style={styles.pickPlayerContainer}>
-              <Text style={styles.pickPlayerText}>Select Bowler</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.matchResultContainer}>
+            <MatchResult
+              winner={
+                match.winner === "team1"
+                  ? match.team1Fullname
+                  : match.winner === "team2"
+                  ? match.team2Fullname
+                  : ""
+              }
+              matchResultText={getMatchResultText(
+                match,
+                finalFirstInningsScore,
+                finalSecondInningsScore
+              )}
+              playerStats={playerMatchStats.find(
+                (x: playerStats) => x.playerId == manOfTheMatch
+              )}
+              onNewMatch={handleNewMatch}
+              status={match.status}
+            />
+          </View>
+        )}
       </View>
       <View style={{ flex: 0.3 }}></View>
       <View style={styles.subContainer}>
@@ -1326,6 +1360,13 @@ const styles = StyleSheet.create({
     textShadowColor: "#555",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
+  },
+  matchResultContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 50,
   },
 });
 

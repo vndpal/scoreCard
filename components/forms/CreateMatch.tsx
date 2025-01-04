@@ -25,6 +25,7 @@ import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import { Timestamp } from "@react-native-firebase/firestore";
+import { player } from "@/types/player";
 
 const createMatchSchema = Yup.object().shape({
   team1: Yup.string().required("Batting team is required"),
@@ -152,40 +153,51 @@ export const CreateMatch = () => {
 
     if (!quickMatch) {
       const playerStats: playerStats[] = [];
-      const playerIds: { playerId: string; team: string }[] = [];
+      const playerIds: { playerId: string; team: string; name: string }[] = [];
       teamPlayerMapping
         .find((mapping) => mapping.teamName === team1)
-        ?.players.forEach((player: string) => {
-          playerIds.push({ playerId: player, team: team1 });
+        ?.players.forEach((player: player) => {
+          playerIds.push({
+            playerId: player.id,
+            team: team1,
+            name: player.name,
+          });
         });
       teamPlayerMapping
         .find((mapping) => mapping.teamName === team2)
-        ?.players.forEach((player: string) => {
-          playerIds.push({ playerId: player, team: team2 });
+        ?.players.forEach((player: player) => {
+          playerIds.push({
+            playerId: player.id,
+            team: team2,
+            name: player.name,
+          });
         });
-      playerIds.forEach((player: { playerId: string; team: string }) => {
-        playerStats.push({
-          playerId: player.playerId,
-          team: player.team,
-          runs: 0,
-          ballsFaced: 0,
-          fours: 0,
-          sixes: 0,
-          average: 0,
-          isOut: false,
-          strikeRate: 0,
-          wickets: 0,
-          ballsBowled: 0,
-          overs: 0,
-          runsConceded: 0,
-          maidens: 0,
-          bowlingEconomy: 0,
-          extras: 0,
-          foursConceded: 0,
-          sixesConceded: 0,
-          dotBalls: 0,
-        });
-      });
+      playerIds.forEach(
+        (player: { playerId: string; team: string; name: string }) => {
+          playerStats.push({
+            playerId: player.playerId,
+            name: player.name,
+            team: player.team,
+            runs: 0,
+            ballsFaced: 0,
+            fours: 0,
+            sixes: 0,
+            average: 0,
+            isOut: false,
+            strikeRate: 0,
+            wickets: 0,
+            ballsBowled: 0,
+            overs: 0,
+            runsConceded: 0,
+            maidens: 0,
+            bowlingEconomy: 0,
+            extras: 0,
+            foursConceded: 0,
+            sixesConceded: 0,
+            dotBalls: 0,
+          });
+        }
+      );
 
       const playerStatsInMatch: playerMatchStats = {
         matchId: newMatch.matchId,

@@ -17,14 +17,19 @@ export const CreatePlayer = () => {
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
-    const isPlayerExists = await Player.findByName(name);
+    if (name == "") {
+      alert("Player name cannot be empty");
+      return;
+    }
+    const trimmedName = name?.replace(/\s+/g, " ").trim();
+    const isPlayerExists = await Player.isPlayerExists(trimmedName, club.id);
 
-    if (isPlayerExists.length > 0) {
+    if (isPlayerExists) {
       alert("Player with this name already exists");
       return;
     }
 
-    const player = await Player.create({ name, clubId: club.id });
+    const player = await Player.create({ name: trimmedName, clubId: club.id });
     if (player) {
       await insertPlayerCareerStats(player.id);
     }

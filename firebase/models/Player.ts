@@ -56,7 +56,7 @@ export class Player implements player {
     await firestoreService.delete(COLLECTION_NAME, id);
   }
 
-  static async findByName(name: string): Promise<Player[]> {
+  static async isPlayerExists(name: string, clubId: string): Promise<boolean> {
     const players = await firestoreService.query<player & { id: string }>(
       COLLECTION_NAME,
       [
@@ -65,9 +65,14 @@ export class Player implements player {
           operator: "==",
           value: name,
         },
+        {
+          field: "clubId",
+          operator: "==",
+          value: clubId,
+        },
       ]
     );
-    return players.map((player) => new Player(player.id, player));
+    return players.length > 0;
   }
 
   toObject(): player & { id: string } {

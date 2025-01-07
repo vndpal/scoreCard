@@ -19,7 +19,7 @@ export default function PlayerProfile() {
   const [showCareerRecords, setShowCareerRecords] = useState(true);
   const [showMatchRecords, setShowMatchRecords] = useState(false);
 
-  const { currentTheme } = useTheme();
+  const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
@@ -27,10 +27,16 @@ export default function PlayerProfile() {
       alert("Player name cannot be empty");
       return;
     }
-    if (playerId && name) {
+    const trimmedName = name?.replace(/\s+/g, " ").trim();
+    const isPlayerExists = await Player.isPlayerExists(trimmedName!, club.id);
+    if (isPlayerExists) {
+      alert("Player with this name already exists");
+      return;
+    }
+    if (playerId && trimmedName) {
       const playerIdToBeUpdated: string = playerId?.toString();
       await Player.update(playerIdToBeUpdated, {
-        name: name,
+        name: trimmedName,
       });
     }
     router.dismissAll();

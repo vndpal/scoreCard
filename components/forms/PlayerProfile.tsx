@@ -1,6 +1,6 @@
 // app/player/[id].tsx
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { TextInput, Button, Text, Icon } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
@@ -44,13 +44,29 @@ export default function PlayerProfile() {
   };
 
   const handleDelete = async () => {
-    if (playerId) {
-      await Player.delete(playerId?.toString());
-      await PlayerCareerStats.delete(playerId?.toString() || "");
-      setIsEditing(false);
-      router.dismissAll();
-      router.push("/players");
-    }
+    Alert.alert(
+      `Delete ${playerName}`,
+      "Are you sure you want to delete this player?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => null,
+          style: "cancel",
+        },
+        {
+          text: "YES",
+          onPress: async () => {
+            if (playerId) {
+              await Player.delete(playerId?.toString());
+              await PlayerCareerStats.delete(playerId?.toString() || "");
+              setIsEditing(false);
+              router.dismissAll();
+              router.push("/players");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (

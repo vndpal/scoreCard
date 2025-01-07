@@ -17,6 +17,7 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
   const [matchStats, setMatchStats] = useState<playerStats[]>([]);
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchMatchStats = async () => {
@@ -24,11 +25,12 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
       if (stats) {
         setMatchStats(stats);
       }
+      setIsLoading(false);
     };
     fetchMatchStats();
   }, [playerId]);
 
-  if (!matchStats.length) {
+  if (isLoading) {
     return (
       <ActivityIndicator
         size="large"

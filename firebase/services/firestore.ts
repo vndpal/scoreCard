@@ -111,13 +111,18 @@ export const firestoreService = {
 
   query: async <T>(
     collectionName: string,
-    filters: { field: string; operator: WhereFilterOp; value: any }[]
+    filters: { field: string; operator: WhereFilterOp; value: any }[],
+    orderByField?: string,
+    direction?: "asc" | "desc"
   ): Promise<T[]> => {
     let q: FirebaseFirestoreTypes.Query<FirebaseFirestoreTypes.DocumentData> =
       collection(db, collectionName);
     filters.forEach(({ field, operator, value }) => {
       q = query(q, where(field, operator, value));
     });
+    if (orderByField) {
+      q = query(q, orderBy(orderByField, direction));
+    }
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() } as T)

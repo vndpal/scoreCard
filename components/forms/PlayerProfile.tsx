@@ -9,12 +9,15 @@ import PlayerCareerRecords from "../PlayerCareerRecords";
 import { useTheme } from "@/context/ThemeContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
+import PlayerMatchRecords from "../PlayerMatchRecords";
 
 export default function PlayerProfile() {
   const router = useRouter();
   const { playerId, playerName } = useLocalSearchParams();
   const [name, setName] = useState(playerName?.toString());
   const [isEditing, setIsEditing] = useState(false);
+  const [showCareerRecords, setShowCareerRecords] = useState(true);
+  const [showMatchRecords, setShowMatchRecords] = useState(false);
 
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -37,14 +40,11 @@ export default function PlayerProfile() {
   const handleDelete = async () => {
     if (playerId) {
       await Player.delete(playerId?.toString());
+      await PlayerCareerStats.delete(playerId?.toString() || "");
       setIsEditing(false);
       router.dismissAll();
       router.push("/players");
     }
-  };
-
-  const removePlayerStats = async (playerId: string | undefined) => {
-    await PlayerCareerStats.delete(playerId?.toString() || "");
   };
 
   return (
@@ -88,9 +88,40 @@ export default function PlayerProfile() {
       ) : (
         <>
           <Text style={[styles.text, themeStyles.text]}>{playerName}</Text>
-          <PlayerCareerRecords
-            playerId={playerId ? playerId?.toString() : ""}
-          />
+
+          <Button
+            mode="outlined"
+            onPress={() => setShowCareerRecords(!showCareerRecords)}
+            style={styles.collapseButton}
+          >
+            <Icon
+              source={showCareerRecords ? "chevron-up" : "chevron-down"}
+              size={20}
+            />
+            {" Career Stats"}
+          </Button>
+          {showCareerRecords && (
+            <PlayerCareerRecords
+              playerId={playerId ? playerId?.toString() : ""}
+            />
+          )}
+
+          <Button
+            mode="outlined"
+            onPress={() => setShowMatchRecords(!showMatchRecords)}
+            style={styles.collapseButton}
+          >
+            <Icon
+              source={showMatchRecords ? "chevron-up" : "chevron-down"}
+              size={20}
+            />
+            {" Stats By Match"}
+          </Button>
+          {showMatchRecords && (
+            <PlayerMatchRecords
+              playerId={playerId ? playerId?.toString() : ""}
+            />
+          )}
 
           <View style={styles.iconContainer}>
             <Button
@@ -147,6 +178,9 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginHorizontal: 4,
+  },
+  collapseButton: {
+    marginVertical: 8,
   },
 });
 

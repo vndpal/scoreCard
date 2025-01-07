@@ -7,10 +7,12 @@ const COLLECTION_NAME = "playerMatchStats";
 export class PlayerMatchStats implements playerMatchStats {
   matchId: string;
   playerMatchStats: playerStats[];
+  timestamp: number;
 
   constructor(data: playerMatchStats) {
     this.matchId = data.matchId;
     this.playerMatchStats = data.playerMatchStats;
+    this.timestamp = data.timestamp;
   }
 
   static async create(data: playerMatchStats): Promise<PlayerMatchStats> {
@@ -37,11 +39,18 @@ export class PlayerMatchStats implements playerMatchStats {
     return res;
   }
 
-  static async getAll(): Promise<PlayerMatchStats[]> {
-    const stats = await firestoreService.getAll<playerMatchStats>(
-      COLLECTION_NAME
+  static async getAllByPlayerId(playerId: string): Promise<playerStats[]> {
+    const stats = await firestoreService.query<playerMatchStats>(
+      COLLECTION_NAME,
+      [],
+      "timestamp",
+      "asc"
     );
-    return stats.map((stat) => new PlayerMatchStats(stat));
+    return stats.flatMap((stat) =>
+      stat.playerMatchStats.filter(
+        (playerStat) => playerStat.playerId === playerId
+      )
+    );
   }
 
   static async update(
@@ -74,6 +83,7 @@ export class PlayerMatchStats implements playerMatchStats {
     return {
       matchId: this.matchId,
       playerMatchStats: this.playerMatchStats,
+      timestamp: this.timestamp,
     };
   }
 }

@@ -202,6 +202,7 @@ export const CreateMatch = () => {
       const playerStatsInMatch: playerMatchStats = {
         matchId: newMatch.matchId,
         playerMatchStats: playerStats,
+        timestamp: Timestamp.now().seconds,
       };
 
       await PlayerMatchStats.create(playerStatsInMatch);

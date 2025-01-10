@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { useTheme } from "@/context/ThemeContext";
-import { StatsTable } from "@/components/ui/statsTable";
 import { playerStats } from "@/types/playerStats";
 import { ActivityIndicator } from "react-native";
+import Table from "./ui/table";
+import { Divider } from "react-native-elements";
 
 interface PlayerMatchRecordsProps {
   playerId: string;
@@ -39,47 +40,50 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
     );
   }
 
-  const battingHeaders = ["Runs", "Balls", "4s", "6s", "SR"];
-  const bowlingHeaders = ["Wickets", "Overs", "Runs", "Econ", "Extras"];
+  const columns = [
+    { key: "runs", label: "Runs" },
+    { key: "strikeRate", label: "SR" },
+    { key: "sixes", label: "6s / 4s" },
+    { key: "overs", label: "Overs" },
+    { key: "wickets", label: "Wickets" },
+  ];
 
-  const battingData: (string | number)[][] = [];
-
-  matchStats.forEach((match) => {
-    battingData.push([
-      match.runs,
-      match.ballsFaced,
-      match.fours,
-      match.sixes,
-      match.strikeRate?.toFixed(2) ?? "-",
-    ]);
-  });
-
-  const bowlingData: (string | number)[][] = [];
-
-  matchStats.forEach((match) => {
-    bowlingData.push([
-      match.wickets,
-      match.overs,
-      match.runsConceded,
-      match.bowlingEconomy?.toFixed(2) ?? "-",
-      match.extras,
-    ]);
-  });
+  const bowlingColumns = [
+    { key: "overs", label: "Overs" },
+    { key: "wickets", label: "Wickets" },
+    { key: "runsConceded", label: "Runs" },
+    { key: "extras", label: "Extras" },
+    { key: "6s / 4s", label: "6s / 4s" },
+  ];
 
   return (
     <ScrollView style={styles.container}>
-      <React.Fragment>
-        <StatsTable
-          title="Batting"
-          headers={battingHeaders}
-          rows={battingData}
-        />
-        <StatsTable
-          title="Bowling"
-          headers={bowlingHeaders}
-          rows={bowlingData}
-        />
-      </React.Fragment>
+      <Table
+        columns={columns}
+        data={matchStats.map((stat) => ({
+          runs: stat.runs,
+          strikeRate: stat.strikeRate.toFixed(2),
+          sixes: stat.sixes + " / " + stat.fours,
+          overs: stat.overs,
+          wickets: stat.wickets,
+        }))}
+        title="Batting"
+      />
+      <Divider style={styles.divider} />
+      <Table
+        columns={bowlingColumns}
+        data={matchStats.map((stat) => ({
+          overs:
+            stat.ballsBowled > 0
+              ? `${stat.overs}.${stat.ballsBowled}`
+              : stat.overs,
+          wickets: stat.wickets,
+          runsConceded: stat.runsConceded,
+          extras: stat.extras,
+          "6s / 4s": stat.sixesConceded + " / " + stat.foursConceded,
+        }))}
+        title="Bowling"
+      />
     </ScrollView>
   );
 };
@@ -89,11 +93,24 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
   },
-  matchDate: {
+  headerText: {
     fontSize: 16,
     fontWeight: "bold",
-    marginVertical: 8,
     paddingLeft: 8,
+    color: "#2e3d4c",
+    textAlign: "center",
+    backgroundColor: "#f8fafc",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    padding: 8,
+    marginTop: 8,
+  },
+  divider: {
+    marginTop: 16,
+    marginBottom: 16,
+    borderColor: "#cbd5e1",
+    borderWidth: 1,
   },
 });
 

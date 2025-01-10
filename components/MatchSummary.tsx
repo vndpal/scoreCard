@@ -1,7 +1,13 @@
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text, VirtualizedList } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  VirtualizedList,
+  ScrollView,
+} from "react-native";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { player } from "@/types/player"; // Import the player type
@@ -9,6 +15,8 @@ import { getItem } from "@/utils/asyncStorage";
 import { useTheme } from "@/context/ThemeContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
+import Table from "./ui/table";
+import { Divider } from "react-native-elements";
 
 const MatchSummary = () => {
   const { matchId, team1, team2 } = useLocalSearchParams();
@@ -28,6 +36,23 @@ const MatchSummary = () => {
 
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+
+  const battingColumns = [
+    { key: "playerId", label: "Player" },
+    { key: "runs", label: "Runs" },
+    { key: "ballsFaced", label: "Balls" },
+    { key: "fours", label: "4s" },
+    { key: "sixes", label: "6s" },
+    { key: "strikeRate", label: "SR" },
+  ];
+
+  const bowlingColumns = [
+    { key: "playerId", label: "Player" },
+    { key: "overs", label: "Overs" },
+    { key: "wickets", label: "Wickets" },
+    { key: "runsConceded", label: "Runs" },
+    { key: "extras", label: "Extras" },
+  ];
 
   useEffect(() => {
     (async () => {
@@ -73,180 +98,71 @@ const MatchSummary = () => {
     })();
   }, [matchId]);
 
-  const renderItem = ({
-    item,
-    type,
-  }: {
-    item: playerStats;
-    type: "batting" | "bowling";
-  }) => (
-    <View style={[styles.row, themeStyles.row]} key={item.playerId}>
-      <Text style={[styles.cell, themeStyles.cell]}>
-        {playersMap.get(item.playerId) || item.playerId}
-      </Text>
-      {type === "batting" ? (
-        <>
-          <Text style={[styles.cell, themeStyles.cell]}>
-            {item.runs} ({item.ballsFaced})
-          </Text>
-          <Text style={[styles.cell, themeStyles.cell]}>
-            {item.strikeRate ? item.strikeRate.toFixed(2) : "-"}
-          </Text>
-          <Text style={[styles.cell, themeStyles.cell]}>
-            {item.sixes} / {item.fours}
-          </Text>
-        </>
-      ) : (
-        <>
-          <Text style={[styles.cell, themeStyles.cell]}>
-            {item.overs}
-            {item.ballsBowled > 0 ? "." + item.ballsBowled : ""}
-          </Text>
-          <Text style={[styles.cell, themeStyles.cell]}>{item.wickets}</Text>
-          <Text style={[styles.cell, themeStyles.cell]}>
-            {item.runsConceded}
-          </Text>
-          <Text style={[styles.cell, themeStyles.cell]}>{item.extras}</Text>
-        </>
-      )}
-    </View>
-  );
-
-  const renderTable = (
-    title: string,
-    data: playerStats[],
-    type: "batting" | "bowling",
-    id: string
-  ) => (
-    <View key={id} style={[styles.table, themeStyles.table]}>
-      <Text style={[styles.tableTitle, themeStyles.tableTitle]}>{title}</Text>
-      <View style={[styles.headerRow, themeStyles.headerRow]}>
-        <Text style={[styles.headerCell, themeStyles.headerCell]}>Player</Text>
-        {type === "batting" ? (
-          <>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>
-              Runs
-            </Text>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>SR</Text>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>
-              6s / 4s
-            </Text>
-          </>
-        ) : (
-          <>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>
-              Overs
-            </Text>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>
-              Wickets
-            </Text>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>
-              Runs
-            </Text>
-            <Text style={[styles.headerCell, themeStyles.headerCell]}>
-              Extras
-            </Text>
-          </>
-        )}
-      </View>
-      {data.map((item) => renderItem({ item, type }))}
-    </View>
-  );
-
-  const data = [
-    {
-      id: "1",
-      title: `${team1} Batting`,
-      data: battingRecordsTeamA,
-      type: "batting",
-    },
-    {
-      id: "2",
-      title: `${team2} Bowling`,
-      data: bowlingRecordsTeamB,
-      type: "bowling",
-    },
-    {
-      id: "3",
-      title: `${team2} Batting`,
-      data: battingRecordsTeamB,
-      type: "batting",
-    },
-    {
-      id: "4",
-      title: `${team1} Bowling`,
-      data: bowlingRecordsTeamA,
-      type: "bowling",
-    },
-  ];
-
-  const getItemLocal = (data: any[], index: number) => data[index];
-  const getItemCount = (data: any[]) => data.length;
-
   return (
-    <VirtualizedList
-      data={data}
-      initialNumToRender={4}
-      renderItem={({ item }) =>
-        renderTable(item.title, item.data, item.type, item.id)
-      }
-      keyExtractor={(item) => item.id}
-      getItem={getItemLocal}
-      getItemCount={getItemCount}
-      style={[styles.container, themeStyles.container]}
-    />
+    <ScrollView style={[styles.container, themeStyles.container]}>
+      <Table
+        columns={battingColumns}
+        data={battingRecordsTeamA.map((x) => ({
+          playerId: playersMap.get(x.playerId) || x.playerId,
+          runs: x.runs,
+          ballsFaced: x.ballsFaced,
+          fours: x.fours,
+          sixes: x.sixes,
+          strikeRate: x.strikeRate.toFixed(2),
+        }))}
+        title={`${team1} - Batting`}
+      />
+      <Divider style={styles.divider} />
+      <Table
+        columns={bowlingColumns}
+        data={bowlingRecordsTeamA.map((x) => ({
+          playerId: playersMap.get(x.playerId) || x.playerId,
+          overs: x.ballsBowled > 0 ? `${x.overs}.${x.ballsBowled}` : x.overs,
+          wickets: x.wickets,
+          runsConceded: x.runsConceded,
+          extras: x.extras,
+        }))}
+        title={`${team1} - Bowling`}
+      />
+      <Divider style={styles.divider} />
+      <Table
+        columns={battingColumns}
+        data={battingRecordsTeamB.map((x) => ({
+          playerId: playersMap.get(x.playerId) || x.playerId,
+          runs: x.runs,
+          ballsFaced: x.ballsFaced,
+          fours: x.fours,
+          sixes: x.sixes,
+          strikeRate: x.strikeRate.toFixed(2),
+        }))}
+        title={`${team2} - Batting`}
+      />
+      <Divider style={styles.divider} />
+      <Table
+        columns={bowlingColumns}
+        data={bowlingRecordsTeamB.map((x) => ({
+          playerId: playersMap.get(x.playerId) || x.playerId,
+          overs: x.ballsBowled > 0 ? `${x.overs}.${x.ballsBowled}` : x.overs,
+          wickets: x.wickets,
+          runsConceded: x.runsConceded,
+          extras: x.extras,
+        }))}
+        title={`${team2} - Bowling`}
+      />
+      <Divider style={styles.divider} />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212", // Dark background color
+    backgroundColor: "#121212",
     padding: 16,
+    paddingBottom: 32,
   },
-  table: {
-    borderWidth: 1,
-    borderColor: "#444", // Darker border color
-    borderRadius: 6,
-    overflow: "hidden",
-    marginBottom: 20,
-    backgroundColor: "#1f1f1f", // Slightly lighter dark background for table
-  },
-  tableTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#ffffff", // Light text color
-    marginVertical: 12,
-    textAlign: "center",
-  },
-  headerRow: {
-    flexDirection: "row",
-    backgroundColor: "#333", // Dark background for header
-    borderBottomWidth: 1,
-    borderBottomColor: "#555", // Slightly lighter border color
-    paddingVertical: 8,
-  },
-  headerCell: {
-    flex: 1,
-    fontWeight: "600",
-    color: "#ffffff", // Light text color
-    textAlign: "center",
-    padding: 6,
-    fontSize: 14,
-  },
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#444", // Darker border color for rows
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  cell: {
-    flex: 1,
-    color: "#ffffff", // Light text color
-    textAlign: "center",
-    padding: 6,
-    fontSize: 14,
+  divider: {
+    marginVertical: 10,
   },
 });
 
@@ -254,91 +170,11 @@ const darkStyles = StyleSheet.create({
   container: {
     backgroundColor: "#121212",
   },
-  table: {
-    backgroundColor: "#1f1f1f",
-  },
-  tableTitle: {
-    color: "#ffffff",
-  },
-  headerRow: {
-    backgroundColor: "#333",
-    borderBottomColor: "#555",
-  },
-  headerCell: {
-    color: "#ffffff",
-  },
-  cell: {
-    color: "#ffffff",
-  },
-  nameCell: {
-    color: "#ffffff",
-  },
-  row: {
-    borderBottomColor: "#444",
-  },
 });
 
 const lightStyles = StyleSheet.create({
   container: {
     backgroundColor: "#f5f5f5",
-  },
-  table: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e0e0e0",
-    borderWidth: 1,
-    borderRadius: 6,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  tableTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333333",
-    marginVertical: 12,
-    textAlign: "center",
-  },
-  tableContent: {
-    flexDirection: "column",
-  },
-  headerRow: {
-    flexDirection: "row",
-    backgroundColor: "#dcdcdc", // Darker gray background
-    borderBottomColor: "#b0b0b0", // Darker border color
-    borderBottomWidth: 1,
-    paddingVertical: 6,
-  },
-  headerCell: {
-    flex: 1,
-    fontWeight: "500",
-    color: "#333333",
-    textAlign: "center",
-    paddingVertical: 8,
-    fontSize: 12,
-    minWidth: 60,
-  },
-  cell: {
-    flex: 1,
-    color: "#333333",
-    textAlign: "center",
-    paddingVertical: 8,
-    fontSize: 12,
-    minWidth: 60,
-  },
-  nameCell: {
-    flex: 1,
-    color: "#333333",
-    textAlign: "left",
-    paddingVertical: 8,
-    fontSize: 12,
-    fontWeight: "500",
-    minWidth: 60,
-  },
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eeeeee",
-    paddingVertical: 10,
-    paddingHorizontal: 6,
   },
 });
 export default MatchSummary;

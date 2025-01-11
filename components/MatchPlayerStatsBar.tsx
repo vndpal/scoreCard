@@ -61,9 +61,6 @@ const MatchPlayerStatsBar = ({
         onPress={() => handleOut(strikerBatsman!)} // Pass strikerBatsman to handleOutBatter
       >
         <View style={styles.playerNameContainer}>
-          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
-            {strikerBatsman?.name?.slice(0, 8)}
-          </Text>
           {strikerBatsman &&
             batterStats &&
             batterStats.runs == 0 &&
@@ -72,14 +69,12 @@ const MatchPlayerStatsBar = ({
                 disabled={isOut}
                 onPress={() => handleEditPlayer("striker")}
               >
-                <Icon
-                  name="shuffle"
-                  type="ionicon"
-                  size={24}
-                  color={currentTheme === "dark" ? "#d0d0d0" : "black"}
-                />
+                <Icon name="close" type="ionicon" size={24} color="#FF6347" />
               </TouchableOpacity>
             )}
+          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
+            {strikerBatsman?.name?.slice(0, 8)}
+          </Text>
         </View>
         <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
           {batterStats?.runs} ({batterStats?.ballsFaced})
@@ -102,9 +97,6 @@ const MatchPlayerStatsBar = ({
         onPress={() => handleOut(nonStrikerBatsman!)} // Pass nonStrikerBatsman to handleOutBatter
       >
         <View style={styles.playerNameContainer}>
-          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
-            {nonStrikerBatsman?.name?.slice(0, 8)}
-          </Text>
           {nonStrikerBatsman &&
             nonStrikerBatter &&
             nonStrikerBatter.runs == 0 &&
@@ -113,14 +105,12 @@ const MatchPlayerStatsBar = ({
                 disabled={isOut}
                 onPress={() => handleEditPlayer("nonStriker")}
               >
-                <Icon
-                  name="shuffle"
-                  type="ionicon"
-                  size={24}
-                  color={currentTheme === "dark" ? "#d0d0d0" : "black"}
-                />
+                <Icon name="close" type="ionicon" size={24} color="#FF6347" />
               </TouchableOpacity>
             )}
+          <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
+            {nonStrikerBatsman?.name?.slice(0, 8)}
+          </Text>
         </View>
         <Text style={[styles.batsmanStats, themeStyles.batsmanStats]}>
           {nonStrikerBatter
@@ -130,22 +120,17 @@ const MatchPlayerStatsBar = ({
       </TouchableOpacity>
       <View style={styles.bowlerContainer}>
         <View style={styles.playerNameContainer}>
-          <Text style={[styles.bowlerName, themeStyles.bowlerName]}>
-            {bowler?.name?.slice(0, 8)}
-          </Text>
           {bowler &&
             bowlerStats &&
             bowlerStats.ballsBowled == 0 &&
             bowlerStats.runsConceded == 0 && (
               <TouchableOpacity onPress={() => handleEditPlayer("bowler")}>
-                <Icon
-                  name="shuffle"
-                  type="ionicon"
-                  size={24}
-                  color={currentTheme === "dark" ? "#d0d0d0" : "black"}
-                />
+                <Icon name="close" type="ionicon" size={24} color="#FF6347" />
               </TouchableOpacity>
             )}
+          <Text style={[styles.bowlerName, themeStyles.bowlerName]}>
+            {bowler?.name?.slice(0, 8)}
+          </Text>
         </View>
         <Text style={[styles.bowlerStats, themeStyles.bowlerStats]}>
           {bowlerStats?.runsConceded}/{bowlerStats?.wickets} (

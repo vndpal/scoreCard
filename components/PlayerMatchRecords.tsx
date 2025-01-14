@@ -40,12 +40,13 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
     );
   }
 
-  const columns = [
+  const battingColumns = [
     { key: "runs", label: "Runs" },
+    { key: "balls", label: "Balls" },
+    { key: "sixes", label: "6s" },
+    { key: "fours", label: "4s" },
     { key: "strikeRate", label: "SR" },
-    { key: "sixes", label: "6s / 4s" },
-    { key: "overs", label: "Overs" },
-    { key: "wickets", label: "Wickets" },
+    { key: "out", label: "Out" },
   ];
 
   const bowlingColumns = [
@@ -59,13 +60,14 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
   return (
     <ScrollView style={styles.container}>
       <Table
-        columns={columns}
+        columns={battingColumns}
         data={matchStats.map((stat) => ({
           runs: stat.runs,
+          balls: stat.ballsFaced,
+          sixes: stat.sixes,
+          fours: stat.fours,
           strikeRate: stat.strikeRate.toFixed(2),
-          sixes: stat.sixes + " / " + stat.fours,
-          overs: stat.overs,
-          wickets: stat.wickets,
+          out: stat.isOut ? "*" : "-",
         }))}
         title="Batting"
       />

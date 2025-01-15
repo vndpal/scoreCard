@@ -55,6 +55,8 @@ const MatchPlayerStatsBar = ({
         style={[
           styles.batter,
           styles.striker,
+          themeStyles.batter,
+          themeStyles.striker,
           isOut && styles.highlightOutBatter,
         ]}
         disabled={!isOut}
@@ -102,8 +104,12 @@ const MatchPlayerStatsBar = ({
         />
       </TouchableOpacity>
       <TouchableOpacity
+        style={[
+          styles.batter,
+          themeStyles.batter,
+          isOut && styles.highlightOutBatter,
+        ]}
         disabled={!isOut}
-        style={[styles.batter, isOut && styles.highlightOutBatter]}
         onPress={() => handleOut(nonStrikerBatsman!)}
       >
         <View style={styles.playerNameContainer}>
@@ -138,7 +144,7 @@ const MatchPlayerStatsBar = ({
             : "N/A"}
         </Text>
       </TouchableOpacity>
-      <View style={styles.bowlerContainer}>
+      <View style={[styles.bowlerContainer, themeStyles.bowlerContainer]}>
         <View style={styles.playerNameContainer}>
           {bowler &&
           bowlerStats &&
@@ -180,63 +186,78 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 10,
+    padding: 6,
     width: windowWidth,
     borderBottomWidth: 1,
     borderTopWidth: 1,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  batter: {
+    alignItems: "center",
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 6,
+    width: "26%",
+    borderLeftWidth: 2,
+    borderLeftColor: "#f39c12",
+  },
+  striker: {
+    borderLeftWidth: 3,
+    borderLeftColor: "#e74c3c",
+    backgroundColor: "#f7f7f7",
+  },
+  bowlerContainer: {
+    flexDirection: "column",
+    alignItems: "flex-end",
+    width: "30%",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 6,
+    padding: 4,
+    borderLeftWidth: 2,
+    borderLeftColor: "#4a90e2",
+  },
+  bubbleButton: {
+    width: windowWidth * 0.06,
+    height: windowWidth * 0.06,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 15,
+    borderWidth: 1,
+    shadowOpacity: 0.1,
+    elevation: 1,
   },
   batterContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "60%",
   },
-  bowlerContainer: {
-    flexDirection: "column",
-    alignItems: "flex-end",
-    width: "40%",
-  },
-  batter: {
-    alignItems: "center",
-    paddingHorizontal: 5,
-  },
-  striker: {
-    borderBottomWidth: 2,
-    paddingBottom: 5,
-    borderBottomColor: "#f39c12",
-  },
   batsmanName: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14, // Slightly bigger font for names
+    fontWeight: "600", // More bold
+    color: "#444", // Darker color for better visibility
+    marginBottom: 1, // Small spacing before stats
   },
   batsmanStats: {
-    fontSize: 14,
-    textAlign: "center",
+    fontSize: 14.5, // Slightly bigger than name
+    fontWeight: "500", // Medium weight
+    color: "#222", // Darker than name but not black
+    marginTop: 1,
   },
   bowlerName: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#444",
+    marginBottom: 1,
   },
   bowlerStats: {
-    fontSize: 14,
-  },
-  bubbleButton: {
-    width: windowWidth * 0.13,
-    height: windowWidth * 0.07,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 12,
-    marginHorizontal: 3,
-    borderRadius: 20,
-    borderWidth: 1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-    overflow: "hidden",
+    fontSize: 14.5,
+    fontWeight: "500",
+    color: "#222",
+    marginTop: 1,
   },
   highlightOutBatter: {
     backgroundColor: "#e0f7fa",
@@ -288,21 +309,33 @@ const darkStyles = StyleSheet.create({
     borderTopColor: "#333",
     shadowColor: "#000000",
   },
-  batsmanName: {
-    color: "#f5f5f5",
+  batter: {
+    backgroundColor: "#2a2a2a",
+    borderLeftColor: "#f39c12",
   },
-  batsmanStats: {
-    color: "#b0b0b0",
+  striker: {
+    borderLeftColor: "#e74c3c",
+    backgroundColor: "#333333",
   },
-  bowlerName: {
-    color: "#f5f5f5",
-  },
-  bowlerStats: {
-    color: "#b0b0b0",
+  bowlerContainer: {
+    backgroundColor: "#2a2a2a",
+    borderLeftColor: "#4a90e2",
   },
   bubbleButton: {
-    backgroundColor: "#444",
-    borderColor: "#a0a0a0",
+    backgroundColor: "#333333",
+    borderColor: "#555555",
+  },
+  batsmanName: {
+    color: "#d0d0d0", // Brighter in dark mode
+  },
+  batsmanStats: {
+    color: "#ffffff", // Pure white for stats
+  },
+  bowlerName: {
+    color: "#d0d0d0",
+  },
+  bowlerStats: {
+    color: "#ffffff",
   },
 });
 
@@ -313,20 +346,32 @@ const lightStyles = StyleSheet.create({
     borderTopColor: "#cccccc",
     shadowColor: "#888888",
   },
-  batsmanName: {
-    color: "#333333",
+  batter: {
+    backgroundColor: "#f5f5f5",
+    borderLeftColor: "#f39c12",
   },
-  batsmanStats: {
-    color: "#555555",
+  striker: {
+    borderLeftColor: "#e74c3c",
+    backgroundColor: "#f7f7f7",
   },
-  bowlerName: {
-    color: "#333333",
-  },
-  bowlerStats: {
-    color: "#555555",
+  bowlerContainer: {
+    backgroundColor: "#f5f5f5",
+    borderLeftColor: "#4a90e2",
   },
   bubbleButton: {
-    backgroundColor: "#e0e0e0",
-    borderColor: "black",
+    backgroundColor: "#ffffff",
+    borderColor: "#dddddd",
+  },
+  batsmanName: {
+    color: "#444",
+  },
+  batsmanStats: {
+    color: "#222",
+  },
+  bowlerName: {
+    color: "#444",
+  },
+  bowlerStats: {
+    color: "#222",
   },
 });

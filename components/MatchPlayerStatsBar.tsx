@@ -221,14 +221,19 @@ const styles = StyleSheet.create({
     borderLeftColor: "#4a90e2",
   },
   bubbleButton: {
-    width: windowWidth * 0.06,
-    height: windowWidth * 0.06,
+    width: windowWidth * 0.09,
+    height: windowWidth * 0.09,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 15,
-    borderWidth: 1,
-    shadowOpacity: 0.1,
-    elevation: 1,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
   batterContainer: {
     flexDirection: "row",
@@ -322,8 +327,8 @@ const darkStyles = StyleSheet.create({
     borderLeftColor: "#4a90e2",
   },
   bubbleButton: {
-    backgroundColor: "#333333",
-    borderColor: "#555555",
+    backgroundColor: "#2a2a2a",
+    borderColor: "#404040",
   },
   batsmanName: {
     color: "#d0d0d0", // Brighter in dark mode
@@ -360,7 +365,7 @@ const lightStyles = StyleSheet.create({
   },
   bubbleButton: {
     backgroundColor: "#ffffff",
-    borderColor: "#dddddd",
+    borderColor: "#e0e0e0",
   },
   batsmanName: {
     color: "#444",

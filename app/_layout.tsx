@@ -47,13 +47,24 @@ export default function RootLayout() {
     if (loaded) {
       SplashScreen.hideAsync();
       setCurrentSettings(settings);
-      const club = async () => {
+
+      const initializeApp = async () => {
+        // Get saved theme
+        const savedTheme = await AsyncStorage.getItem(STORAGE_ITEMS.THEME);
+        if (savedTheme) {
+          const theme = savedTheme as "dark" | "light";
+          setCurrentTheme(theme);
+          setTheme(theme === "dark" ? DarkTheme : DefaultTheme);
+        }
+
+        // Get saved club
         const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
         if (club) {
           setClub(JSON.parse(club));
         }
       };
-      club();
+
+      initializeApp();
     }
   }, [loaded]);
 
@@ -64,7 +75,10 @@ export default function RootLayout() {
   const toggleTheme = () => {
     setTheme((prevTheme) => {
       const newTheme = prevTheme === DarkTheme ? DefaultTheme : DarkTheme;
-      setCurrentTheme(newTheme === DarkTheme ? "dark" : "light");
+      const newThemeType = newTheme === DarkTheme ? "dark" : "light";
+      setCurrentTheme(newThemeType);
+      // Save theme preference
+      AsyncStorage.setItem(STORAGE_ITEMS.THEME, newThemeType);
       return newTheme;
     });
   };

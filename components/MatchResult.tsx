@@ -110,9 +110,12 @@ const MatchResult = ({
       {/* New Match Button */}
       <TouchableOpacity
         style={[styles.button, themeStyles.button]}
+        disabled={!playerStats}
         onPress={onNewMatch}
       >
-        <Text style={styles.buttonText}>Start new match</Text>
+        <Text style={[styles.buttonText, !playerStats && { opacity: 0.5 }]}>
+          Start new match
+        </Text>
       </TouchableOpacity>
     </View>
   );

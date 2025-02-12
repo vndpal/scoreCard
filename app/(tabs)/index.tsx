@@ -33,6 +33,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Club } from "@/types/club";
 import MatchResult from "@/components/MatchResult";
 import { getMatchResultText } from "@/utils/getMatchResultText";
+import { reloadAppAsync } from "expo";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -629,6 +630,7 @@ export default function HomeScreen() {
             const manOfTheMatch = await updateManOfTheMatch(match.matchId);
             setManOfTheMatch(manOfTheMatch);
           }
+          reloadAppAsync();
           return;
         }
       } else {
@@ -660,6 +662,7 @@ export default function HomeScreen() {
           const manOfTheMatch = await updateManOfTheMatch(match.matchId);
           setManOfTheMatch(manOfTheMatch);
         }
+        reloadAppAsync();
       }
     } finally {
       setShowLoader(false);

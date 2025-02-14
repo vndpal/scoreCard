@@ -81,6 +81,9 @@ const MatchPlayerStatsBar = ({
               >
                 {strikerBatsman?.name?.slice(0, 8)}
               </Text>
+              <View style={styles.minusIconContainer}>
+                <Icon name="minus" type="feather" size={10} color="white" />
+              </View>
             </TouchableOpacity>
           ) : (
             <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
@@ -131,6 +134,9 @@ const MatchPlayerStatsBar = ({
               >
                 {nonStrikerBatsman?.name?.slice(0, 8)}
               </Text>
+              <View style={styles.minusIconContainer}>
+                <Icon name="minus" type="feather" size={10} color="white" />
+              </View>
             </TouchableOpacity>
           ) : (
             <Text style={[styles.batsmanName, themeStyles.batsmanName]}>
@@ -163,6 +169,9 @@ const MatchPlayerStatsBar = ({
               >
                 {bowler?.name?.slice(0, 8)}
               </Text>
+              <View style={styles.minusIconContainer}>
+                <Icon name="minus" type="feather" size={10} color="white" />
+              </View>
             </TouchableOpacity>
           ) : (
             <Text style={[styles.bowlerName, themeStyles.bowlerName]}>
@@ -190,10 +199,6 @@ const styles = StyleSheet.create({
     width: windowWidth,
     borderBottomWidth: 1,
     borderTopWidth: 1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
   },
   batter: {
     alignItems: "center",
@@ -227,13 +232,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 12,
     borderWidth: 0.5,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
   },
   batterContainer: {
     flexDirection: "row",
@@ -265,15 +263,10 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   highlightOutBatter: {
-    backgroundColor: "#e0f7fa",
-    borderRadius: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
+    backgroundColor: "rgba(231, 77, 60, 0.16)", // Softer red tint
+    borderLeftColor: "#e74c3c", // Maintain the red accent
+    borderLeftWidth: 3,
+    borderRadius: 6,
   },
   playerNameContainer: {
     flexDirection: "column",
@@ -282,28 +275,32 @@ const styles = StyleSheet.create({
   },
   removablePlayer: {
     padding: 4,
-    borderRadius: 12,
-    backgroundColor: "#e1e1e1",
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     minWidth: 60,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
+    gap: 4,
   },
   removableText: {
-    color: "#505050",
-    fontWeight: "600",
+    color: "#666666",
+    fontWeight: "500",
     fontSize: 14,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    textAlign: "center",
+  },
+  minusIconContainer: {
+    backgroundColor: "rgba(231, 6, 6, 0.66)",
+    borderRadius: 5,
+    padding: 2,
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconContainer: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    padding: 2,
   },
 });
 
@@ -312,7 +309,6 @@ const darkStyles = StyleSheet.create({
     backgroundColor: "#1e1e1e",
     borderBottomColor: "#333",
     borderTopColor: "#333",
-    shadowColor: "#000000",
   },
   batter: {
     backgroundColor: "#2a2a2a",
@@ -342,6 +338,24 @@ const darkStyles = StyleSheet.create({
   bowlerStats: {
     color: "#ffffff",
   },
+  iconContainer: {
+    backgroundColor: "#333333",
+  },
+  removablePlayer: {
+    backgroundColor: "#333333",
+  },
+  minusIconContainer: {
+    backgroundColor: "rgba(231, 6, 6, 0.66)",
+  },
+  removableText: {
+    color: "#a0a0a0",
+  },
+  highlightOutBatter: {
+    backgroundColor: "rgba(231, 76, 60, 0.08)", // Darker, more subtle red
+    borderLeftColor: "#e74c3c",
+    borderLeftWidth: 3,
+    borderRadius: 6,
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -349,7 +363,6 @@ const lightStyles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     borderBottomColor: "#cccccc",
     borderTopColor: "#cccccc",
-    shadowColor: "#888888",
   },
   batter: {
     backgroundColor: "#f5f5f5",
@@ -378,5 +391,40 @@ const lightStyles = StyleSheet.create({
   },
   bowlerStats: {
     color: "#222",
+  },
+  iconContainer: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    padding: 2,
+  },
+  removablePlayer: {
+    padding: 4,
+    borderRadius: 8,
+    backgroundColor: "#f0f0f0",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 60,
+    gap: 4,
+  },
+  removableText: {
+    color: "#666666",
+    fontWeight: "500",
+    fontSize: 14,
+  },
+  minusIconContainer: {
+    backgroundColor: "rgba(214, 48, 49, 0.3)",
+    borderRadius: 5,
+    padding: 2,
+    width: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  highlightOutBatter: {
+    backgroundColor: "rgba(231, 76, 60, 0.12)", // Soft red tint
+    borderLeftColor: "#e74c3c",
+    borderLeftWidth: 3,
+    borderRadius: 6,
   },
 });

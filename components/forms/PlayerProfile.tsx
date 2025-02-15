@@ -3,176 +3,142 @@ import React, { useState } from "react";
 import { View, StyleSheet, Alert } from "react-native";
 import { TextInput, Button, Text, Icon } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { getItem, setItem } from "@/utils/asyncStorage";
-import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import PlayerCareerRecords from "../PlayerCareerRecords";
-import { useTheme } from "@/context/ThemeContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
+import PlayerCareerRecords from "../PlayerCareerRecords";
 import PlayerMatchRecords from "../PlayerMatchRecords";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function PlayerProfile() {
   const router = useRouter();
   const { playerId, playerName } = useLocalSearchParams();
   const [name, setName] = useState(playerName?.toString());
   const [isEditing, setIsEditing] = useState(false);
-  const [showCareerRecords, setShowCareerRecords] = useState(true);
-  const [showMatchRecords, setShowMatchRecords] = useState(false);
-
+  const [activeTab, setActiveTab] = useState<"career" | "matches" | null>(
+    "career"
+  );
   const { currentTheme, club } = useTheme();
-  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSave = async () => {
-    if (name == "") {
+    const trimmedName = name?.replace(/\s+/g, " ").trim();
+    if (!trimmedName) {
       alert("Player name cannot be empty");
       return;
     }
-    const trimmedName = name?.replace(/\s+/g, " ").trim();
-    const isPlayerExists = await Player.isPlayerExists(trimmedName!, club.id);
-    if (isPlayerExists) {
+
+    if (await Player.isPlayerExists(trimmedName, club.id)) {
       alert("Player with this name already exists");
       return;
     }
-    if (playerId && trimmedName) {
-      const playerIdToBeUpdated: string = playerId?.toString();
-      await Player.update(playerIdToBeUpdated, {
-        name: trimmedName,
-      });
+
+    if (playerId) {
+      await Player.update(playerId.toString(), { name: trimmedName });
+      router.replace("/players");
     }
-    router.dismissAll();
-    router.push("/players");
   };
 
-  const handleDelete = async () => {
-    Alert.alert(
-      `Delete ${playerName}`,
-      "Are you sure you want to delete this player?",
-      [
-        {
-          text: "Cancel",
-          onPress: () => null,
-          style: "cancel",
+  const handleDelete = () => {
+    Alert.alert(`Delete ${playerName}`, "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        onPress: async () => {
+          if (playerId) {
+            const id = playerId.toString();
+            await Promise.all([
+              Player.delete(id),
+              PlayerCareerStats.delete(id),
+            ]);
+            router.replace("/players");
+          }
         },
-        {
-          text: "YES",
-          onPress: async () => {
-            if (playerId) {
-              await Player.delete(playerId?.toString());
-              await PlayerCareerStats.delete(playerId?.toString() || "");
-              setIsEditing(false);
-              router.dismissAll();
-              router.push("/players");
-            }
-          },
-        },
-      ]
-    );
+      },
+    ]);
   };
+
+  const ActionButtons = () => (
+    <View style={styles.actions}>
+      <Button
+        mode="contained"
+        onPress={isEditing ? handleSave : () => setIsEditing(true)}
+        style={styles.button}
+      >
+        <Icon
+          source={isEditing ? "content-save" : "pencil"}
+          color={currentTheme === "dark" ? "black" : "white"}
+          size={20}
+        />
+        {" " + (isEditing ? "Save" : "Edit")}
+      </Button>
+      <Button
+        mode="contained"
+        onPress={isEditing ? () => setIsEditing(false) : handleDelete}
+        style={styles.button}
+      >
+        <Icon
+          source={isEditing ? "close" : "delete"}
+          color={currentTheme === "dark" ? "black" : "white"}
+          size={20}
+        />
+        {" " + (isEditing ? "Cancel" : "Delete")}
+      </Button>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       {isEditing ? (
-        <>
-          <TextInput
-            label="Player Name"
-            value={name}
-            onChangeText={setName}
-            mode="outlined"
-          />
-          <View style={{ flex: 1 }} />
-          <View style={styles.iconContainer}>
-            <Button
-              mode="contained"
-              onPress={handleSave}
-              style={styles.actionButton}
-            >
-              <Icon
-                source="content-save-check"
-                color={currentTheme == "dark" ? "black" : "white"}
-                size={20}
-              />{" "}
-              Save
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => setIsEditing(false)}
-              style={styles.actionButton}
-            >
-              <Icon
-                source="close-thick"
-                color={currentTheme == "dark" ? "black" : "white"}
-                size={20}
-              />{" "}
-              Cancel
-            </Button>
-          </View>
-        </>
+        <TextInput
+          label="Player Name"
+          value={name}
+          onChangeText={setName}
+          mode="outlined"
+        />
       ) : (
         <>
-          <Text style={[styles.text, themeStyles.text]}>{playerName}</Text>
-
-          <Button
-            mode="outlined"
-            onPress={() => setShowCareerRecords(!showCareerRecords)}
-            style={styles.collapseButton}
+          <Text
+            style={[
+              styles.subtitle,
+              { color: currentTheme === "dark" ? "white" : "black" },
+            ]}
           >
-            <Icon
-              source={showCareerRecords ? "chevron-up" : "chevron-down"}
-              size={20}
-            />
-            {" Career Stats"}
-          </Button>
-          {showCareerRecords && (
-            <PlayerCareerRecords
-              playerId={playerId ? playerId?.toString() : ""}
-            />
-          )}
-
-          <Button
-            mode="outlined"
-            onPress={() => setShowMatchRecords(!showMatchRecords)}
-            style={styles.collapseButton}
-          >
-            <Icon
-              source={showMatchRecords ? "chevron-up" : "chevron-down"}
-              size={20}
-            />
-            {" Stats By Match"}
-          </Button>
-          {showMatchRecords && (
-            <PlayerMatchRecords
-              playerId={playerId ? playerId?.toString() : ""}
-            />
-          )}
-
-          <View style={styles.iconContainer}>
+            {playerName}
+          </Text>
+          <View style={styles.tabs}>
             <Button
-              mode="contained"
-              onPress={() => setIsEditing(true)}
-              style={styles.actionButton}
+              mode={activeTab === "career" ? "contained" : "outlined"}
+              onPress={() => setActiveTab("career")}
+              style={[styles.tab, activeTab === "career" && styles.activeTab]}
+              labelStyle={
+                activeTab === "career" ? styles.activeTabText : styles.tabText
+              }
             >
-              <Icon
-                source="pencil"
-                color={currentTheme == "dark" ? "black" : "white"}
-                size={20}
-              />{" "}
-              Edit
+              Career Stats
             </Button>
             <Button
-              mode="contained"
-              onPress={handleDelete}
-              style={styles.actionButton}
+              mode={activeTab === "matches" ? "contained" : "outlined"}
+              onPress={() => setActiveTab("matches")}
+              style={[styles.tab, activeTab === "matches" && styles.activeTab]}
+              labelStyle={
+                activeTab === "matches" ? styles.activeTabText : styles.tabText
+              }
             >
-              <Icon
-                source="delete"
-                color={currentTheme == "dark" ? "black" : "white"}
-                size={20}
-              />{" "}
-              Delete
+              Match Stats
             </Button>
           </View>
+          {activeTab === "career" && (
+            <>
+              <PlayerCareerRecords playerId={playerId?.toString() || ""} />
+            </>
+          )}
+          {activeTab === "matches" && (
+            <>
+              <PlayerMatchRecords playerId={playerId?.toString() || ""} />
+            </>
+          )}
         </>
       )}
+      <ActionButtons />
     </View>
   );
 }
@@ -182,46 +148,39 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  button: {
-    marginTop: 16,
+  subtitle: {
+    fontSize: 20,
+    marginBottom: 24,
+    textAlign: "center",
+    opacity: 0.8,
   },
-  iconContainer: {
+  actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
+    marginTop: "auto",
+    paddingTop: 16,
   },
-  text: {
-    fontSize: 24,
-    marginBottom: 16,
-    padding: 8,
-    color: "white",
-    textAlign: "center",
-  },
-  actionButton: {
+  button: {
     flex: 1,
     marginHorizontal: 4,
   },
-  collapseButton: {
-    marginVertical: 8,
-  },
-});
-
-const lightStyles = StyleSheet.create({
-  text: {
-    fontSize: 24,
+  tabs: {
+    flexDirection: "row",
+    gap: 12,
     marginBottom: 16,
-    padding: 8,
-    color: "black",
-    textAlign: "center",
   },
-});
-
-const darkStyles = StyleSheet.create({
-  text: {
-    fontSize: 24,
-    marginBottom: 16,
-    padding: 8,
-    color: "white",
-    textAlign: "center",
+  tab: {
+    flex: 1,
+    borderRadius: 8,
+  },
+  activeTab: {
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+  },
+  activeTabText: {
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });

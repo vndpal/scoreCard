@@ -67,9 +67,12 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
           sixes: stat.sixes,
           fours: stat.fours,
           strikeRate: stat.strikeRate.toFixed(2),
-          out: stat.isOut ? "*" : "-",
+          out: stat.isOut ? "" : "*",
         }))}
         title="Batting"
+        headerStyle={{ padding: 6, fontSize: 13 }}
+        cellStyle={{ padding: 6, fontSize: 13 }}
+        tableStyle={{ marginBottom: 8 }}
       />
       <Divider style={styles.divider} />
       <Table
@@ -85,6 +88,9 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
           "6s / 4s": stat.sixesConceded + " / " + stat.foursConceded,
         }))}
         title="Bowling"
+        headerStyle={{ padding: 6, fontSize: 13 }}
+        cellStyle={{ padding: 6, fontSize: 13 }}
+        tableStyle={{ marginBottom: 8 }}
       />
     </ScrollView>
   );

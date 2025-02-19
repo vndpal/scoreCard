@@ -24,7 +24,7 @@ import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import Loader from "../Loader";
 import { Timestamp } from "@react-native-firebase/firestore";
-import { reloadAppAsync } from "expo";
+import * as Updates from "expo-updates";
 
 type items = {
   label: string;
@@ -113,7 +113,7 @@ const MatchSettings = () => {
             }
             await updateManOfTheMatch(currentMatch.matchId);
           }
-          reloadAppAsync();
+          await Updates.reloadAsync();
           Keyboard.dismiss();
           setLoading(false);
           router.push("/");

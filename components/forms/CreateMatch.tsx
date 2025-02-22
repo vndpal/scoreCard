@@ -26,6 +26,8 @@ import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import { Timestamp } from "@react-native-firebase/firestore";
 import { player } from "@/types/player";
+import { Tournament } from "@/firebase/models/Tournament";
+import { tournament } from "@/types/tournament";
 
 const createMatchSchema = Yup.object().shape({
   team1: Yup.string().required("Batting team is required"),
@@ -43,6 +45,7 @@ type items = {
 export const CreateMatch = () => {
   const [teams, setTeams] = useState<items[]>([]);
   const { currentTheme, club } = useTheme();
+  const [tournament, setTournament] = useState<tournament>();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -70,6 +73,11 @@ export const CreateMatch = () => {
             value: team.teamInitials,
           }))
         );
+      }
+
+      const tournament = await Tournament.getByStatus("ongoing", club.id);
+      if (tournament) {
+        setTournament(tournament[0]);
       }
     })();
   }, []);
@@ -149,6 +157,7 @@ export const CreateMatch = () => {
       startDateTime: Timestamp.now(),
       quickMatch: quickMatch,
       clubId: club?.id ?? "",
+      tournamentId: tournament?.id ?? "",
     });
 
     if (!quickMatch) {

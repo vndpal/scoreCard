@@ -27,12 +27,13 @@ interface MenuProps {
 
 const menuItems = [
   { id: "1", title: "🏏 New match", route: "/createMatch" },
-  { id: "2", title: "🪙 Toss", route: "/toss" },
-  { id: "3", title: "📝 Team setup", route: "/teamLineup" },
-  { id: "4", title: "🙌 New team", route: "/createTeam" },
-  { id: "5", title: "👦 Players", route: "/players" },
-  { id: "6", title: "📊 Stats", route: "/playerRecords" },
-  { id: "7", title: "⚙️ Settings", route: "/settings" },
+  { id: "2", title: "🏆 Tournament", route: "/tournaments" },
+  { id: "3", title: "🪙 Toss", route: "/toss" },
+  { id: "4", title: "📝 Team setup", route: "/teamLineup" },
+  { id: "5", title: "🙌 New team", route: "/createTeam" },
+  { id: "6", title: "👦 Players", route: "/players" },
+  { id: "7", title: "📊 Stats", route: "/playerRecords" },
+  { id: "8", title: "⚙️ Settings", route: "/settings" },
 ];
 const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
   const slideAnim = useRef(new Animated.Value(width * 0.7)).current;
@@ -141,7 +142,7 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
               🚶‍♂️ Leave Group
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.menuItem, themeStyles.menuItem]}
             onPress={changeTheme}
           >
@@ -157,7 +158,7 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
                 ]}
               />
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity
             style={[styles.menuItem, themeStyles.menuItem]}
             onPress={hideMenu}

@@ -191,6 +191,13 @@ export default function RootLayout() {
                 animation: "flip",
               }}
             />
+            <Stack.Screen
+              name="tournaments"
+              options={{
+                headerTitle: "Tournaments",
+                animation: "slide_from_right",
+              }}
+            />
           </Stack>
         </AppThemeProvider>
       </PaperProvider>

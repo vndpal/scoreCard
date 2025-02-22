@@ -31,6 +31,7 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     team2: currentTotalScore;
   };
   clubId: string;
+  tournamentId: string;
 
   constructor(matchId: string, data: match) {
     this.matchId = matchId;
@@ -49,6 +50,7 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     this.manOfTheMatch = data.manOfTheMatch;
     this.currentScore = data.currentScore;
     this.clubId = data.clubId;
+    this.tournamentId = data.tournamentId;
     Object.assign(this, data);
   }
 

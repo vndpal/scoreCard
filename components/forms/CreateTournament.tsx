@@ -26,7 +26,7 @@ export const CreateTournament = ({
 }: {
   style: StyleProp<ViewStyle>;
 }) => {
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club, updateCurrentTournament } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSubmit = async () => {
@@ -50,13 +50,15 @@ export const CreateTournament = ({
       status: "ongoing",
     });
 
+    updateCurrentTournament(newTournament.id);
+
     Keyboard.dismiss();
     router.replace("/explore");
   };
 
   const formik = useFormik({
     initialValues: {
-      name: "",
+      name: new Date().toLocaleDateString("en-GB").replace(/\//g, "-"),
     },
     validationSchema: createTournamentSchema,
     onSubmit: async (values) => {

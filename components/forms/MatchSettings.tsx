@@ -25,7 +25,7 @@ import { Match } from "@/firebase/models/Match";
 import Loader from "../Loader";
 import { Timestamp } from "@react-native-firebase/firestore";
 import * as Updates from "expo-updates";
-
+import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 type items = {
   label: string;
   value: string;
@@ -110,6 +110,11 @@ const MatchSettings = () => {
           if (playerMatchStats) {
             if (matchStatus !== "abandoned") {
               await updatePlayerCareerStats(playerMatchStats.playerMatchStats);
+              await updatePlayerTournamentStats(
+                playerMatchStats.playerMatchStats,
+                currentMatch.tournamentId,
+                currentMatch.clubId
+              );
             }
             await updateManOfTheMatch(currentMatch.matchId);
           }

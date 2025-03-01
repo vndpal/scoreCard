@@ -9,6 +9,8 @@ interface ThemeContextType {
   club: Club;
   updateClub: (club: Club) => void;
   applySettingsChanges: (settings: settings) => void;
+  currentTournament: string;
+  updateCurrentTournament: (tournament: string) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -28,6 +30,8 @@ export const AppThemeProvider: React.FC<{
   club: Club;
   updateClub: (club: Club) => void;
   applySettingsChanges: (settings: settings) => void;
+  currentTournament: string;
+  updateCurrentTournament: (tournament: string) => void;
   children: React.ReactNode;
 }> = ({
   children,
@@ -37,6 +41,8 @@ export const AppThemeProvider: React.FC<{
   applySettingsChanges,
   club,
   updateClub,
+  currentTournament,
+  updateCurrentTournament,
 }) => {
   return (
     <ThemeContext.Provider
@@ -47,6 +53,8 @@ export const AppThemeProvider: React.FC<{
         applySettingsChanges,
         club: club,
         updateClub,
+        currentTournament,
+        updateCurrentTournament,
       }}
     >
       {children}

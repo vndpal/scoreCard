@@ -17,6 +17,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { Club } from "@/firebase/models/Club";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Tournament } from "@/firebase/models/Tournament";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,6 +44,8 @@ export default function RootLayout() {
     name: "",
   });
 
+  const [currentTournament, setCurrentTournament] = useState<string>("");
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -61,6 +64,13 @@ export default function RootLayout() {
         const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
         if (club) {
           setClub(JSON.parse(club));
+          const currentTournament = await Tournament.getByStatus(
+            "ongoing",
+            club
+          );
+          if (currentTournament) {
+            setCurrentTournament(currentTournament[0].id);
+          }
         }
       };
 
@@ -91,6 +101,10 @@ export default function RootLayout() {
     setClub(club);
   };
 
+  const updateCurrentTournament = (tournament: string) => {
+    setCurrentTournament(tournament);
+  };
+
   const paperTheme =
     currentTheme === "dark"
       ? { ...MD3DarkTheme, colors: theme.dark }
@@ -106,6 +120,8 @@ export default function RootLayout() {
           applySettingsChanges={updateSettings}
           club={club}
           updateClub={updateClub}
+          currentTournament={currentTournament}
+          updateCurrentTournament={updateCurrentTournament}
         >
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

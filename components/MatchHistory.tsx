@@ -1,7 +1,7 @@
 import { match } from "@/types/match";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { Animated } from "react-native";
+import React, { useContext, useEffect, useRef } from "react";
+import { Animated, Button } from "react-native";
 import {
   ScrollView,
   View,
@@ -18,7 +18,9 @@ import MatchScoreBar from "./MatchScoreBar";
 import TournamentStandings from "./TournamentStandings";
 import { Timestamp } from "@react-native-firebase/firestore";
 import { getMatchResultText } from "@/utils/getMatchResultText";
-
+import { Dropdown } from "react-native-paper-dropdown";
+import { Menu } from "react-native-paper";
+import { Tournament } from "@/firebase/models/Tournament";
 const { width } = Dimensions.get("window");
 
 const Card = ({ match, players }: { match: match; players: player[] }) => {
@@ -298,30 +300,119 @@ const MatchHistory = ({
   matches: match[];
   players: player[];
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme, currentTournament } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  const [selectedTournament, setSelectedTournament] =
+    React.useState<Tournament | null>(null);
+  const [tournaments, setTournaments] = React.useState<Tournament[]>([]);
 
-  const matchStandings =
-    matches?.reduce((acc, match) => {
-      if (match.winner && match.status === "completed") {
-        const winningTeam =
-          match.winner === "team1" ? match.team1Fullname : match.team2Fullname;
-        const losingTeam =
-          match.winner === "team1" ? match.team2Fullname : match.team1Fullname;
-        if (typeof winningTeam === "string" && typeof losingTeam === "string") {
-          acc[winningTeam] = (acc[winningTeam] || 0) + 1;
-          acc[losingTeam] = acc[losingTeam] || 0;
+  // Fetch tournaments when dropdown is opened
+  const fetchTournaments = async () => {
+    const tournamentList = await Tournament.getAll();
+    setTournaments(tournamentList);
+    // Set the first tournament as default if none selected
+    if (
+      !selectedTournament &&
+      tournamentList &&
+      currentTournament &&
+      tournamentList.length > 0
+    ) {
+      setSelectedTournament(
+        tournamentList.find((t) => t.id === currentTournament?.id)
+      );
+    }
+    //TODO filter this
+  };
+
+  const handleDropdownPress = () => {
+    if (!showDropdown && tournaments.length === 0) {
+      // Only fetch if we haven't loaded tournaments yet
+      fetchTournaments();
+    }
+    setShowDropdown(!showDropdown);
+  };
+
+  const filteredMatches = React.useMemo(() => {
+    return matches?.filter(
+      (match) => match.tournamentId === selectedTournament?.id
+    );
+  }, [matches, selectedTournament]);
+
+  const matchStandings = React.useMemo(() => {
+    return (
+      filteredMatches?.reduce((acc, match) => {
+        if (match.winner && match.status === "completed") {
+          const winningTeam =
+            match.winner === "team1"
+              ? match.team1Fullname
+              : match.team2Fullname;
+          const losingTeam =
+            match.winner === "team1"
+              ? match.team2Fullname
+              : match.team1Fullname;
+          if (
+            typeof winningTeam === "string" &&
+            typeof losingTeam === "string"
+          ) {
+            acc[winningTeam] = (acc[winningTeam] || 0) + 1;
+            acc[losingTeam] = acc[losingTeam] || 0;
+          }
         }
-      }
-      return acc;
-    }, {} as Record<string, number>) ?? {};
+        return acc;
+      }, {} as Record<string, number>) ?? {}
+    );
+  }, [filteredMatches]);
 
   return (
     <View style={themeStyles.container}>
       <Text style={themeStyles.header}>Match History</Text>
+
       {matches && <TournamentStandings matchStandings={matchStandings} />}
+
+      <View style={themeStyles.dropdownContainer}>
+        <TouchableOpacity
+          style={themeStyles.dropdownButton}
+          onPress={handleDropdownPress}
+        >
+          <Text style={themeStyles.dropdownButtonText}>
+            {selectedTournament?.name || "Select Tournament"}
+          </Text>
+          <Ionicons
+            name={showDropdown ? "chevron-up" : "chevron-down"}
+            size={24}
+            color={currentTheme === "dark" ? "#4dabf5" : "#1a73e8"}
+          />
+        </TouchableOpacity>
+
+        {showDropdown && (
+          <View style={themeStyles.dropdownContent}>
+            {tournaments.map((tournament) => (
+              <TouchableOpacity
+                key={tournament.id}
+                style={themeStyles.dropdownItem}
+                onPress={() => {
+                  setSelectedTournament(tournament);
+                  setShowDropdown(false);
+                }}
+              >
+                <Text
+                  style={[
+                    themeStyles.dropdownItemText,
+                    selectedTournament === tournament &&
+                      themeStyles.selectedItemText,
+                  ]}
+                >
+                  {tournament.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        {matches?.map((item, index) => (
+        {filteredMatches?.map((item, index) => (
           <Card key={index} match={item} players={players} />
         ))}
       </ScrollView>
@@ -469,6 +560,60 @@ const darkStyles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "300",
   },
+  dropdownContainer: {
+    width: "100%",
+    marginBottom: 20,
+    zIndex: 1,
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#2C2C2C",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#3A3A3A",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dropdownContent: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: "#2C2C2C",
+    borderRadius: 12,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: "#3A3A3A",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#3A3A3A",
+  },
+  dropdownItemText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+  },
+  selectedItemText: {
+    color: "#4dabf5",
+    fontWeight: "600",
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -613,6 +758,60 @@ const lightStyles = StyleSheet.create({
     fontSize: 14,
     color: "#000000",
     fontWeight: "700",
+  },
+  dropdownContainer: {
+    width: "100%",
+    marginBottom: 20,
+    zIndex: 1,
+  },
+  dropdownButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownButtonText: {
+    color: "#333333",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  dropdownContent: {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  dropdownItemText: {
+    color: "#333333",
+    fontSize: 16,
+  },
+  selectedItemText: {
+    color: "#1a73e8",
+    fontWeight: "600",
   },
 });
 

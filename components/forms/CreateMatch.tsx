@@ -10,7 +10,13 @@ import {
   Alert,
   Text,
 } from "react-native";
-import { Button, TextInput, HelperText, Switch } from "react-native-paper";
+import {
+  Button,
+  TextInput,
+  HelperText,
+  Switch,
+  Snackbar,
+} from "react-native-paper";
 import { Formik, useFormik } from "formik";
 import * as Yup from "yup";
 import { match } from "@/types/match";
@@ -46,6 +52,7 @@ export const CreateMatch = () => {
   const [teams, setTeams] = useState<items[]>([]);
   const { currentTheme, club } = useTheme();
   const [tournament, setTournament] = useState<tournament>();
+  const [showSnackbar, setShowSnackbar] = useState(false);
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -76,8 +83,11 @@ export const CreateMatch = () => {
       }
 
       const tournament = await Tournament.getByStatus("ongoing", club.id);
-      if (tournament) {
+      if (tournament && tournament.length > 0) {
         setTournament(tournament[0]);
+      }
+      if (tournament && tournament.length == 0) {
+        setShowSnackbar(true);
       }
     })();
   }, []);
@@ -336,6 +346,23 @@ export const CreateMatch = () => {
       >
         Start new match
       </Button>
+      <Snackbar
+        visible={showSnackbar}
+        onDismiss={() => {
+          setShowSnackbar(false);
+          router.push("/tournaments");
+        }}
+        duration={1000}
+        style={styles.snackbar}
+        theme={{
+          colors: {
+            inverseSurface: "#323232", // dark background
+            inverseOnSurface: "#ffffff", // white text
+          },
+        }}
+      >
+        Create a new tournament to start a match
+      </Snackbar>
     </View>
   );
 };
@@ -375,6 +402,9 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#B3E5FC",
     paddingLeft: 0,
+  },
+  snackbar: {
+    width: "100%",
   },
 });
 

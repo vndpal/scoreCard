@@ -16,6 +16,7 @@ import * as Yup from "yup";
 import { useTheme } from "@/context/ThemeContext";
 import { Tournament } from "@/firebase/models/Tournament";
 import { Timestamp } from "@react-native-firebase/firestore";
+import { Match } from "@/firebase/models/Match";
 
 const createTournamentSchema = Yup.object().shape({
   name: Yup.string().required("Tournament name is required"),
@@ -31,6 +32,13 @@ export const CreateTournament = ({
 
   const handleSubmit = async () => {
     const { name } = formik.values;
+
+    const lastMatch = await Match.getLatestMatch(club.id);
+
+    if (lastMatch && lastMatch.status === "live") {
+      Alert.alert("Complete the match before creating a new tournament.");
+      return;
+    }
 
     const latestTournament = await Tournament.getByStatus(
       "ongoing",

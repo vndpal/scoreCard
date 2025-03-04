@@ -94,6 +94,28 @@ export class PlayerCareerStats implements playerCareerStats {
     return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
   }
 
+  static async getAllFromTournamentAndClub(
+    tournamentId: string,
+    clubId: string
+  ): Promise<PlayerCareerStats[]> {
+    const stats = await firestoreService.query<playerCareerStats>(
+      COLLECTION_NAME,
+      [
+        {
+          field: "clubId",
+          operator: "==",
+          value: clubId,
+        },
+        {
+          field: "tournamentId",
+          operator: "==",
+          value: tournamentId,
+        },
+      ]
+    );
+    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+  }
+
   static async getAllFromCache(): Promise<PlayerCareerStats[]> {
     const stats = await firestoreService.getAllFromCache<playerCareerStats>(
       COLLECTION_NAME

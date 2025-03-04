@@ -1,6 +1,6 @@
 import { match } from "@/types/match";
 import { useRouter } from "expo-router";
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Animated, Button } from "react-native";
 import {
   ScrollView,
@@ -21,6 +21,7 @@ import { getMatchResultText } from "@/utils/getMatchResultText";
 import { Dropdown } from "react-native-paper-dropdown";
 import { Menu } from "react-native-paper";
 import { Tournament } from "@/firebase/models/Tournament";
+import TournamentDropdown from "./TournamentDropdown";
 const { width } = Dimensions.get("window");
 
 const Card = ({ match, players }: { match: match; players: player[] }) => {
@@ -300,37 +301,13 @@ const MatchHistory = ({
   matches: match[];
   players: player[];
 }) => {
-  const { currentTheme, currentTournament } = useTheme();
+  const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
-  const [showDropdown, setShowDropdown] = React.useState(false);
-  const [selectedTournament, setSelectedTournament] =
-    React.useState<Tournament | null>(null);
-  const [tournaments, setTournaments] = React.useState<Tournament[]>([]);
+  const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 
-  // Fetch tournaments when dropdown is opened
-  const fetchTournaments = async () => {
-    const tournamentList = await Tournament.getAll();
-    setTournaments(tournamentList);
-    // Set the first tournament as default if none selected
-    if (
-      !selectedTournament &&
-      tournamentList &&
-      currentTournament &&
-      tournamentList.length > 0
-    ) {
-      setSelectedTournament(
-        tournamentList.find((t) => t.id === currentTournament?.id)
-      );
-    }
-    //TODO filter this
-  };
-
-  const handleDropdownPress = () => {
-    if (!showDropdown && tournaments.length === 0) {
-      // Only fetch if we haven't loaded tournaments yet
-      fetchTournaments();
-    }
-    setShowDropdown(!showDropdown);
+  const selectedTorunamen = (t: Tournament) => {
+    console.log("t", t);
+    setSelectedTournament(t);
   };
 
   const filteredMatches = React.useMemo(() => {
@@ -370,46 +347,10 @@ const MatchHistory = ({
 
       {matches && <TournamentStandings matchStandings={matchStandings} />}
 
-      <View style={themeStyles.dropdownContainer}>
-        <TouchableOpacity
-          style={themeStyles.dropdownButton}
-          onPress={handleDropdownPress}
-        >
-          <Text style={themeStyles.dropdownButtonText}>
-            {selectedTournament?.name || "Select Tournament"}
-          </Text>
-          <Ionicons
-            name={showDropdown ? "chevron-up" : "chevron-down"}
-            size={24}
-            color={currentTheme === "dark" ? "#4dabf5" : "#1a73e8"}
-          />
-        </TouchableOpacity>
-
-        {showDropdown && (
-          <View style={themeStyles.dropdownContent}>
-            {tournaments.map((tournament) => (
-              <TouchableOpacity
-                key={tournament.id}
-                style={themeStyles.dropdownItem}
-                onPress={() => {
-                  setSelectedTournament(tournament);
-                  setShowDropdown(false);
-                }}
-              >
-                <Text
-                  style={[
-                    themeStyles.dropdownItemText,
-                    selectedTournament === tournament &&
-                      themeStyles.selectedItemText,
-                  ]}
-                >
-                  {tournament.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
+      <TournamentDropdown
+        selectedTournament={selectedTournament}
+        onTournamentSelect={selectedTorunamen}
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {filteredMatches?.map((item, index) => (
@@ -560,60 +501,6 @@ const darkStyles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "300",
   },
-  dropdownContainer: {
-    width: "100%",
-    marginBottom: 20,
-    zIndex: 1,
-  },
-  dropdownButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#2C2C2C",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#3A3A3A",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  dropdownButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  dropdownContent: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    backgroundColor: "#2C2C2C",
-    borderRadius: 12,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: "#3A3A3A",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  dropdownItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#3A3A3A",
-  },
-  dropdownItemText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-  },
-  selectedItemText: {
-    color: "#4dabf5",
-    fontWeight: "600",
-  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -758,60 +645,6 @@ const lightStyles = StyleSheet.create({
     fontSize: 14,
     color: "#000000",
     fontWeight: "700",
-  },
-  dropdownContainer: {
-    width: "100%",
-    marginBottom: 20,
-    zIndex: 1,
-  },
-  dropdownButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  dropdownButtonText: {
-    color: "#333333",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  dropdownContent: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  dropdownItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-  },
-  dropdownItemText: {
-    color: "#333333",
-    fontSize: 16,
-  },
-  selectedItemText: {
-    color: "#1a73e8",
-    fontWeight: "600",
   },
 });
 

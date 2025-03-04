@@ -66,8 +66,9 @@ export default function RootLayout() {
           setClub(JSON.parse(club));
           const currentTournament = await Tournament.getByStatus(
             "ongoing",
-            club
+            JSON.parse(club).id
           );
+
           if (currentTournament) {
             setCurrentTournament(currentTournament[0].id);
           }

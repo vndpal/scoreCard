@@ -19,21 +19,37 @@ import { ActivityIndicator, Icon } from "react-native-paper";
 import Loader from "./Loader";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
-
+import TournamentDropdown from "./TournamentDropdown";
+import { Tournament } from "@/firebase/models/Tournament";
+import { PlayerTournamentStats } from "@/firebase/models/PlayerTournamentStats";
 const PlayerCareerSummary = () => {
   const [battingStats, setBattingStats] = useState<playerCareerStats[]>([]);
   const [bowlingStats, setBowlingStats] = useState<playerCareerStats[]>([]);
+  const [selectedTournament, setSelectedTournament] = useState<Tournament>();
   const [playersMap, setPlayersMap] = useState<Map<string, string>>(new Map());
   const [webViewContent, setWebViewContent] = useState<string | null>(null);
   const [isLoader, setIsLoader] = useState<boolean>(false);
 
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
-  const { club } = useTheme();
+  const { club, currentTournament } = useTheme();
 
   useEffect(() => {
     (async () => {
-      const careerStats = await PlayerCareerStats.getAllFromClub(club.id);
+      const currentlySelectedTournament = selectedTournament
+        ? selectedTournament.id
+        : currentTournament;
+
+      let careerStats: playerCareerStats[] = [];
+      if (currentlySelectedTournament === "all") {
+        careerStats = await PlayerCareerStats.getAllFromClub(club.id);
+      } else {
+        careerStats = await PlayerTournamentStats.getAllFromTournamentAndClub(
+          currentlySelectedTournament,
+          club.id
+        );
+      }
+
       const players = await Player.getAllFromClub(club.id);
       if (careerStats && players) {
         const playersMap = new Map<string, string>();
@@ -65,7 +81,7 @@ const PlayerCareerSummary = () => {
         setBowlingStats(sortedBowlingStats);
       }
     })();
-  }, []);
+  }, [selectedTournament]);
 
   const webViewRef = useRef<WebView>(null);
 
@@ -257,8 +273,6 @@ const PlayerCareerSummary = () => {
       await FileSystem.writeAsStringAsync(filePath, base64Data, {
         encoding: "base64",
       });
-      console.log("Image saved:", filePath);
-      //test
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(filePath);
@@ -434,6 +448,13 @@ const PlayerCareerSummary = () => {
 
   return (
     <View style={[styles.container, themeStyles.container]}>
+      <View style={styles.dropdownContainer}>
+        <TournamentDropdown
+          selectedTournament={selectedTournament}
+          onTournamentSelect={setSelectedTournament}
+          isAllTournaments={true}
+        />
+      </View>
       <ScrollView style={styles.content}>
         {data.map((item) =>
           renderTable(item.title, item.data, item.type, item.id)
@@ -467,8 +488,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  dropdownContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    zIndex: 1000,
+    elevation: 1000,
+  },
   content: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   footer: {
     padding: 8,
@@ -489,7 +519,7 @@ const styles = StyleSheet.create({
   table: {
     borderRadius: 12,
     overflow: "hidden",
-    marginBottom: 24,
+    marginVertical: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -576,6 +606,9 @@ const darkStyles = StyleSheet.create({
     borderBottomColor: "#2c3e50",
     borderBottomWidth: 1,
   },
+  dropdownContainer: {
+    borderBottomColor: "#333",
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -613,6 +646,9 @@ const lightStyles = StyleSheet.create({
   row: {
     borderBottomColor: "#ecf0f1",
     borderBottomWidth: 1,
+  },
+  dropdownContainer: {
+    borderBottomColor: "#E0E0E0",
   },
 });
 

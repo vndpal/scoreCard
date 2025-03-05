@@ -63,7 +63,7 @@ export const updatePlayerTournamentStats = async (
 
       tournamentStat.dotBalls += playerMatchStat.dotBalls;
       return PlayerTournamentStats.update(
-        tournamentStat.playerId,
+        playerTournamentStat.id || "",
         tournamentStat
       );
     } else {

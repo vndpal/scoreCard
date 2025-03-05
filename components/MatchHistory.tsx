@@ -306,7 +306,6 @@ const MatchHistory = ({
   const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 
   const selectedTorunamen = (t: Tournament) => {
-    console.log("t", t);
     setSelectedTournament(t);
   };
 

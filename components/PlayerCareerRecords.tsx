@@ -5,8 +5,11 @@ import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 import { useTheme } from "@/context/ThemeContext";
 import Table from "./ui/table";
 import { Divider } from "react-native-elements";
+import TournamentDropdown from "./TournamentDropdown";
+import { Tournament } from "@/firebase/models/Tournament";
+import { PlayerTournamentStats } from "@/firebase/models/PlayerTournamentStats";
+import { Timestamp } from "@react-native-firebase/firestore";
 
-// Props for the PlayerCareerRecords component
 interface PlayerCareerRecordsProps {
   playerId: string;
 }
@@ -15,18 +18,31 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
   playerId,
 }) => {
   const [stats, setStats] = useState<playerCareerStats | null>(null);
+  const [selectedTournament, setSelectedTournament] = useState<Tournament>({
+    id: "all",
+    name: "All",
+    date: Timestamp.now(),
+    clubId: "",
+    status: "upcoming",
+  });
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     const fetchStats = async () => {
-      const careerStats = await PlayerCareerStats.getByPlayerId(playerId);
-      if (careerStats) {
-        setStats(careerStats);
+      let careerStats: playerCareerStats | null = null;
+      if (selectedTournament && selectedTournament.id == "all") {
+        careerStats = await PlayerCareerStats.getByPlayerId(playerId);
+      } else {
+        careerStats = await PlayerTournamentStats.getByPlayerIdAndTournamentId(
+          playerId,
+          selectedTournament?.id ?? ""
+        );
       }
+      setStats(careerStats);
     };
     fetchStats();
-  }, [playerId]);
+  }, [playerId, selectedTournament]);
 
   if (!stats) {
     return (
@@ -59,6 +75,11 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
 
   return (
     <ScrollView style={styles.container}>
+      <TournamentDropdown
+        selectedTournament={selectedTournament}
+        onTournamentSelect={setSelectedTournament}
+        isAllTournaments={true}
+      />
       <Table
         columns={battingColumns}
         data={[

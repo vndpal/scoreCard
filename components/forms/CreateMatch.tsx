@@ -220,6 +220,7 @@ export const CreateMatch = () => {
 
       const playerStatsInMatch: playerMatchStats = {
         matchId: newMatch.matchId,
+        tournamentId: tournament?.id ?? "",
         playerMatchStats: playerStats,
         timestamp: Timestamp.now().seconds,
       };

@@ -150,20 +150,13 @@ export class PlayerTournamentStats implements playerTournamentStats {
   }
 
   static async update(
-    playerId: string,
+    id: string,
     data: Partial<playerTournamentStats>
   ): Promise<void> {
-    const stats = await this.getByPlayerId(playerId);
-    if (stats) {
-      try {
-        await firestoreService.update(COLLECTION_NAME, stats.id || "", data);
-      } catch (error) {
-        console.error("Error updating PlayerTournamentStats:", error);
-      }
-    } else {
-      throw new Error(
-        `PlayerTournamentStats not found for playerId: ${playerId}`
-      );
+    try {
+      await firestoreService.update(COLLECTION_NAME, id, data);
+    } catch (error) {
+      console.error("Error updating PlayerTournamentStats:", error);
     }
   }
 

@@ -166,6 +166,7 @@ export const firestoreService = {
         "matchScores",
         "players",
         "playerCareerStats",
+        "playerTournamentStats",
         "playerMatchStats",
         "teams",
         "teamPlayerMapping",

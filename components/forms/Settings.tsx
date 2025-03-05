@@ -74,6 +74,12 @@ const Settings = () => {
     setShowLoader(false);
   };
 
+  const handleClearCache = async () => {
+    setShowLoader(true);
+    await AsyncStorage.clear();
+    setShowLoader(false);
+  };
+
   const handleSettingChange = async (key: string, value: any) => {
     try {
       await updateSettings({ [key]: value });
@@ -95,6 +101,9 @@ const Settings = () => {
           break;
         case "autoUpdate":
           setAutoUpdate(value);
+          break;
+        case "clearCache":
+          handleClearCache();
           break;
         case "clearDatabase":
           handleClearDatabase();
@@ -228,6 +237,14 @@ const Settings = () => {
             value={autoUpdate}
             onValueChange={setAutoUpdate}
             settingKey="autoUpdate"
+          />
+          <SettingItem
+            title="Clear Cache"
+            icon="trash"
+            value={false}
+            onValueChange={handleClearCache}
+            type="button"
+            settingKey="clearCache"
           />
           <SettingItem
             title="Clear Database"

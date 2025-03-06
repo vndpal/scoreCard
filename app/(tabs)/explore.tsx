@@ -1,3 +1,4 @@
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import { useCallback, useState } from "react";
 import { getItem } from "@/utils/asyncStorage";

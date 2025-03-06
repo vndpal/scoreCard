@@ -1,7 +1,7 @@
 import { match } from "@/types/match";
 import { useRouter } from "expo-router";
-import React, { useEffect, useRef } from "react";
-import { Animated } from "react-native";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Animated, Button } from "react-native";
 import {
   ScrollView,
   View,
@@ -18,7 +18,10 @@ import MatchScoreBar from "./MatchScoreBar";
 import TournamentStandings from "./TournamentStandings";
 import { Timestamp } from "@react-native-firebase/firestore";
 import { getMatchResultText } from "@/utils/getMatchResultText";
-
+import { Dropdown } from "react-native-paper-dropdown";
+import { Menu } from "react-native-paper";
+import { Tournament } from "@/firebase/models/Tournament";
+import TournamentDropdown from "./TournamentDropdown";
 const { width } = Dimensions.get("window");
 
 const Card = ({ match, players }: { match: match; players: player[] }) => {
@@ -300,28 +303,56 @@ const MatchHistory = ({
 }) => {
   const { currentTheme } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 
-  const matchStandings =
-    matches?.reduce((acc, match) => {
-      if (match.winner && match.status === "completed") {
-        const winningTeam =
-          match.winner === "team1" ? match.team1Fullname : match.team2Fullname;
-        const losingTeam =
-          match.winner === "team1" ? match.team2Fullname : match.team1Fullname;
-        if (typeof winningTeam === "string" && typeof losingTeam === "string") {
-          acc[winningTeam] = (acc[winningTeam] || 0) + 1;
-          acc[losingTeam] = acc[losingTeam] || 0;
+  const selectedTorunamen = (t: Tournament) => {
+    setSelectedTournament(t);
+  };
+
+  const filteredMatches = React.useMemo(() => {
+    return matches?.filter(
+      (match) => match.tournamentId === selectedTournament?.id
+    );
+  }, [matches, selectedTournament]);
+
+  const matchStandings = React.useMemo(() => {
+    return (
+      filteredMatches?.reduce((acc, match) => {
+        if (match.winner && match.status === "completed") {
+          const winningTeam =
+            match.winner === "team1"
+              ? match.team1Fullname
+              : match.team2Fullname;
+          const losingTeam =
+            match.winner === "team1"
+              ? match.team2Fullname
+              : match.team1Fullname;
+          if (
+            typeof winningTeam === "string" &&
+            typeof losingTeam === "string"
+          ) {
+            acc[winningTeam] = (acc[winningTeam] || 0) + 1;
+            acc[losingTeam] = acc[losingTeam] || 0;
+          }
         }
-      }
-      return acc;
-    }, {} as Record<string, number>) ?? {};
+        return acc;
+      }, {} as Record<string, number>) ?? {}
+    );
+  }, [filteredMatches]);
 
   return (
     <View style={themeStyles.container}>
       <Text style={themeStyles.header}>Match History</Text>
+
       {matches && <TournamentStandings matchStandings={matchStandings} />}
+
+      <TournamentDropdown
+        selectedTournament={selectedTournament}
+        onTournamentSelect={selectedTorunamen}
+      />
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        {matches?.map((item, index) => (
+        {filteredMatches?.map((item, index) => (
           <Card key={index} match={item} players={players} />
         ))}
       </ScrollView>

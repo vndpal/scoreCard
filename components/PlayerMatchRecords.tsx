@@ -7,7 +7,8 @@ import { playerStats } from "@/types/playerStats";
 import { ActivityIndicator } from "react-native";
 import Table from "./ui/table";
 import { Divider } from "react-native-elements";
-
+import TournamentDropdown from "./TournamentDropdown";
+import { Tournament } from "@/firebase/models/Tournament";
 interface PlayerMatchRecordsProps {
   playerId: string;
 }
@@ -16,20 +17,24 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
   playerId,
 }) => {
   const [matchStats, setMatchStats] = useState<playerStats[]>([]);
-  const { currentTheme } = useTheme();
+  const { currentTheme, club, currentTournament } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 
   useEffect(() => {
     const fetchMatchStats = async () => {
-      const stats = await PlayerMatchStats.getAllByPlayerId(playerId);
+      const stats = await PlayerMatchStats.getAllByPlayerId(
+        playerId,
+        selectedTournament?.id ?? ""
+      );
       if (stats) {
         setMatchStats(stats);
       }
       setIsLoading(false);
     };
     fetchMatchStats();
-  }, [playerId]);
+  }, [playerId, selectedTournament]);
 
   if (isLoading) {
     return (
@@ -59,6 +64,10 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
 
   return (
     <ScrollView style={styles.container}>
+      <TournamentDropdown
+        selectedTournament={selectedTournament}
+        onTournamentSelect={setSelectedTournament}
+      />
       <Table
         columns={battingColumns}
         data={matchStats.map((stat) => ({

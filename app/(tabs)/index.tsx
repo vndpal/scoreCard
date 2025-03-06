@@ -34,6 +34,7 @@ import { Club } from "@/types/club";
 import MatchResult from "@/components/MatchResult";
 import { getMatchResultText } from "@/utils/getMatchResultText";
 import * as Updates from "expo-updates";
+import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -75,6 +76,7 @@ export default function HomeScreen() {
       },
     },
     clubId: "",
+    tournamentId: "",
   });
   const [playerMatchStats, setPlayerMatchStats] = useState<playerStats[]>([]);
 
@@ -627,6 +629,11 @@ export default function HomeScreen() {
 
           if (!match.quickMatch) {
             await updatePlayerCareerStats(playerMatchStats);
+            await updatePlayerTournamentStats(
+              playerMatchStats,
+              match.tournamentId,
+              match.clubId
+            );
             const manOfTheMatch = await updateManOfTheMatch(match.matchId);
             setManOfTheMatch(manOfTheMatch);
           }
@@ -659,6 +666,11 @@ export default function HomeScreen() {
 
         if (!match.quickMatch) {
           await updatePlayerCareerStats(playerMatchStats);
+          await updatePlayerTournamentStats(
+            playerMatchStats,
+            match.tournamentId,
+            match.clubId
+          );
           const manOfTheMatch = await updateManOfTheMatch(match.matchId);
           setManOfTheMatch(manOfTheMatch);
         }

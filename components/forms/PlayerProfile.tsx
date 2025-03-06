@@ -18,7 +18,6 @@ export default function PlayerProfile() {
     "career"
   );
   const { currentTheme, club } = useTheme();
-
   const handleSave = async () => {
     const trimmedName = name?.replace(/\s+/g, " ").trim();
     if (!trimmedName) {

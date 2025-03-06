@@ -1,16 +1,18 @@
 import { firestoreService } from "../services/firestore";
 import { playerMatchStats } from "../../types/playerMatchStats";
 import { playerStats } from "../../types/playerStats";
-
+import { Match } from "./Match";
 const COLLECTION_NAME = "playerMatchStats";
 
 export class PlayerMatchStats implements playerMatchStats {
   matchId: string;
+  tournamentId: string;
   playerMatchStats: playerStats[];
   timestamp: number;
 
   constructor(data: playerMatchStats) {
     this.matchId = data.matchId;
+    this.tournamentId = data.tournamentId;
     this.playerMatchStats = data.playerMatchStats;
     this.timestamp = data.timestamp;
   }
@@ -39,13 +41,15 @@ export class PlayerMatchStats implements playerMatchStats {
     return res;
   }
 
-  static async getAllByPlayerId(playerId: string): Promise<playerStats[]> {
+  static async getAllByPlayerId(
+    playerId: string,
+    tournamentId: string
+  ): Promise<playerStats[]> {
     const stats = await firestoreService.query<playerMatchStats>(
       COLLECTION_NAME,
-      [],
-      "timestamp",
-      "asc"
+      [{ field: "tournamentId", operator: "==", value: tournamentId }]
     );
+
     return stats.flatMap((stat) =>
       stat.playerMatchStats.filter(
         (playerStat) => playerStat.playerId === playerId
@@ -82,6 +86,7 @@ export class PlayerMatchStats implements playerMatchStats {
   toObject(): playerMatchStats {
     return {
       matchId: this.matchId,
+      tournamentId: this.tournamentId,
       playerMatchStats: this.playerMatchStats,
       timestamp: this.timestamp,
     };

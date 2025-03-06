@@ -1,10 +1,11 @@
 import { firestoreService } from "../services/firestore";
-import { playerCareerStats } from "../../types/playerCareerStats";
+import { playerTournamentStats } from "../../types/playerTournamentStats";
 
-const COLLECTION_NAME = "playerCareerStats";
+const COLLECTION_NAME = "playerTournamentStats";
 
-export class PlayerCareerStats implements playerCareerStats {
+export class PlayerTournamentStats implements playerTournamentStats {
   playerId: string;
+  tournamentId: string;
   matches: number;
   innings: number;
   runs: number;
@@ -26,8 +27,9 @@ export class PlayerCareerStats implements playerCareerStats {
   dotBalls: number;
   clubId: string;
 
-  constructor(playerId: string, data: playerCareerStats) {
+  constructor(playerId: string, data: playerTournamentStats) {
     this.playerId = playerId;
+    this.tournamentId = data.tournamentId;
     this.matches = data.matches;
     this.innings = data.innings;
     this.runs = data.runs;
@@ -51,16 +53,16 @@ export class PlayerCareerStats implements playerCareerStats {
   }
 
   static async create(
-    data: Omit<playerCareerStats, "id">
-  ): Promise<PlayerCareerStats> {
+    data: Omit<playerTournamentStats, "id">
+  ): Promise<PlayerTournamentStats> {
     const id = await firestoreService.createWithAutoId(COLLECTION_NAME, data);
-    return new PlayerCareerStats(data.playerId, data);
+    return new PlayerTournamentStats(data.playerId, data);
   }
 
   static async getByPlayerId(
     playerId: string
-  ): Promise<playerCareerStats | null> {
-    const data = await firestoreService.query<playerCareerStats>(
+  ): Promise<playerTournamentStats | null> {
+    const data = await firestoreService.query<playerTournamentStats>(
       COLLECTION_NAME,
       [
         {
@@ -73,15 +75,39 @@ export class PlayerCareerStats implements playerCareerStats {
     return data.length > 0 ? { ...data[0], id: data[0].id } : null;
   }
 
-  static async getAll(): Promise<PlayerCareerStats[]> {
-    const stats = await firestoreService.getAll<playerCareerStats>(
-      COLLECTION_NAME
+  static async getByPlayerIdAndTournamentId(
+    playerId: string,
+    tournamentId: string
+  ): Promise<playerTournamentStats | null> {
+    const data = await firestoreService.query<playerTournamentStats>(
+      COLLECTION_NAME,
+      [
+        {
+          field: "playerId",
+          operator: "==",
+          value: playerId,
+        },
+        {
+          field: "tournamentId",
+          operator: "==",
+          value: tournamentId,
+        },
+      ]
     );
-    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+    return data.length > 0 ? { ...data[0], id: data[0].id } : null;
   }
 
-  static async getAllFromClub(clubId: string): Promise<PlayerCareerStats[]> {
-    const stats = await firestoreService.query<playerCareerStats>(
+  static async getAll(): Promise<PlayerTournamentStats[]> {
+    const stats = await firestoreService.getAll<playerTournamentStats>(
+      COLLECTION_NAME
+    );
+    return stats.map((stat) => new PlayerTournamentStats(stat.playerId, stat));
+  }
+
+  static async getAllFromClub(
+    clubId: string
+  ): Promise<PlayerTournamentStats[]> {
+    const stats = await firestoreService.query<playerTournamentStats>(
       COLLECTION_NAME,
       [
         {
@@ -91,14 +117,14 @@ export class PlayerCareerStats implements playerCareerStats {
         },
       ]
     );
-    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+    return stats.map((stat) => new PlayerTournamentStats(stat.playerId, stat));
   }
 
   static async getAllFromTournamentAndClub(
     tournamentId: string,
     clubId: string
-  ): Promise<PlayerCareerStats[]> {
-    const stats = await firestoreService.query<playerCareerStats>(
+  ): Promise<PlayerTournamentStats[]> {
+    const stats = await firestoreService.query<playerTournamentStats>(
       COLLECTION_NAME,
       [
         {
@@ -113,29 +139,24 @@ export class PlayerCareerStats implements playerCareerStats {
         },
       ]
     );
-    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+    return stats.map((stat) => new PlayerTournamentStats(stat.playerId, stat));
   }
 
-  static async getAllFromCache(): Promise<PlayerCareerStats[]> {
-    const stats = await firestoreService.getAllFromCache<playerCareerStats>(
+  static async getAllFromCache(): Promise<PlayerTournamentStats[]> {
+    const stats = await firestoreService.getAllFromCache<playerTournamentStats>(
       COLLECTION_NAME
     );
-    return stats.map((stat) => new PlayerCareerStats(stat.playerId, stat));
+    return stats.map((stat) => new PlayerTournamentStats(stat.playerId, stat));
   }
 
   static async update(
-    playerId: string,
-    data: Partial<playerCareerStats>
+    id: string,
+    data: Partial<playerTournamentStats>
   ): Promise<void> {
-    const stats = await this.getByPlayerId(playerId);
-    if (stats) {
-      try {
-        await firestoreService.update(COLLECTION_NAME, stats.id || "", data);
-      } catch (error) {
-        console.error("Error updating PlayerCareerStats:", error);
-      }
-    } else {
-      throw new Error(`PlayerCareerStats not found for playerId: ${playerId}`);
+    try {
+      await firestoreService.update(COLLECTION_NAME, id, data);
+    } catch (error) {
+      console.error("Error updating PlayerTournamentStats:", error);
     }
   }
 
@@ -144,13 +165,16 @@ export class PlayerCareerStats implements playerCareerStats {
     if (stats) {
       await firestoreService.delete(COLLECTION_NAME, stats.id || "");
     } else {
-      throw new Error(`PlayerCareerStats not found for playerId: ${playerId}`);
+      throw new Error(
+        `PlayerTournamentStats not found for playerId: ${playerId}`
+      );
     }
   }
 
-  toObject(): playerCareerStats {
+  toObject(): playerTournamentStats {
     return {
       playerId: this.playerId,
+      tournamentId: this.tournamentId,
       matches: this.matches,
       innings: this.innings,
       runs: this.runs,

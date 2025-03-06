@@ -5,13 +5,13 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { CreateTournament } from "./forms/CreateTournament";
 const Tournaments = () => {
-  const { currentTheme } = useTheme();
+  const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
   useEffect(() => {
     const fetchTournaments = async () => {
-      const tournaments = await Tournament.getAll();
+      const tournaments = await Tournament.getAllByClubId(club.id);
       setTournaments(tournaments);
     };
     fetchTournaments();

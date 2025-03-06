@@ -16,17 +16,23 @@ const TournamentDropdown = ({
   onTournamentSelect,
   isAllTournaments = false,
 }: TournamentDropdownProps) => {
-  const { currentTheme, currentTournament } = useTheme();
+  const { currentTheme, currentTournament, club } = useTheme();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
   useEffect(() => {
     const fetchTournaments = async () => {
-      const tournamentList = await Tournament.getAll();
+      const tournamentList = await Tournament.getAllByClubId(club.id);
       tournamentList.sort((a, b) => {
         const dateA = a.date.toDate();
         const dateB = b.date.toDate();
         return dateB.getTime() - dateA.getTime();
       });
+      if (tournamentList.length > 0) {
+        const defaultTournament =
+          tournamentList.find((t) => t.id === currentTournament) ||
+          tournamentList[0];
+        onTournamentSelect(defaultTournament);
+      }
 
       if (isAllTournaments) {
         tournamentList.unshift({
@@ -38,14 +44,8 @@ const TournamentDropdown = ({
         });
       }
       setTournaments(tournamentList);
-
-      if (tournamentList.length > 0) {
-        const defaultTournament =
-          tournamentList.find((t) => t.id === currentTournament) ||
-          tournamentList[0];
-        onTournamentSelect(defaultTournament);
-      }
     };
+
     fetchTournaments();
   }, []);
 
@@ -57,7 +57,7 @@ const TournamentDropdown = ({
   return (
     <View style={styles.container}>
       <Dropdown
-        label="Select Tournament"
+        label="Tournaments"
         options={dropdownItems}
         value={selectedTournament?.id}
         onSelect={(value) => {

@@ -48,7 +48,7 @@ export class Team implements team {
     await firestoreService.delete(COLLECTION_NAME, this.id);
   }
 
-  static async findByInitials(name: string): Promise<Team[]> {
+  static async findByInitials(name: string, clubId: string): Promise<Team[]> {
     const teams = await firestoreService.query<team & { id: string }>(
       COLLECTION_NAME,
       [
@@ -56,6 +56,11 @@ export class Team implements team {
           field: "teamInitials",
           operator: "==",
           value: name,
+        },
+        {
+          field: "clubId",
+          operator: "==",
+          value: clubId,
         },
       ]
     );

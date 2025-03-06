@@ -61,7 +61,7 @@ export const CreateTournament = ({
     updateCurrentTournament(newTournament.id);
 
     Keyboard.dismiss();
-    router.replace("/explore");
+    router.replace("/teamLineup");
   };
 
   const formik = useFormik({

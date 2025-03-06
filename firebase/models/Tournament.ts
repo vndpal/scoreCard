@@ -28,9 +28,11 @@ export class Tournament implements tournament {
     return data ? new Tournament(id, data) : null;
   }
 
-  static async getAll(): Promise<Tournament[]> {
-    const data = await firestoreService.getAll<tournament>(COLLECTION_NAME);
-    return data.map((doc) => new Tournament(doc.id, doc));
+  static async getAllByClubId (clubId: string): Promise<Tournament[]> {
+    const data = await firestoreService.query<tournament>(COLLECTION_NAME, [
+      { field: "clubId", operator: "==", value: clubId },
+    ]);
+    return data.map((doc: tournament) => new Tournament(doc.id, doc));
   }
 
   static async getByStatus(

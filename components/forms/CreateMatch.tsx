@@ -351,7 +351,7 @@ export const CreateMatch = () => {
         visible={showSnackbar}
         onDismiss={() => {
           setShowSnackbar(false);
-          router.push("/tournaments");
+          router.replace("/tournaments");
         }}
         duration={1000}
         style={styles.snackbar}

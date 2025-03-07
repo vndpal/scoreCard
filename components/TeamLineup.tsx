@@ -6,6 +6,8 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  BackHandler,
+  Alert,
 } from "react-native";
 import { Menu } from "react-native-paper";
 import { Icon } from "react-native-elements";
@@ -45,6 +47,7 @@ const TeamLineUp: React.FC = () => {
     playerStats[]
   >([]);
   const [loader, setLoader] = useState<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
   const { currentTheme, club } = useTheme();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -148,8 +151,43 @@ const TeamLineUp: React.FC = () => {
     })();
   }, []);
 
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (hasUnsavedChanges) {
+          Alert.alert(
+            "Unsaved Changes",
+            "You have unsaved changes. Do you want to save before leaving?",
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => null,
+              },
+              {
+                text: "Discard",
+                style: "destructive",
+                onPress: () => router.back(),
+              },
+              {
+                text: "Save",
+                onPress: saveTeams,
+              },
+            ]
+          );
+          return true;
+        }
+        return false;
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [hasUnsavedChanges]);
+
   const handleAddPlayer = (selectedPlayer: player) => {
     if (selectedPlayer) {
+      setHasUnsavedChanges(true);
       if (team1DropdownOpen) {
         setTeam1Players([...team1Players, selectedPlayer]);
         setAvailablePlayers(
@@ -185,6 +223,7 @@ const TeamLineUp: React.FC = () => {
   };
 
   const removePlayer = (playerId: string, team: "team1" | "team2") => {
+    setHasUnsavedChanges(true);
     if (team === "team1") {
       setTeam1Players(team1Players.filter((player) => player.id !== playerId));
     } else {
@@ -317,6 +356,7 @@ const TeamLineUp: React.FC = () => {
     } else {
       router.back();
     }
+    setHasUnsavedChanges(false);
   };
 
   return (

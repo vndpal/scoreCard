@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import ScrollPicker from "react-native-wheel-scrollview-picker";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 interface TimePickerProps {
   initialHour?: number;
@@ -18,7 +18,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
   onTimeChange,
   onCancel,
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const [selectedHour, setSelectedHour] = useState(initialHour);

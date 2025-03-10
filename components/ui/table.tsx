@@ -1,4 +1,4 @@
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import React from "react";
 import {
   View,
@@ -35,7 +35,7 @@ const Table = <T extends Record<string, any>>({
   cellStyle,
 }: TableProps<T>): JSX.Element => {
   const screenWidth = Dimensions.get("window").width;
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   // Calculate dynamic column widths

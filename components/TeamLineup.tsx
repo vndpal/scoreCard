@@ -9,7 +9,7 @@ import {
   BackHandler,
   Alert,
 } from "react-native";
-import { Menu } from "react-native-paper";
+import { Menu, useTheme } from "react-native-paper";
 import { Icon } from "react-native-elements";
 import { player } from "@/types/player";
 import { team } from "@/types/team";
@@ -17,7 +17,7 @@ import TeamSelection from "./TeamSelection";
 import teams from "@/interfaces/teams";
 import { teamPlayerMapping } from "@/types/teamPlayerMapping";
 import { router } from "expo-router";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { match } from "@/types/match";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
@@ -49,7 +49,7 @@ const TeamLineUp: React.FC = () => {
   const [loader, setLoader] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
 
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {

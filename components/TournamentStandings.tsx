@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Ionicons } from "@expo/vector-icons";
 
 const TournamentStandings = ({
@@ -8,7 +8,7 @@ const TournamentStandings = ({
 }: {
   matchStandings: Record<string, number>;
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   return (

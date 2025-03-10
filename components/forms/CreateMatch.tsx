@@ -25,7 +25,7 @@ import { team } from "@/types/team";
 import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Team } from "@/firebase/models/Team";
 import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
@@ -50,7 +50,7 @@ type items = {
 
 export const CreateMatch = () => {
   const [teams, setTeams] = useState<items[]>([]);
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club } = useAppContext();
   const [tournament, setTournament] = useState<tournament>();
   const [showSnackbar, setShowSnackbar] = useState(false);
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;

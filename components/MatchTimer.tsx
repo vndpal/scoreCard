@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Timestamp } from "@react-native-firebase/firestore";
 
 type MatchTimerProps = {
@@ -16,7 +16,7 @@ const MatchTimer = ({
 }: MatchTimerProps) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isInactive, setIsInactive] = useState(false);
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {

@@ -12,7 +12,7 @@ import MenuScreen from "./menu";
 import { BackHandler, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Club } from "@/firebase/models/Club";
 
 export default function TabLayout() {

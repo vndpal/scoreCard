@@ -13,7 +13,7 @@ import {
 import { Button, TextInput, HelperText } from "react-native-paper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Tournament } from "@/firebase/models/Tournament";
 import { Timestamp } from "@react-native-firebase/firestore";
 import { Match } from "@/firebase/models/Match";
@@ -27,7 +27,7 @@ export const CreateTournament = ({
 }: {
   style: StyleProp<ViewStyle>;
 }) => {
-  const { currentTheme, club, updateCurrentTournament } = useTheme();
+  const { currentTheme, club, updateCurrentTournament } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSubmit = async () => {

@@ -8,12 +8,12 @@ import MatchHistory from "@/components/MatchHistory";
 import { Player } from "@/firebase/models/Player";
 import { Match } from "@/firebase/models/Match";
 import { match } from "@/types/match";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 export default function TabTwoScreen() {
   const [matches, setMatches] = useState<match[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
-  const { club } = useTheme();
+  const { club } = useAppContext();
   useFocusEffect(
     useCallback(() => {
       const fetchMatch = async () => {

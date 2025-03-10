@@ -2,7 +2,7 @@ import { scorePerBall } from "@/types/scorePerBall";
 import { scorePerInning } from "@/types/scorePerInnig";
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 const ScoreBoard = ({
   totalScore,
@@ -17,7 +17,7 @@ const ScoreBoard = ({
   balls: Number;
   scorePerInning: scorePerInning;
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   return (

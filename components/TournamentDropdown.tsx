@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { Dropdown } from "react-native-paper-dropdown";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Tournament } from "@/firebase/models/Tournament";
 import { Timestamp } from "@react-native-firebase/firestore";
 
@@ -16,7 +16,7 @@ const TournamentDropdown = ({
   onTournamentSelect,
   isAllTournaments = false,
 }: TournamentDropdownProps) => {
-  const { currentTheme, currentTournament, club } = useTheme();
+  const { currentTheme, currentTournament, club } = useAppContext();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
   useEffect(() => {

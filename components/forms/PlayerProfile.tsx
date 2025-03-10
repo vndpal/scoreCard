@@ -7,7 +7,7 @@ import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 import PlayerCareerRecords from "../PlayerCareerRecords";
 import PlayerMatchRecords from "../PlayerMatchRecords";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 export default function PlayerProfile() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function PlayerProfile() {
   const [activeTab, setActiveTab] = useState<"career" | "matches" | null>(
     "career"
   );
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club } = useAppContext();
   const handleSave = async () => {
     const trimmedName = name?.replace(/\s+/g, " ").trim();
     if (!trimmedName) {

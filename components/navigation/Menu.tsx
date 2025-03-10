@@ -13,7 +13,7 @@ import {
   Alert,
 } from "react-native";
 import { Text, Portal } from "react-native-paper";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -38,7 +38,7 @@ const menuItems = [
 const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
   const slideAnim = useRef(new Animated.Value(width * 0.7)).current;
   const router = useRouter();
-  const { currentTheme, toggleTheme, club } = useTheme();
+  const { currentTheme, toggleTheme, club } = useAppContext();
   const [group, setGroup] = useState<string | null>(null);
 
   useEffect(() => {

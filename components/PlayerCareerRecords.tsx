@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text } from "react-native";
 import { playerCareerStats } from "@/types/playerCareerStats";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import Table from "./ui/table";
 import { Divider } from "react-native-elements";
 import TournamentDropdown from "./TournamentDropdown";
@@ -25,7 +25,7 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
     clubId: "",
     status: "upcoming",
   });
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {

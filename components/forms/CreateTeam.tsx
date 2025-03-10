@@ -12,7 +12,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { team } from "@/types/team";
 import { Team } from "@/firebase/models/Team";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 const createTeamSchema = Yup.object().shape({
   teamName: Yup.string().required("Team name is required"),
@@ -24,7 +24,7 @@ const createTeamSchema = Yup.object().shape({
 
 export const CreateTeam = () => {
   const [isSuccess, setIsSuccess] = useState(false);
-  const { club } = useTheme();
+  const { club } = useAppContext();
 
   const handleSubmit = async () => {
     Keyboard.dismiss();

@@ -6,7 +6,7 @@ import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
 import { playerStats } from "@/types/playerStats";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { playerCareerStats } from "@/types/playerCareerStats";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
@@ -36,7 +36,7 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   const [players, setPlayers] = useState<player[]>([]);
   const [playerStats, setPlayerStats] = useState<PlayerWithStats[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {

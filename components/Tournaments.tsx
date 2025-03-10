@@ -1,11 +1,11 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Tournament } from "@/firebase/models/Tournament";
 import { useEffect } from "react";
 import { useState } from "react";
 import { CreateTournament } from "./forms/CreateTournament";
 const Tournaments = () => {
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 

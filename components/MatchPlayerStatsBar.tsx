@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Icon } from "react-native-elements";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 const windowWidth = Dimensions.get("window").width;
 
@@ -31,7 +31,7 @@ const MatchPlayerStatsBar = ({
   handleSwapBatters: () => void;
   handleEditPlayer: (playerType: "striker" | "nonStriker" | "bowler") => void;
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
 
   const batterStats = playerMatchStats.find(
     (playerStat) => playerStat.playerId == strikerBatsman?.id

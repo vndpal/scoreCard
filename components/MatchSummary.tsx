@@ -12,7 +12,7 @@ import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { player } from "@/types/player"; // Import the player type
 import { getItem } from "@/utils/asyncStorage";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import Table from "./ui/table";
@@ -34,7 +34,7 @@ const MatchSummary = () => {
   );
   const [playersMap, setPlayersMap] = useState<Map<string, string>>(new Map());
 
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const battingColumns = [

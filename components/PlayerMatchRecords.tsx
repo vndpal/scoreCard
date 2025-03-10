@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { playerStats } from "@/types/playerStats";
 import { ActivityIndicator } from "react-native";
 import Table from "./ui/table";
@@ -17,7 +17,7 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
   playerId,
 }) => {
   const [matchStats, setMatchStats] = useState<playerStats[]>([]);
-  const { currentTheme, club, currentTournament } = useTheme();
+  const { currentTheme, club, currentTournament } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTournament, setSelectedTournament] = useState<Tournament>();

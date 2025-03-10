@@ -17,14 +17,14 @@ import { useRouter } from "expo-router";
 import { Colors } from "@/constants/Colors";
 import { Club } from "@/firebase/models/Club";
 import { getUniqueClubName } from "@/utils/getUniqueClubName";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 
 export default function ClubsScreen() {
   const [clubName, setClubName] = useState("");
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const router = useRouter();
-  const { updateClub } = useTheme();
+  const { updateClub } = useAppContext();
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(

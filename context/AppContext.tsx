@@ -2,7 +2,7 @@ import { Club } from "@/types/club";
 import { settings } from "@/types/settings";
 import React, { createContext, useContext } from "react";
 
-interface ThemeContextType {
+interface AppContextType {
   toggleTheme: () => void;
   currentTheme: "dark" | "light";
   currentSettings: settings;
@@ -13,17 +13,17 @@ interface ThemeContextType {
   updateCurrentTournament: (tournament: string) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
+export const useAppContext = () => {
+  const context = useContext(AppContext);
   if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error("useAppContext must be used within a AppContextProvider");
   }
   return context;
 };
 
-export const AppThemeProvider: React.FC<{
+export const AppContextProvider: React.FC<{
   toggleTheme: () => void;
   currentTheme: "dark" | "light";
   currentSettings: settings;
@@ -45,7 +45,7 @@ export const AppThemeProvider: React.FC<{
   updateCurrentTournament,
 }) => {
   return (
-    <ThemeContext.Provider
+    <AppContext.Provider
       value={{
         toggleTheme,
         currentTheme,
@@ -58,6 +58,6 @@ export const AppThemeProvider: React.FC<{
       }}
     >
       {children}
-    </ThemeContext.Provider>
+    </AppContext.Provider>
   );
 };

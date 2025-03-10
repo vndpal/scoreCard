@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { player } from "@/types/player";
@@ -26,7 +26,7 @@ const { width } = Dimensions.get("window");
 
 const Card = ({ match, players }: { match: match; players: player[] }) => {
   const router = useRouter();
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
@@ -189,7 +189,7 @@ const StatusBadge = ({
   opacityAnim: Animated.Value;
   match: match;
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   if (status === "live") {
@@ -259,7 +259,7 @@ const TeamScore = ({
     totalBalls: number;
   };
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   return (
@@ -279,7 +279,7 @@ const TeamScore = ({
 };
 
 const WinnerBadge = ({ winner }: { winner: string }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   return (
@@ -301,7 +301,7 @@ const MatchHistory = ({
   matches: match[];
   players: player[];
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 

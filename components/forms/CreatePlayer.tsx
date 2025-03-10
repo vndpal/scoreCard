@@ -5,14 +5,14 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 
 export const CreatePlayer = () => {
   const [name, setName] = useState("");
   const router = useRouter();
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club } = useAppContext();
 
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 

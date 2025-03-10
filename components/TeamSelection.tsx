@@ -9,7 +9,7 @@ import { team } from "@/types/team";
 import teams from "@/interfaces/teams";
 import { Dropdown } from "react-native-paper-dropdown";
 import { Team } from "@/firebase/models/Team";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { useRouter } from "expo-router";
 
 // Define validation schema with Yup
@@ -43,7 +43,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
 }) => {
   const [items, setItems] = useState<items[]>([]);
   const [teams, setTeams] = useState<team[]>([]);
-  const { club } = useTheme();
+  const { club } = useAppContext();
   const router = useRouter();
 
   useEffect(() => {

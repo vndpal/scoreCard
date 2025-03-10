@@ -8,7 +8,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
-import { AppThemeProvider } from "@/context/ThemeContext";
+import { AppContextProvider } from "@/context/AppContext";
 import { settings } from "@/types/settings";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
@@ -114,7 +114,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={customTheme}>
       <PaperProvider theme={paperTheme}>
-        <AppThemeProvider
+        <AppContextProvider
           toggleTheme={toggleTheme}
           currentTheme={currentTheme}
           currentSettings={currentSettings}
@@ -216,7 +216,7 @@ export default function RootLayout() {
               }}
             />
           </Stack>
-        </AppThemeProvider>
+        </AppContextProvider>
       </PaperProvider>
     </ThemeProvider>
   );

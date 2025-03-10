@@ -9,11 +9,11 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 
 export const FloatingMenu: React.FC = () => {
   const router = useRouter();
-  const { toggleTheme, currentTheme } = useTheme();
+  const { toggleTheme, currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const [isMenuVisible, setIsMenuVisible] = useState(false);

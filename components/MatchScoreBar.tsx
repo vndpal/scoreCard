@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { match } from "@/types/match";
 import { currentTotalScore } from "@/types/currentTotalScore";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { getMatchResultText } from "@/utils/getMatchResultText";
 
 const windowWidth = Dimensions.get("window").width;
@@ -15,7 +15,7 @@ const MatchScoreBar = ({
   finalFirstInningsScore: currentTotalScore;
   finalSecondInningsScore: currentTotalScore;
 }) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
 
   const calculateRequiredRate = () => {
     const runsNeeded =

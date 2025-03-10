@@ -8,7 +8,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import TimePicker from "@/components/ui/timePicker";
@@ -22,7 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Settings = () => {
   const { currentTheme, toggleTheme, currentSettings, applySettingsChanges } =
-    useTheme();
+    useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const [showTimePicker, setShowTimePicker] = useState(false);

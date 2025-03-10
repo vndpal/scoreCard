@@ -19,7 +19,7 @@ import MatchPlayerStatsBar from "@/components/MatchPlayerStatsBar";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import MatchTimer from "@/components/MatchTimer";
@@ -35,6 +35,7 @@ import MatchResult from "@/components/MatchResult";
 import { getMatchResultText } from "@/utils/getMatchResultText";
 import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
+import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -115,7 +116,7 @@ export default function HomeScreen() {
   );
   const [manOfTheMatch, setManOfTheMatch] = useState<string>("");
 
-  const { currentTheme, currentSettings } = useTheme();
+  const { currentTheme, currentSettings } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -928,7 +929,6 @@ export default function HomeScreen() {
       }
       if (isLocalFirstInning) {
         if (currentMatchTeam1Score.length == 0) {
-          console.log("No ball to undo");
           return;
         }
 
@@ -958,13 +958,13 @@ export default function HomeScreen() {
         }
       } else {
         if (currentMatchTeam2Score.length == 0) {
-          console.log("No ball to undo");
           return;
         }
 
         if (!match.quickMatch) {
           if (match.status !== "live") {
             await undoPlayerCareerStats(match.matchId);
+            await undoPlayerTournamentStats(match.matchId);
           }
           await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
         }

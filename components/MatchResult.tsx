@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { playerStats } from "@/types/playerStats";
 import Loader from "./Loader";
 
@@ -26,7 +26,7 @@ const MatchResult = ({
   status,
   onNewMatch,
 }: MatchResultProps) => {
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   return (

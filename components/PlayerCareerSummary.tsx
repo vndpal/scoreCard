@@ -13,7 +13,7 @@ import { playerCareerStats } from "@/types/playerCareerStats";
 import { player } from "@/types/player";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { ActivityIndicator, Icon } from "react-native-paper";
 import Loader from "./Loader";
@@ -30,9 +30,9 @@ const PlayerCareerSummary = () => {
   const [webViewContent, setWebViewContent] = useState<string | null>(null);
   const [isLoader, setIsLoader] = useState<boolean>(false);
 
-  const { currentTheme } = useTheme();
+  const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
-  const { club, currentTournament } = useTheme();
+  const { club, currentTournament } = useAppContext();
 
   useEffect(() => {
     (async () => {

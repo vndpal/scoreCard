@@ -1,6 +1,6 @@
 import { Colors } from "@/constants/Colors";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { Player } from "@/firebase/models/Player";
 import { player } from "@/types/player";
 import { getItem } from "@/utils/asyncStorage";
@@ -12,10 +12,8 @@ import { Card, Text, FAB } from "react-native-paper";
 const Players = () => {
   const router = useRouter();
   const [players, setPlayers] = useState<player[]>([]);
-  const { currentTheme } = useTheme();
+  const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
-
-  const { club } = useTheme();
 
   useEffect(() => {
     (async () => {

@@ -17,7 +17,7 @@ import { Switch, Button, TextInput } from "react-native-paper";
 import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
-import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
@@ -38,7 +38,7 @@ const MatchSettings = () => {
   const [items, setItems] = useState<items[]>([]);
   const [matchStatus, setMatchStatus] = useState<matchResult>("completed");
   const [winner, setWinner] = useState<string>("");
-  const { currentTheme, club } = useTheme();
+  const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [loading, setLoading] = useState<boolean>(false);
 

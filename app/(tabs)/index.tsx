@@ -36,6 +36,7 @@ import { getMatchResultText } from "@/utils/getMatchResultText";
 import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
+import Loader from "@/components/Loader";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -115,6 +116,7 @@ export default function HomeScreen() {
     Timestamp.now()
   );
   const [manOfTheMatch, setManOfTheMatch] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { currentTheme, currentSettings } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -909,6 +911,7 @@ export default function HomeScreen() {
   const undoAction = async () => {
     try {
       setShowLoader(true);
+      setIsLoading(true);
       if (!match) {
         return;
       }
@@ -993,6 +996,7 @@ export default function HomeScreen() {
       await fetchMatch();
     } finally {
       setShowLoader(false);
+      setIsLoading(false);
     }
   };
 
@@ -1259,6 +1263,7 @@ export default function HomeScreen() {
           onDismiss={() => setPickPlayerVisible(false)}
         />
       ) : null}
+      {isLoading && <Loader />}
     </View>
   );
 }

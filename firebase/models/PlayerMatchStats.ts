@@ -47,7 +47,8 @@ export class PlayerMatchStats implements playerMatchStats {
   ): Promise<playerStats[]> {
     const stats = await firestoreService.query<playerMatchStats>(
       COLLECTION_NAME,
-      [{ field: "tournamentId", operator: "==", value: tournamentId }]
+      [{ field: "tournamentId", operator: "==", value: tournamentId }],
+      "timestamp"
     );
 
     return stats.flatMap((stat) =>

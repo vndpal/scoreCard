@@ -543,6 +543,8 @@ export default function HomeScreen() {
             inningNumber: 1,
             overNumber: totalScore.length,
             overSummary: [],
+            clubId: match.clubId,
+            tournamentId: match.tournamentId,
           });
         }
 
@@ -564,6 +566,8 @@ export default function HomeScreen() {
               ? scoreSecondInningsLocalState.length
               : 0,
             overSummary: [],
+            clubId: match.clubId,
+            tournamentId: match.tournamentId,
           });
         }
 

@@ -1,21 +1,16 @@
 import { firestoreService } from "../services/firestore";
 import { scorePerBall } from "../../types/scorePerBall";
 import { scorePerOver } from "@/types/scorePerOver";
+import { MatchScoresData } from "@/types/matchScores";
 
 const COLLECTION_NAME = "matchScores";
 const BALLS_SUBCOLLECTION = "balls";
 
-export type MatchScoresData = {
-  matchId: string;
-  teamId: string;
-  inningNumber: number;
-  overNumber: number;
-  overSummary: scorePerOver;
-};
-
 export class MatchScore implements MatchScoresData {
   matchId: string;
   teamId: string;
+  clubId: string;
+  tournamentId: string;
   inningNumber: number;
   overNumber: number;
   overSummary: scorePerOver;
@@ -23,6 +18,8 @@ export class MatchScore implements MatchScoresData {
   constructor(data: MatchScoresData) {
     this.matchId = data.matchId;
     this.teamId = data.teamId;
+    this.clubId = data.clubId;
+    this.tournamentId = data.tournamentId;
     this.inningNumber = data.inningNumber;
     this.overNumber = data.overNumber;
     this.overSummary = data.overSummary;

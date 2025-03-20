@@ -7,12 +7,14 @@ const COLLECTION_NAME = "playerMatchStats";
 export class PlayerMatchStats implements playerMatchStats {
   matchId: string;
   tournamentId: string;
+  clubId: string;
   playerMatchStats: playerStats[];
   timestamp: number;
 
   constructor(data: playerMatchStats) {
     this.matchId = data.matchId;
     this.tournamentId = data.tournamentId;
+    this.clubId = data.clubId;
     this.playerMatchStats = data.playerMatchStats;
     this.timestamp = data.timestamp;
   }
@@ -88,6 +90,7 @@ export class PlayerMatchStats implements playerMatchStats {
     return {
       matchId: this.matchId,
       tournamentId: this.tournamentId,
+      clubId: this.clubId,
       playerMatchStats: this.playerMatchStats,
       timestamp: this.timestamp,
     };

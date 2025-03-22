@@ -5,7 +5,8 @@ import { playerCareerStats } from "@/types/playerCareerStats";
 import { playerStats } from "@/types/playerStats";
 
 export const updatePlayerCareerStats = async (
-  playerMatchStats: playerStats[]
+  playerMatchStats: playerStats[],
+  teamWon: string
 ) => {
   const updatePromises = playerMatchStats.map(async (playerMatchStat) => {
     const playerCareerStat = await PlayerCareerStats.getByPlayerId(
@@ -16,6 +17,9 @@ export const updatePlayerCareerStats = async (
       const careerStat = playerCareerStat;
 
       careerStat.matches += 1;
+      careerStat.matchesWon =
+        (careerStat.matchesWon || 0) +
+        (teamWon === playerMatchStat.team ? 1 : 0);
       careerStat.runs += playerMatchStat.runs;
       careerStat.ballsFaced += playerMatchStat.ballsFaced;
       careerStat.fours += playerMatchStat.fours;

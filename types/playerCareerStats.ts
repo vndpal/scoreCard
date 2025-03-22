@@ -3,6 +3,7 @@ type playerCareerStats = {
   playerId: string;
   matches: number;
   innings: number;
+  matchesWon: number;
   runs: number;
   ballsFaced: number;
   fours: number;

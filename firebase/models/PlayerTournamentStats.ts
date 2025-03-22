@@ -7,6 +7,7 @@ export class PlayerTournamentStats implements playerTournamentStats {
   playerId: string;
   tournamentId: string;
   matches: number;
+  matchesWon: number;
   innings: number;
   runs: number;
   ballsFaced: number;
@@ -31,6 +32,7 @@ export class PlayerTournamentStats implements playerTournamentStats {
     this.playerId = playerId;
     this.tournamentId = data.tournamentId;
     this.matches = data.matches;
+    this.matchesWon = data.matchesWon;
     this.innings = data.innings;
     this.runs = data.runs;
     this.ballsFaced = data.ballsFaced;
@@ -57,22 +59,6 @@ export class PlayerTournamentStats implements playerTournamentStats {
   ): Promise<PlayerTournamentStats> {
     const id = await firestoreService.createWithAutoId(COLLECTION_NAME, data);
     return new PlayerTournamentStats(data.playerId, data);
-  }
-
-  static async getByPlayerId(
-    playerId: string
-  ): Promise<playerTournamentStats | null> {
-    const data = await firestoreService.query<playerTournamentStats>(
-      COLLECTION_NAME,
-      [
-        {
-          field: "playerId",
-          operator: "==",
-          value: playerId,
-        },
-      ]
-    );
-    return data.length > 0 ? { ...data[0], id: data[0].id } : null;
   }
 
   static async getByPlayerIdAndTournamentId(
@@ -160,22 +146,12 @@ export class PlayerTournamentStats implements playerTournamentStats {
     }
   }
 
-  static async delete(playerId: string): Promise<void> {
-    const stats = await this.getByPlayerId(playerId);
-    if (stats) {
-      await firestoreService.delete(COLLECTION_NAME, stats.id || "");
-    } else {
-      throw new Error(
-        `PlayerTournamentStats not found for playerId: ${playerId}`
-      );
-    }
-  }
-
   toObject(): playerTournamentStats {
     return {
       playerId: this.playerId,
       tournamentId: this.tournamentId,
       matches: this.matches,
+      matchesWon: this.matchesWon,
       innings: this.innings,
       runs: this.runs,
       ballsFaced: this.ballsFaced,

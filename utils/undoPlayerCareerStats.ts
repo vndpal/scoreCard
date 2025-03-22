@@ -5,9 +5,16 @@ import { playerCareerStats } from "@/types/playerCareerStats";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
-
+import { Match } from "@/firebase/models/Match";
 export const undoPlayerCareerStats = async (matchId: string) => {
   let matchStatsForPlayers = await PlayerMatchStats.getByMatchId(matchId);
+  const lastMatch = await Match.getById(matchId);
+  const teamWon =
+    lastMatch?.status === "completed"
+      ? lastMatch?.winner === "team1"
+        ? lastMatch?.team1
+        : lastMatch?.team2
+      : "";
   let playerMatchStats: playerStats[] = matchStatsForPlayers
     ? matchStatsForPlayers.playerMatchStats
     : [];
@@ -20,6 +27,7 @@ export const undoPlayerCareerStats = async (matchId: string) => {
       const careerStat = playerCareerStat;
 
       careerStat.matches -= 1;
+      careerStat.matchesWon -= teamWon === playerMatchStat.team ? 1 : 0;
       careerStat.runs -= playerMatchStat.runs;
       careerStat.ballsFaced -= playerMatchStat.ballsFaced;
       careerStat.fours -= playerMatchStat.fours;

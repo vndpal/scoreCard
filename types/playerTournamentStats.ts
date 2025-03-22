@@ -3,6 +3,7 @@ type playerTournamentStats = {
   tournamentId: string;
   playerId: string;
   matches: number;
+  matchesWon: number;
   innings: number;
   runs: number;
   ballsFaced: number;

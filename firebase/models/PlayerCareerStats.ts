@@ -6,6 +6,7 @@ const COLLECTION_NAME = "playerCareerStats";
 export class PlayerCareerStats implements playerCareerStats {
   playerId: string;
   matches: number;
+  matchesWon: number;
   innings: number;
   runs: number;
   ballsFaced: number;
@@ -29,6 +30,7 @@ export class PlayerCareerStats implements playerCareerStats {
   constructor(playerId: string, data: playerCareerStats) {
     this.playerId = playerId;
     this.matches = data.matches;
+    this.matchesWon = data.matchesWon;
     this.innings = data.innings;
     this.runs = data.runs;
     this.ballsFaced = data.ballsFaced;
@@ -152,6 +154,7 @@ export class PlayerCareerStats implements playerCareerStats {
     return {
       playerId: this.playerId,
       matches: this.matches,
+      matchesWon: this.matchesWon,
       innings: this.innings,
       runs: this.runs,
       ballsFaced: this.ballsFaced,

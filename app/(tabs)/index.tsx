@@ -635,11 +635,23 @@ export default function HomeScreen() {
           });
 
           if (!match.quickMatch) {
-            await updatePlayerCareerStats(playerMatchStats);
+            await updatePlayerCareerStats(
+              playerMatchStats,
+              matchStatus === "completed"
+                ? winner === "team1"
+                  ? match.team1
+                  : match.team2
+                : ""
+            );
             await updatePlayerTournamentStats(
               playerMatchStats,
               match.tournamentId,
-              match.clubId
+              match.clubId,
+              matchStatus === "completed"
+                ? winner === "team1"
+                  ? match.team1
+                  : match.team2
+                : ""
             );
             const manOfTheMatch = await updateManOfTheMatch(match.matchId);
             setManOfTheMatch(manOfTheMatch);
@@ -672,11 +684,12 @@ export default function HomeScreen() {
         });
 
         if (!match.quickMatch) {
-          await updatePlayerCareerStats(playerMatchStats);
+          await updatePlayerCareerStats(playerMatchStats, match.team2);
           await updatePlayerTournamentStats(
             playerMatchStats,
             match.tournamentId,
-            match.clubId
+            match.clubId,
+            match.team2
           );
           const manOfTheMatch = await updateManOfTheMatch(match.matchId);
           setManOfTheMatch(manOfTheMatch);

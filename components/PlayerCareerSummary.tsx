@@ -314,6 +314,9 @@ const PlayerCareerSummary = () => {
             {item.average ? item.average.toFixed(2) : "-"}
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.notOuts}</Text>
+          <Text style={[styles.cell, themeStyles.cell]}>
+            {isNaN(item.matchesWon) ? "-" : item.matchesWon}
+          </Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.innings}</Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.matches}</Text>
         </>
@@ -336,6 +339,9 @@ const PlayerCareerSummary = () => {
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>
             {item.foursConceded}
+          </Text>
+          <Text style={[styles.cell, themeStyles.cell]}>
+            {isNaN(item.matchesWon) ? "-" : item.matchesWon}
           </Text>
           <Text style={[styles.cell, themeStyles.cell]}>{item.matches}</Text>
         </>
@@ -390,6 +396,9 @@ const PlayerCareerSummary = () => {
                   NO
                 </Text>
                 <Text style={[styles.headerCell, themeStyles.headerCell]}>
+                  Wins
+                </Text>
+                <Text style={[styles.headerCell, themeStyles.headerCell]}>
                   Innings
                 </Text>
                 <Text style={[styles.headerCell, themeStyles.headerCell]}>
@@ -418,6 +427,9 @@ const PlayerCareerSummary = () => {
                 </Text>
                 <Text style={[styles.headerCell, themeStyles.headerCell]}>
                   4s
+                </Text>
+                <Text style={[styles.headerCell, themeStyles.headerCell]}>
+                  Wins
                 </Text>
                 <Text style={[styles.headerCell, themeStyles.headerCell]}>
                   Matches

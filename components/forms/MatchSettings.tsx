@@ -109,11 +109,15 @@ const MatchSettings = () => {
             await PlayerMatchStats.getByMatchId(currentMatch.matchId);
           if (playerMatchStats) {
             if (matchStatus !== "abandoned") {
-              await updatePlayerCareerStats(playerMatchStats.playerMatchStats);
+              await updatePlayerCareerStats(
+                playerMatchStats.playerMatchStats,
+                matchStatus === "completed" ? winner : ""
+              );
               await updatePlayerTournamentStats(
                 playerMatchStats.playerMatchStats,
                 currentMatch.tournamentId,
-                currentMatch.clubId
+                currentMatch.clubId,
+                matchStatus === "completed" ? winner : ""
               );
             }
             await updateManOfTheMatch(currentMatch.matchId);

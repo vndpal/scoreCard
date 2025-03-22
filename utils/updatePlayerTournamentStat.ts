@@ -4,7 +4,8 @@ import { playerStats } from "@/types/playerStats";
 export const updatePlayerTournamentStats = async (
   playerMatchStats: playerStats[],
   tournamentId: string,
-  clubId: string
+  clubId: string,
+  teamWon: string
 ) => {
   const updatePromises = playerMatchStats.map(async (playerMatchStat) => {
     const playerTournamentStat =
@@ -17,6 +18,9 @@ export const updatePlayerTournamentStats = async (
       const tournamentStat = playerTournamentStat;
 
       tournamentStat.matches += 1;
+      tournamentStat.matchesWon =
+        (tournamentStat.matchesWon || 0) +
+        (teamWon === playerMatchStat.team ? 1 : 0);
       tournamentStat.runs += playerMatchStat.runs;
       tournamentStat.ballsFaced += playerMatchStat.ballsFaced;
       tournamentStat.fours += playerMatchStat.fours;
@@ -71,6 +75,7 @@ export const updatePlayerTournamentStats = async (
         playerId: playerMatchStat.playerId,
         tournamentId: tournamentId,
         matches: 1,
+        matchesWon: teamWon === playerMatchStat.team ? 1 : 0,
         innings: playerMatchStat.ballsFaced > 0 ? 1 : 0,
         notOuts:
           playerMatchStat.ballsFaced == 0 && playerMatchStat.runs == 0

@@ -36,11 +36,15 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   const [players, setPlayers] = useState<player[]>([]);
   const [playerStats, setPlayerStats] = useState<PlayerWithStats[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
     (async () => {
+      if (visible) {
+        setIsSubmitting(false);
+      }
       if (team) {
         let playersFromDb = await Player.getAllFromCache();
         let playerStatsFromDb: (playerCareerStats & {
@@ -94,9 +98,12 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
     <TouchableOpacity
       style={[styles.playerItem, themeStyles.playerItem]}
       onPress={() => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
         onSubmit(item);
         onDismiss();
       }}
+      disabled={isSubmitting}
     >
       <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
       <View style={styles.statsContainer}>

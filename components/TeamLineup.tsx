@@ -55,17 +55,17 @@ const TeamLineUp: React.FC = () => {
   useEffect(() => {
     (async () => {
       setLoader(true);
-      const teamPlayersMapping = await TeamPlayerMapping.getAll();
+      const teamPlayersMapping = await TeamPlayerMapping.getAllFromClub(
+        club.id
+      );
       const playersFromStorage: player[] = await Player.getAllFromClub(club.id);
       if (playersFromStorage && playersFromStorage.length > 0) {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
         setAllPlayers(playersFromStorage);
       }
       const teams: team[] = await Team.getAllByClubId(club.id);
-      let lastMatchTeam1 =
-        teamPlayersMapping.length > 0 ? teamPlayersMapping[0].teamName : "";
-      let lastMatchTeam2 =
-        teamPlayersMapping.length > 1 ? teamPlayersMapping[1].teamName : "";
+      let lastMatchTeam1: string;
+      let lastMatchTeam2: string;
       const lastMatch = await Match.getLatestMatch(club.id);
       if (lastMatch) {
         lastMatchTeam1 = lastMatch.team1;
@@ -114,7 +114,7 @@ const TeamLineUp: React.FC = () => {
         setTeam1Players(
           playersFromStorage.filter((player) =>
             teamPlayersMapping
-              .find((mapping) => mapping.teamName === localTeam1?.teamInitials)
+              .find((mapping) => mapping.team === localTeam1?.teamInitials)
               ?.players.map((p) => p.id)
               .includes(player.id)
           )
@@ -122,7 +122,7 @@ const TeamLineUp: React.FC = () => {
         setTeam2Players(
           playersFromStorage.filter((player) =>
             teamPlayersMapping
-              .find((mapping) => mapping.teamName === localTeam2?.teamInitials)
+              .find((mapping) => mapping.team === localTeam2?.teamInitials)
               ?.players.map((p) => p.id)
               .includes(player.id)
           )
@@ -131,15 +131,11 @@ const TeamLineUp: React.FC = () => {
           playersFromStorage.filter(
             (player) =>
               !teamPlayersMapping
-                .find(
-                  (mapping) => mapping.teamName === localTeam1?.teamInitials
-                )
+                .find((mapping) => mapping.team === localTeam1?.teamInitials)
                 ?.players.map((p) => p.id)
                 .includes(player.id) &&
               !teamPlayersMapping
-                .find(
-                  (mapping) => mapping.teamName === localTeam2?.teamInitials
-                )
+                .find((mapping) => mapping.team === localTeam2?.teamInitials)
                 ?.players.map((p) => p.id)
                 .includes(player.id)
           )
@@ -293,53 +289,98 @@ const TeamLineUp: React.FC = () => {
       return;
     }
 
-    const updatedTeamPlayerMapping: teamPlayerMapping = {
-      [team1!.teamInitials]: team1Players,
-      [team2!.teamInitials]: team2Players,
-    };
+    if (team1Players.length === 0 || team2Players.length === 0) {
+      alert("Add players to the teams before saving");
+      return;
+    }
 
-    await TeamPlayerMapping.create(team1!.teamInitials, team1Players);
-    await TeamPlayerMapping.create(team2!.teamInitials, team2Players);
+    await TeamPlayerMapping.createOrUpdate(
+      team1!.teamInitials,
+      club.id,
+      team1Players
+    );
+    await TeamPlayerMapping.createOrUpdate(
+      team2!.teamInitials,
+      club.id,
+      team2Players
+    );
 
     if (currentMatchId !== "") {
       const updatedLiveMatchPlayerStats: playerStats[] =
         currentMatchPlayerStats;
-      for (const teamInitials in updatedTeamPlayerMapping) {
-        for (const player of updatedTeamPlayerMapping[teamInitials]) {
-          if (!activePlayerIds.includes(player.id)) {
-            const existingPlayerStats = updatedLiveMatchPlayerStats.find(
-              (stats) => stats.playerId === player.id
+      for (const player of team1Players) {
+        if (!activePlayerIds.includes(player.id)) {
+          const existingPlayerStats = updatedLiveMatchPlayerStats.find(
+            (stats) => stats.playerId === player.id
+          );
+          if (!existingPlayerStats) {
+            updatedLiveMatchPlayerStats.push({
+              playerId: player.id,
+              name: player.name,
+              runs: 0,
+              ballsFaced: 0,
+              fours: 0,
+              sixes: 0,
+              ballsBowled: 0,
+              runsConceded: 0,
+              wickets: 0,
+              overs: 0,
+              extras: 0,
+              isOut: false,
+              team: team1!.teamInitials,
+              strikeRate: 0,
+              average: 0,
+              foursConceded: 0,
+              sixesConceded: 0,
+              maidens: 0,
+              bowlingEconomy: 0,
+              dotBalls: 0,
+            });
+          } else {
+            const playerStats = updatedLiveMatchPlayerStats.find(
+              (x) => x.playerId === player.id
             );
-            if (!existingPlayerStats) {
-              updatedLiveMatchPlayerStats.push({
-                playerId: player.id,
-                name: player.name,
-                runs: 0,
-                ballsFaced: 0,
-                fours: 0,
-                sixes: 0,
-                ballsBowled: 0,
-                runsConceded: 0,
-                wickets: 0,
-                overs: 0,
-                extras: 0,
-                isOut: false,
-                team: teamInitials,
-                strikeRate: 0,
-                average: 0,
-                foursConceded: 0,
-                sixesConceded: 0,
-                maidens: 0,
-                bowlingEconomy: 0,
-                dotBalls: 0,
-              });
-            } else {
-              const playerStats = updatedLiveMatchPlayerStats.find(
-                (x) => x.playerId === player.id
-              );
-              if (playerStats) {
-                playerStats.team = teamInitials;
-              }
+            if (playerStats) {
+              playerStats.team = team1!.teamInitials;
+            }
+          }
+        }
+      }
+
+      for (const player of team2Players) {
+        if (!activePlayerIds.includes(player.id)) {
+          const existingPlayerStats = updatedLiveMatchPlayerStats.find(
+            (stats) => stats.playerId === player.id
+          );
+          if (!existingPlayerStats) {
+            updatedLiveMatchPlayerStats.push({
+              playerId: player.id,
+              name: player.name,
+              runs: 0,
+              ballsFaced: 0,
+              fours: 0,
+              sixes: 0,
+              ballsBowled: 0,
+              runsConceded: 0,
+              wickets: 0,
+              overs: 0,
+              extras: 0,
+              isOut: false,
+              team: team2!.teamInitials,
+              strikeRate: 0,
+              average: 0,
+              foursConceded: 0,
+              sixesConceded: 0,
+              maidens: 0,
+              bowlingEconomy: 0,
+              dotBalls: 0,
+            });
+          } else {
+            const playerStats = updatedLiveMatchPlayerStats.find(
+              (x) => x.playerId === player.id
+            );
+            if (playerStats) {
+              playerStats.team = team2!.teamInitials;
             }
           }
         }

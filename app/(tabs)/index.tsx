@@ -686,7 +686,6 @@ export default function HomeScreen() {
     } finally {
       setShowLoader(false);
       setLastActivityDateTime(Timestamp.now());
-      //todo add a vibrate effet to show action is done
     }
   };
 

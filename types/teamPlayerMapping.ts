@@ -1,8 +1,10 @@
 import { player } from "./player";
-import { team } from "./team";
 
 type teamPlayerMapping = {
-  [team: string]: player[];
+  id: string;
+  team: string;
+  clubId: string;
+  players: player[];
 };
 
 export type { teamPlayerMapping };

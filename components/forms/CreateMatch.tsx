@@ -99,31 +99,31 @@ export const CreateMatch = () => {
     }
 
     const lastMatch = await Match.getLatestMatch(club.id);
-    const teamPlayerMapping = await TeamPlayerMapping.getAll();
     const { overs, wickets, team1, team2, quickMatch } = formik.values;
 
+    let team1Players: player[] = [];
+    let team2Players: player[] = [];
+
     if (!quickMatch) {
-      const team1PlayerCount =
-        teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team1)
-          ? teamPlayerMapping.find((mapping) => mapping.teamName === team1)
-              ?.players.length
-          : 0;
-      const team2PlayerCount =
-        teamPlayerMapping && teamPlayerMapping.hasOwnProperty(team2)
-          ? teamPlayerMapping.find((mapping) => mapping.teamName === team2)
-              ?.players.length
-          : 0;
+      team1Players = await TeamPlayerMapping.getPlayersFromTeamAndClub(
+        team1,
+        club.id
+      );
+      team2Players = await TeamPlayerMapping.getPlayersFromTeamAndClub(
+        team2,
+        club.id
+      );
 
       if (
-        team1PlayerCount &&
-        team2PlayerCount &&
-        (team1PlayerCount == 0 ||
-          team2PlayerCount == 0 ||
-          Math.abs(team1PlayerCount - team2PlayerCount) > 1)
+        team1Players &&
+        team2Players &&
+        (team1Players.length == 0 ||
+          team2Players.length == 0 ||
+          Math.abs(team1Players.length - team2Players.length) > 1)
       ) {
         Alert.alert(
           "Team is not created properly",
-          `Teams must have equal players or differ by at most 1 player!\n\n${team1}: ${team1PlayerCount}\n${team2}: ${team2PlayerCount}`
+          `Teams must have equal players or differ by at most 1 player!\n\n${team1}: ${team1Players.length}\n${team2}: ${team2Players.length}`
         );
         return;
       }
@@ -173,24 +173,22 @@ export const CreateMatch = () => {
     if (!quickMatch) {
       const playerStats: playerStats[] = [];
       const playerIds: { playerId: string; team: string; name: string }[] = [];
-      teamPlayerMapping
-        .find((mapping) => mapping.teamName === team1)
-        ?.players.forEach((player: player) => {
-          playerIds.push({
-            playerId: player.id,
-            team: team1,
-            name: player.name,
-          });
+
+      team1Players.forEach((player: player) => {
+        playerIds.push({
+          playerId: player.id,
+          team: team1,
+          name: player.name,
         });
-      teamPlayerMapping
-        .find((mapping) => mapping.teamName === team2)
-        ?.players.forEach((player: player) => {
-          playerIds.push({
-            playerId: player.id,
-            team: team2,
-            name: player.name,
-          });
+      });
+
+      team2Players.forEach((player: player) => {
+        playerIds.push({
+          playerId: player.id,
+          team: team2,
+          name: player.name,
         });
+      });
       playerIds.forEach(
         (player: { playerId: string; team: string; name: string }) => {
           playerStats.push({

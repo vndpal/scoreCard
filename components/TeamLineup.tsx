@@ -59,6 +59,7 @@ const TeamLineUp: React.FC = () => {
         club.id
       );
       const playersFromStorage: player[] = await Player.getAllFromClub(club.id);
+
       if (playersFromStorage && playersFromStorage.length > 0) {
         playersFromStorage.sort((a, b) => a.name.localeCompare(b.name));
         setAllPlayers(playersFromStorage);
@@ -70,6 +71,9 @@ const TeamLineUp: React.FC = () => {
       if (lastMatch) {
         lastMatchTeam1 = lastMatch.team1;
         lastMatchTeam2 = lastMatch.team2;
+      } else if (teamPlayersMapping && teamPlayersMapping.length >= 2) {
+        lastMatchTeam1 = teamPlayersMapping[0].team;
+        lastMatchTeam2 = teamPlayersMapping[1].team;
       }
       if (lastMatch && lastMatch.status === "live") {
         const playerStats = await PlayerMatchStats.getByMatchId(

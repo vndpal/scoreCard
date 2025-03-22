@@ -186,12 +186,89 @@ export const firestoreService = {
     }
   },
 
+  deleteEntireClub: async (clubId: string): Promise<void> => {
+    try {
+      // Predefined list of collections to clear
+      const collections = [
+        "matches",
+        "matchScores",
+        "players",
+        "playerCareerStats",
+        "playerTournamentStats",
+        "playerMatchStats",
+        "teams",
+        "teamPlayerMapping",
+        "tournaments",
+      ];
+
+      // Clear each collection
+      for (const collectionName of collections) {
+        await firestoreService.clearCollectionByClubId(collectionName, clubId);
+      }
+
+      await deleteDoc(doc(db, "clubs", clubId));
+
+      console.log("Database and local cache reset successfully");
+    } catch (error) {
+      console.error("Error resetting database:", error);
+      throw error;
+    }
+  },
+
   clearCollection: async (collectionName: string): Promise<void> => {
     try {
       // Get all documents in batches
       while (true) {
         const snapshot = await getDocs(
           query(collection(db, collectionName), limit(500))
+        );
+
+        if (snapshot.empty) {
+          break;
+        }
+
+        const batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+          if (collectionName === "matchScores") {
+            doc.ref
+              .collection("balls")
+              .get()
+              .then((subSnapshot) => {
+                subSnapshot.docs.forEach((subDoc) => {
+                  subDoc.ref.delete();
+                });
+              });
+          }
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
+        if (snapshot.docs.length < 500) {
+          break;
+        }
+      }
+
+      console.log(`Cleared collection: ${collectionName}`);
+    } catch (error) {
+      console.error(`Error clearing collection ${collectionName}:`, error);
+      throw error;
+    }
+  },
+
+  clearCollectionByClubId: async (
+    collectionName: string,
+    clubId: string
+  ): Promise<void> => {
+    try {
+      // Get all documents in batches
+      while (true) {
+        const snapshot = await getDocs(
+          query(
+            collection(db, collectionName),
+            where("clubId", "==", clubId),
+            limit(500)
+          )
         );
 
         if (snapshot.empty) {

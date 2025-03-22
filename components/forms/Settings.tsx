@@ -19,10 +19,15 @@ import { firestoreService } from "@/firebase/services/firestore";
 import Loader from "../Loader";
 import { toggleCache } from "@/firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { ViewStyle } from "react-native";
 const Settings = () => {
-  const { currentTheme, toggleTheme, currentSettings, applySettingsChanges } =
-    useAppContext();
+  const {
+    currentTheme,
+    toggleTheme,
+    currentSettings,
+    applySettingsChanges,
+    club,
+  } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -74,6 +79,24 @@ const Settings = () => {
     setShowLoader(false);
   };
 
+  const handleClearClub = async () => {
+    Alert.alert("Delete Club", "Are you sure you want to delete the club?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: clearClub,
+      },
+    ]);
+  };
+
+  const clearClub = async () => {
+    setShowLoader(true);
+    await firestoreService.deleteEntireClub(club.id);
+    await AsyncStorage.clear();
+    setShowLoader(false);
+  };
+
   const handleClearCache = async () => {
     setShowLoader(true);
     await AsyncStorage.clear();
@@ -108,6 +131,9 @@ const Settings = () => {
         case "clearDatabase":
           handleClearDatabase();
           break;
+        case "clearClub":
+          handleClearClub();
+          break;
         case "matchTime":
           setMatchTime({
             hours: value.hours,
@@ -129,6 +155,7 @@ const Settings = () => {
     onValueChange,
     type = "switch",
     settingKey,
+    buttonStyle,
   }: {
     title: string;
     icon: string;
@@ -136,6 +163,7 @@ const Settings = () => {
     onValueChange: (value: boolean) => void;
     type?: "switch" | "button";
     settingKey: string;
+    buttonStyle?: ViewStyle;
   }) => (
     <View style={themeStyles.settingItem}>
       <View style={themeStyles.settingLeft}>
@@ -160,7 +188,7 @@ const Settings = () => {
         />
       ) : (
         <TouchableOpacity
-          style={themeStyles.button}
+          style={[themeStyles.button, buttonStyle]}
           onPress={() => handleSettingChange(settingKey, !value)}
         >
           <Text style={themeStyles.buttonText}>
@@ -246,13 +274,22 @@ const Settings = () => {
             type="button"
             settingKey="clearCache"
           />
-          <SettingItem
+          {/* <SettingItem
             title="Clear Database"
             icon="trash"
             value={false}
             onValueChange={handleClearDatabase}
             type="button"
             settingKey="clearDatabase"
+          />  */}
+          <SettingItem
+            title="Delete this club"
+            icon="trash"
+            value={false}
+            onValueChange={handleClearClub}
+            type="button"
+            settingKey="clearClub"
+            buttonStyle={{ backgroundColor: "#FF5B3B" }}
           />
         </LinearGradient>
       </ScrollView>

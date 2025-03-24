@@ -62,6 +62,22 @@ export const firestoreService = {
     );
   },
 
+  getFromCache: async <T>(
+    collectionName: string,
+    filters: { field: string; operator: WhereFilterOp; value: any }
+  ): Promise<T[]> => {
+    const querySnapshot = await getDocsFromCache(
+      collection(db, collectionName).where(
+        filters.field,
+        filters.operator,
+        filters.value
+      )
+    );
+    return querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as T)
+    );
+  },
+
   getAllOrderby: async <T>(
     collectionName: string,
     orderByField: string,

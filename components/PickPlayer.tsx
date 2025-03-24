@@ -10,6 +10,7 @@ import { useAppContext } from "@/context/AppContext";
 import { playerCareerStats } from "@/types/playerCareerStats";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
+import { PlayerTournamentStats } from "@/firebase/models/PlayerTournamentStats";
 
 interface PlayerWithStats extends playerCareerStats {
   isRecommendedBowler?: boolean;
@@ -37,7 +38,7 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   const [playerStats, setPlayerStats] = useState<PlayerWithStats[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { currentTheme } = useAppContext();
+  const { currentTheme, currentTournament } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -47,10 +48,11 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
       }
       if (team) {
         let playersFromDb = await Player.getAllFromCache();
-        let playerStatsFromDb: (playerCareerStats & {
+        let playerStatsFromDb: (PlayerTournamentStats & {
           isRecommendedBowler?: boolean;
           isRecommendedBatter?: boolean;
-        })[] = await PlayerCareerStats.getAllFromCache();
+        })[] = await PlayerTournamentStats.getFromCache(currentTournament);
+
         if (playerStatsFromDb && playerStatsFromDb.length > 0) {
           const halfPlayers = Math.ceil(playerStatsFromDb.length / 3);
 

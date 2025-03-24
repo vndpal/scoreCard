@@ -128,9 +128,16 @@ export class PlayerTournamentStats implements playerTournamentStats {
     return stats.map((stat) => new PlayerTournamentStats(stat.playerId, stat));
   }
 
-  static async getAllFromCache(): Promise<PlayerTournamentStats[]> {
-    const stats = await firestoreService.getAllFromCache<playerTournamentStats>(
-      COLLECTION_NAME
+  static async getFromCache(
+    tournamentId: string
+  ): Promise<PlayerTournamentStats[]> {
+    const stats = await firestoreService.getFromCache<playerTournamentStats>(
+      COLLECTION_NAME,
+      {
+        field: "tournamentId",
+        operator: "==",
+        value: tournamentId,
+      }
     );
     return stats.map((stat) => new PlayerTournamentStats(stat.playerId, stat));
   }

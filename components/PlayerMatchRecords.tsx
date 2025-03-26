@@ -9,6 +9,8 @@ import Table from "./ui/table";
 import { Divider } from "react-native-elements";
 import TournamentDropdown from "./TournamentDropdown";
 import { Tournament } from "@/firebase/models/Tournament";
+import NotFoundTable from "./ui/notFoundTable";
+
 interface PlayerMatchRecordsProps {
   playerId: string;
 }
@@ -68,39 +70,45 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
         selectedTournament={selectedTournament}
         onTournamentSelect={setSelectedTournament}
       />
-      <Table
-        columns={battingColumns}
-        data={matchStats.map((stat) => ({
-          runs: stat.runs,
-          balls: stat.ballsFaced,
-          sixes: stat.sixes,
-          fours: stat.fours,
-          strikeRate: stat.strikeRate.toFixed(2),
-          out: stat.isOut ? "" : "*",
-        }))}
-        title="Batting"
-        headerStyle={{ padding: 6, fontSize: 13 }}
-        cellStyle={{ padding: 6, fontSize: 13 }}
-        tableStyle={{ marginBottom: 8 }}
-      />
-      <Divider style={styles.divider} />
-      <Table
-        columns={bowlingColumns}
-        data={matchStats.map((stat) => ({
-          overs:
-            stat.ballsBowled > 0
-              ? `${stat.overs}.${stat.ballsBowled}`
-              : stat.overs,
-          wickets: stat.wickets,
-          runsConceded: stat.runsConceded,
-          extras: stat.extras,
-          "6s / 4s": stat.sixesConceded + " / " + stat.foursConceded,
-        }))}
-        title="Bowling"
-        headerStyle={{ padding: 6, fontSize: 13 }}
-        cellStyle={{ padding: 6, fontSize: 13 }}
-        tableStyle={{ marginBottom: 8 }}
-      />
+      {matchStats.length === 0 ? (
+        <NotFoundTable />
+      ) : (
+        <>
+          <Table
+            columns={battingColumns}
+            data={matchStats.map((stat) => ({
+              runs: stat.runs,
+              balls: stat.ballsFaced,
+              sixes: stat.sixes,
+              fours: stat.fours,
+              strikeRate: stat.strikeRate.toFixed(2),
+              out: stat.isOut ? "" : "*",
+            }))}
+            title="Batting"
+            headerStyle={{ padding: 6, fontSize: 13 }}
+            cellStyle={{ padding: 6, fontSize: 13 }}
+            tableStyle={{ marginBottom: 8 }}
+          />
+          <Divider style={styles.divider} />
+          <Table
+            columns={bowlingColumns}
+            data={matchStats.map((stat) => ({
+              overs:
+                stat.ballsBowled > 0
+                  ? `${stat.overs}.${stat.ballsBowled}`
+                  : stat.overs,
+              wickets: stat.wickets,
+              runsConceded: stat.runsConceded,
+              extras: stat.extras,
+              "6s / 4s": stat.sixesConceded + " / " + stat.foursConceded,
+            }))}
+            title="Bowling"
+            headerStyle={{ padding: 6, fontSize: 13 }}
+            cellStyle={{ padding: 6, fontSize: 13 }}
+            tableStyle={{ marginBottom: 8 }}
+          />
+        </>
+      )}
     </ScrollView>
   );
 };

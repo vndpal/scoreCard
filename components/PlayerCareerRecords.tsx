@@ -9,7 +9,7 @@ import TournamentDropdown from "./TournamentDropdown";
 import { Tournament } from "@/firebase/models/Tournament";
 import { PlayerTournamentStats } from "@/firebase/models/PlayerTournamentStats";
 import { Timestamp } from "@react-native-firebase/firestore";
-
+import NotFoundTable from "./ui/notFoundTable";
 interface PlayerCareerRecordsProps {
   playerId: string;
 }
@@ -46,10 +46,14 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
 
   if (!stats) {
     return (
-      <ActivityIndicator
-        size="large"
-        color={currentTheme === "dark" ? "#ffffff" : "#000000"}
-      />
+      <ScrollView style={styles.container}>
+        <TournamentDropdown
+          selectedTournament={selectedTournament}
+          onTournamentSelect={setSelectedTournament}
+          isAllTournaments={true}
+        />
+        <NotFoundTable />
+      </ScrollView>
     );
   }
 
@@ -125,10 +129,23 @@ const styles = StyleSheet.create({
     borderColor: "#cbd5e1",
     borderWidth: 1,
   },
+  noDataText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+  },
 });
 
-const darkStyles = StyleSheet.create({});
+const darkStyles = StyleSheet.create({
+  text: {
+    color: "#ffffff",
+  },
+});
 
-const lightStyles = StyleSheet.create({});
+const lightStyles = StyleSheet.create({
+  text: {
+    color: "#000000",
+  },
+});
 
 export default PlayerCareerRecords;

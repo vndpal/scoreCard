@@ -310,8 +310,7 @@ const TeamLineUp: React.FC = () => {
     );
 
     if (currentMatchId !== "") {
-      const updatedLiveMatchPlayerStats: playerStats[] =
-        currentMatchPlayerStats;
+      let updatedLiveMatchPlayerStats: playerStats[] = currentMatchPlayerStats;
       for (const player of team1Players) {
         if (!activePlayerIds.includes(player.id)) {
           const existingPlayerStats = updatedLiveMatchPlayerStats.find(
@@ -389,6 +388,15 @@ const TeamLineUp: React.FC = () => {
           }
         }
       }
+
+      const playersFromBothTeams: player[] = [...team1Players, ...team2Players];
+      const playerIdsFromBothTeams: string[] = playersFromBothTeams.map(
+        (x) => x.id
+      );
+
+      updatedLiveMatchPlayerStats = updatedLiveMatchPlayerStats.filter((x) =>
+        playerIdsFromBothTeams.includes(x.playerId)
+      );
 
       await PlayerMatchStats.update(currentMatchId, {
         matchId: currentMatchId,

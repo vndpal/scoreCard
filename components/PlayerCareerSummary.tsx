@@ -171,6 +171,7 @@ const PlayerCareerSummary = () => {
                 <th>Avg</th>
                 <th>NO</th>
                 <th>Innings</th>
+                <th>Wins</th>
                 <th>Matches</th>
               </tr>
               ${battingStats
@@ -189,6 +190,7 @@ const PlayerCareerSummary = () => {
                   <td>${player.average ? player.average.toFixed(2) : "-"}</td>
                   <td>${player.notOuts}</td>
                   <td>${player.innings}</td>
+                  <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
                   <td>${player.matches}</td>
                 </tr>
               `
@@ -206,7 +208,8 @@ const PlayerCareerSummary = () => {
                 <th>Eco</th>
                 <th>Extras</th>
                 <th>6s</th>
-                <th>4s</th>
+                <th>4s</th> 
+                <th>Wins</th>
                 <th>Matches</th>
               </tr>
               ${bowlingStats
@@ -228,6 +231,7 @@ const PlayerCareerSummary = () => {
                   <td>${player.extras}</td>
                   <td>${player.sixesConceded}</td>
                   <td>${player.foursConceded}</td>
+                  <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
                   <td>${player.matches}</td>
                 </tr>
               `

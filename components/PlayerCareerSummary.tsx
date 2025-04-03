@@ -96,68 +96,110 @@ const PlayerCareerSummary = () => {
             body {
               font-family: Arial, sans-serif;
               background-color: ${
-                currentTheme === "dark" ? "#121212" : "#e8f5e9"
+                currentTheme === "dark" ? "#1a1a1a" : "#e8ebe8"
               };
-              color: ${currentTheme === "dark" ? "#e0f2f1" : "#333333"};
+              color: ${currentTheme === "dark" ? "#d0d6d0" : "#2d3d2d"};
             }
 
             .container {
               width: 1200px;
               padding: 20px;
-              background-color:  ${
-                currentTheme === "dark" ? "#1e1e1e" : "#ffffff"
-              };
-            border: 1px solid ${
-              currentTheme === "dark" ? "#333333" : "#cfd8dc"
-            };
-            box-shadow: 0 6px 12px ${
-              currentTheme === "dark"
-                ? "rgba(0, 0, 0, 0.7)"
-                : "rgba(0, 0, 0, 0.1)"
-            };
-          }
-
-          h1 {
-            text-align: center;
-            color: ${currentTheme === "dark" ? "#00bfae" : "#004d40"};
-          }
-
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-            border: 1px solid ${
-              currentTheme === "dark" ? "#333333" : "#cfd8dc"
-            };
-          }
-
-          th,
-          td {
-            border: 1px solid ${
-              currentTheme === "dark" ? "#999999" : "#b0bec5"
-            };
-            padding: 12px;
-            text-align: left;
-          }
-
-          th {
-            background-color: ${
-              currentTheme === "dark" ? "#00bfae" : "#004d40"
-            };
-            color: ${currentTheme === "dark" ? "#121212" : "#ffffff"};
-          }
-
-          tr:nth-child(even) {
               background-color: ${
-                currentTheme === "dark" ? "#333333" : "#e0f2f1"
+                currentTheme === "dark" ? "#242824" : "#ffffff"
+              };
+              border: 1px solid ${
+                currentTheme === "dark" ? "#2d3d2d" : "#c8d6c8"
+              };
+              box-shadow: 0 6px 12px ${
+                currentTheme === "dark"
+                  ? "rgba(0, 0, 0, 0.7)"
+                  : "rgba(45, 61, 45, 0.1)"
               };
             }
-          }
-        </style>  
+
+            h1 {
+              text-align: center;
+              color: ${currentTheme === "dark" ? "#8ba88b" : "#3c4f3c"};
+              margin: 24px 0;
+              padding-bottom: 12px;
+              border-bottom: 3px solid ${
+                currentTheme === "dark" ? "#5c715c" : "#3c4f3c"
+              };
+            }
+
+            h1 .main-title {
+              display: block;
+              font-size: 36px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+              margin-bottom: 8px;
+            }
+
+            h1 .tournament-name {
+              display: block;
+              font-size: 24px;
+              font-weight: 600;
+              letter-spacing: 1px;
+              color: ${currentTheme === "dark" ? "#7a917a" : "#4a5d4a"};
+            }
+
+            h2 {
+              color: ${currentTheme === "dark" ? "#8ba88b" : "#3c4f3c"};
+              font-size: 24px;
+              font-weight: 600;
+              margin: 20px 0;
+              padding-left: 12px;
+              border-left: 4px solid ${
+                currentTheme === "dark" ? "#5c715c" : "#3c4f3c"
+              };
+            }
+
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+              border: 1px solid ${
+                currentTheme === "dark" ? "#2d3d2d" : "#c8d6c8"
+              };
+            }
+
+            th, td {
+              border: 1px solid ${
+                currentTheme === "dark" ? "#3d4d3d" : "#c8d6c8"
+              };
+              padding: 12px;
+              text-align: left;
+            }
+
+            th {
+              background-color: ${
+                currentTheme === "dark" ? "#3c4f3c" : "#4a5d4a"
+              };
+              color: #d0d6d0;
+            }
+
+            tr:nth-child(even) {
+              background-color: ${
+                currentTheme === "dark" ? "#2a332a" : "#f2f4f2"
+              };
+            }
+
+            tr:hover {
+              background-color: ${
+                currentTheme === "dark" ? "#313931" : "#e0e6e0"
+              };
+            }
+          </style>  
         </head>
         <body>
           <div class="container">
-            <h1>Player Stats</h1>
+            <h1>
+              <span class="main-title">Player Stats</span>
+              <span class="tournament-name">${
+                selectedTournament ? selectedTournament.name : "All Tournaments"
+              }</span>
+            </h1>
             
             <h2>Batting Records</h2>
             <table>

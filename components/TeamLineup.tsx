@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   BackHandler,
   Alert,
+  Dimensions,
 } from "react-native";
 import { Menu, useTheme } from "react-native-paper";
 import { Icon } from "react-native-elements";
@@ -29,6 +30,9 @@ import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import Loader from "./Loader";
+import { LinearGradient } from "expo-linear-gradient";
+
+const { width } = Dimensions.get("window");
 
 const TeamLineUp: React.FC = () => {
   const [team1Players, setTeam1Players] = useState<player[]>([]);
@@ -235,31 +239,6 @@ const TeamLineUp: React.FC = () => {
     ]);
   };
 
-  const renderPlayer = ({
-    item,
-    team,
-  }: {
-    item: player;
-    team: "team1" | "team2";
-  }) => (
-    <View style={[styles.playerCard, themeStyles.playerCard]}>
-      <Text style={[styles.playerName, themeStyles.playerName]}>
-        {item.name}
-      </Text>
-      {!activePlayerIds.includes(item.id) && (
-        <TouchableOpacity onPress={() => removePlayer(item.id, team)}>
-          <Icon
-            name="remove-circle"
-            type="Ionicons"
-            size={22}
-            color="#FF6F6F"
-            style={styles.removeIcon}
-          />
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
   const randomizeTeams = () => {
     const shuffledPlayers = [...allPlayers].sort(() => 0.5 - Math.random());
     const team1Players = shuffledPlayers.slice(
@@ -414,119 +393,195 @@ const TeamLineUp: React.FC = () => {
 
   return (
     <View style={[styles.container, themeStyles.container]}>
-      <View style={styles.playersContainer}>
-        <View style={[styles.teamContainer, themeStyles.teamContainer]}>
-          <View style={styles.headerContainer}>
-            <Text style={[styles.header, themeStyles.header]}>
-              {team1?.teamInitials ? team1.teamInitials : "Team 1"}{" "}
-              <Text style={[styles.playerCount, themeStyles.playerCount]}>
-                {"(" + team1Players.length + ")"}
-              </Text>
-            </Text>
-            <Menu
-              visible={team1DropdownOpen}
-              onDismiss={closeMenu}
-              anchor={
-                <TouchableOpacity
-                  onPress={() => openMenu("team1")}
-                  style={styles.menuButton}
-                >
-                  <Icon
-                    name="add-circle"
-                    type="Ionicons"
-                    color={"#4CAF50"}
-                    size={24}
-                  />
-                </TouchableOpacity>
-              }
-            >
-              {availablePlayers.map((player) => (
-                <Menu.Item
-                  key={player.id}
-                  onPress={() => handleAddPlayer(player)}
-                  title={player.name}
-                />
-              ))}
-            </Menu>
-          </View>
-          <FlatList
-            data={team1Players}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => renderPlayer({ item, team: "team1" })}
-          />
-        </View>
-
-        <View style={[styles.teamContainer, themeStyles.teamContainer]}>
-          <View style={styles.headerContainer}>
-            <Text style={[styles.header, themeStyles.header]}>
-              {team2?.teamInitials ? team2.teamInitials : "Team 2"}{" "}
-              <Text style={[styles.playerCount, themeStyles.playerCount]}>
-                {"(" + team2Players.length + ")"}
-              </Text>
-            </Text>
-            <Menu
-              visible={team2DropdownOpen}
-              onDismiss={closeMenu}
-              anchor={
-                <TouchableOpacity
-                  onPress={() => openMenu("team2")}
-                  style={styles.menuButton}
-                >
-                  <Icon
-                    name="add-circle"
-                    type="Ionicons"
-                    color={"#4CAF50"}
-                    size={24}
-                  />
-                </TouchableOpacity>
-              }
-            >
-              {availablePlayers.map((player) => (
-                <Menu.Item
-                  key={player.id}
-                  onPress={() => handleAddPlayer(player)}
-                  title={player.name}
-                />
-              ))}
-            </Menu>
-          </View>
-          <FlatList
-            data={team2Players}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => renderPlayer({ item, team: "team2" })}
-          />
-        </View>
-      </View>
-
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={[styles.configButton, themeStyles.configButton]}
-          onPress={() => setTeamSelectionVisible(true)}
-          disabled={currentMatchId !== ""}
-        >
-          <Icon name="swap" type="entypo" color="white" size={20} />
-          <Text style={[styles.buttonText, themeStyles.buttonText]}>
-            Setup Team
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.configButton, themeStyles.configButton]}
-          disabled={currentMatchId !== ""}
-          onPress={randomizeTeams}
-        >
-          <Icon name="random" type="font-awesome" color="white" size={20} />
-          <Text style={[styles.buttonText, themeStyles.buttonText]}>
-            Randomize
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.saveButton, themeStyles.saveButton]}
-        onPress={saveTeams}
+      <LinearGradient
+        colors={
+          currentTheme === "dark"
+            ? ["#1a1a1a", "#2a2a2a"]
+            : ["#FFFFFF", "#F5F5F5"]
+        }
+        style={styles.gradientBackground}
       >
-        <Text style={[styles.buttonText, themeStyles.buttonText]}>Save</Text>
-      </TouchableOpacity>
+        <View style={styles.contentContainer}>
+          <View style={styles.teamsGrid}>
+            {/* Team 1 Section */}
+            <View style={[styles.teamSection, themeStyles.teamSection]}>
+              <View style={styles.teamHeader}>
+                <View style={styles.teamTitleContainer}>
+                  <Text style={[styles.teamTitle, themeStyles.teamTitle]}>
+                    {team1?.teamInitials || "Team 1"}
+                  </Text>
+                  <Text style={[styles.playerCount, themeStyles.playerCount]}>
+                    {team1Players.length} Players
+                  </Text>
+                </View>
+                <Menu
+                  visible={team1DropdownOpen}
+                  onDismiss={closeMenu}
+                  anchor={
+                    <TouchableOpacity
+                      onPress={() => openMenu("team1")}
+                      style={styles.addButton}
+                    >
+                      <Icon
+                        name="add"
+                        type="material"
+                        color="#4CAF50"
+                        size={24}
+                      />
+                    </TouchableOpacity>
+                  }
+                >
+                  {availablePlayers.map((player) => (
+                    <Menu.Item
+                      key={player.id}
+                      onPress={() => handleAddPlayer(player)}
+                      title={player.name}
+                    />
+                  ))}
+                </Menu>
+              </View>
+              <View style={styles.playersList}>
+                <FlatList
+                  data={team1Players}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <View style={[styles.playerItem, themeStyles.playerItem]}>
+                      <Text style={[styles.playerName, themeStyles.playerName]}>
+                        {item.name}
+                      </Text>
+                      {!activePlayerIds.includes(item.id) && (
+                        <TouchableOpacity
+                          onPress={() => removePlayer(item.id, "team1")}
+                          style={styles.removeButton}
+                        >
+                          <Icon
+                            name="remove-circle"
+                            type="Ionicons"
+                            size={22}
+                            color="#FF6F6F"
+                            style={styles.removeIcon}
+                          />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                />
+              </View>
+            </View>
+
+            {/* Team 2 Section */}
+            <View style={[styles.teamSection, themeStyles.teamSection]}>
+              <View style={styles.teamHeader}>
+                <View style={styles.teamTitleContainer}>
+                  <Text style={[styles.teamTitle, themeStyles.teamTitle]}>
+                    {team2?.teamInitials || "Team 2"}
+                  </Text>
+                  <Text style={[styles.playerCount, themeStyles.playerCount]}>
+                    {team2Players.length} Players
+                  </Text>
+                </View>
+                <Menu
+                  visible={team2DropdownOpen}
+                  onDismiss={closeMenu}
+                  anchor={
+                    <TouchableOpacity
+                      onPress={() => openMenu("team2")}
+                      style={styles.addButton}
+                    >
+                      <Icon
+                        name="add"
+                        type="material"
+                        color="#4CAF50"
+                        size={24}
+                      />
+                    </TouchableOpacity>
+                  }
+                >
+                  {availablePlayers.map((player) => (
+                    <Menu.Item
+                      key={player.id}
+                      onPress={() => handleAddPlayer(player)}
+                      title={player.name}
+                    />
+                  ))}
+                </Menu>
+              </View>
+              <View style={styles.playersList}>
+                <FlatList
+                  data={team2Players}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item }) => (
+                    <View style={[styles.playerItem, themeStyles.playerItem]}>
+                      <Text style={[styles.playerName, themeStyles.playerName]}>
+                        {item.name}
+                      </Text>
+                      {!activePlayerIds.includes(item.id) && (
+                        <TouchableOpacity
+                          onPress={() => removePlayer(item.id, "team2")}
+                          style={styles.removeButton}
+                        >
+                          <Icon
+                            name="remove-circle"
+                            type="Ionicons"
+                            size={22}
+                            color="#FF6F6F"
+                            style={styles.removeIcon}
+                          />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                themeStyles.actionButton,
+                currentMatchId !== "" && styles.actionButtonDisabled,
+              ]}
+              onPress={() => setTeamSelectionVisible(true)}
+              disabled={currentMatchId !== ""}
+            >
+              <Icon name="group" type="material" color="white" size={20} />
+              <Text
+                style={[styles.actionButtonText, themeStyles.actionButtonText]}
+              >
+                New Selection
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                themeStyles.actionButton,
+                currentMatchId !== "" && styles.actionButtonDisabled,
+              ]}
+              disabled={currentMatchId !== ""}
+              onPress={randomizeTeams}
+            >
+              <Icon name="shuffle" type="material" color="white" size={20} />
+              <Text
+                style={[styles.actionButtonText, themeStyles.actionButtonText]}
+              >
+                Randomize
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveButton, themeStyles.saveButton]}
+            onPress={saveTeams}
+          >
+            <Text style={[styles.saveButtonText, themeStyles.saveButtonText]}>
+              Save Teams
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
       <TeamSelection
         visible={teamSelectionVisible}
@@ -541,167 +596,179 @@ const TeamLineUp: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: "#1F1F1F", // Dark background for a modern look
   },
-  playersContainer: {
+  gradientBackground: {
+    flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 12,
+  },
+  teamsGrid: {
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 16,
+    gap: 12,
   },
-  teamContainer: {
+  teamSection: {
     flex: 1,
-    borderWidth: 1,
-    borderColor: "#333", // Slightly lighter border for better contrast
-    borderRadius: 8,
-    backgroundColor: "#2C2C2C",
-    marginHorizontal: 8, // Increased margin for better separation
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 12,
+    padding: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 }, // Increased shadow for a more pronounced effect
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-    padding: 12, // Reduced padding to make the layout more compact
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  headerContainer: {
+  teamHeader: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20, // Increased margin for better spacing
-    height: 22, // Slightly taller for better alignment
+    alignItems: "center",
+    marginBottom: 12,
   },
-  header: {
-    color: "#FFFFFF",
-    flexWrap: "wrap",
-    maxHeight: 22, // Ensure the header fits within its container
-    lineHeight: 22,
-    fontSize: 16, // Slightly reduced font size for compactness
-    fontWeight: "700", // Bold for emphasis
+  teamTitleContainer: {
+    flex: 1,
+  },
+  teamTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 2,
   },
   playerCount: {
-    color: "#DDDDDD",
-    fontSize: 12, // Smaller size to save space
+    fontSize: 13,
+    opacity: 0.7,
   },
-  playerCard: {
+  addButton: {
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+  },
+  playersList: {
+    flex: 1,
+  },
+  playerItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 6, // Increased margin for better spacing
-    backgroundColor: "#333",
-    flexWrap: "wrap",
-    borderRadius: 4, // Less rounded corners for a modern aesthetic
-    padding: 10, // Reduced padding for a more compact appearance
+    padding: 8,
+    marginVertical: 3,
+    borderRadius: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
   playerName: {
-    color: "#FFFFFF",
-    fontSize: 14, // Slightly smaller font size for compactness
-    fontWeight: "600", // Semi-bold to retain readability and elegance
+    fontSize: 15,
+    fontWeight: "700",
+    flex: 1,
+    marginRight: 8,
   },
-  removeIcon: {
-    marginLeft: 12, // Increased margin for better spacing
+  removeButton: {
+    // padding: 4,
+    // minWidth: 24,
   },
-  menuButton: {
-    padding: 0,
-  },
-  buttonsContainer: {
+  actionButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginTop: 12,
+    gap: 10,
   },
-  configButton: {
+  actionButton: {
+    flex: 1,
     flexDirection: "row",
-    backgroundColor: "#4CAF50",
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
-    marginHorizontal: 8, // Increased margin for better spacing
-    paddingVertical: 8, // Reduced padding for a more compact button
-    paddingHorizontal: 16,
-    borderRadius: 20, // Less rounded for a modern appearance
+    padding: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  actionButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
   saveButton: {
-    backgroundColor: "#0c66e4",
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 10,
     alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 8, // Maintain margin for consistency
-    paddingVertical: 8, // Reduced padding for a more compact button
-    paddingHorizontal: 16,
-    borderRadius: 20, // Less rounded for consistency
   },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16, // Larger font size for better readability
-    marginLeft: 8,
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  removeIcon: {
+    marginLeft: 6, // Increased margin for better spacing
+  },
+  actionButtonDisabled: {
+    backgroundColor: "#D3D3D3",
   },
 });
 
 const darkStyles = StyleSheet.create({
   container: {
-    backgroundColor: "#121212",
+    backgroundColor: "#1a1a1a",
   },
-  teamContainer: {
-    backgroundColor: "#2C2C2C",
-    borderColor: "#333",
+  teamSection: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
-  playerCard: {
-    backgroundColor: "#333",
+  teamTitle: {
+    color: "#FFFFFF",
+  },
+  playerCount: {
+    color: "#AAAAAA",
+  },
+  playerItem: {
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
   playerName: {
     color: "#FFFFFF",
   },
-  removeIcon: {
-    color: "#FF6F6F",
-  },
-  header: {
-    color: "#FFFFFF",
-  },
-  playerCount: {
-    color: "#DDDDDD",
-  },
-  configButton: {
+  actionButton: {
     backgroundColor: "#4CAF50",
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
   },
   saveButton: {
     backgroundColor: "#0c66e4",
   },
-  buttonText: {
-    fontSize: 14, // Slightly smaller font size for compactness
-    fontWeight: "600", // Semi-bold for emphasis without overwhelming
+  saveButtonText: {
     color: "#FFFFFF",
   },
 });
 
 const lightStyles = StyleSheet.create({
   container: {
-    backgroundColor: "#FAFAFA", // Softer background color for a more modern look
-  },
-  teamContainer: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#E0E0E0", // Lighter border for a clean and minimal look
   },
-  playerCard: {
-    backgroundColor: "#F9F9F9", // Slightly off-white for a subtle distinction
+  teamSection: {
+    backgroundColor: "#F8F8F8",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
-  playerName: {
-    color: "#333333", // Dark gray for a softer, classy text color
-  },
-  removeIcon: {
-    color: "#E57373", // Softer red for a more refined look
-  },
-  header: {
-    color: "#333333", // Darker text for better contrast and readability
+  teamTitle: {
+    color: "#333333",
   },
   playerCount: {
-    color: "#888888", // Softer gray for a subtle, modern look
+    color: "#666666",
   },
-  configButton: {
-    backgroundColor: "#388E3C", // Slightly darker green for a more sophisticated look
+  playerItem: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  playerName: {
+    color: "#333333",
+  },
+  actionButton: {
+    backgroundColor: "#388E3C",
+  },
+  actionButtonText: {
+    color: "#FFFFFF",
   },
   saveButton: {
-    backgroundColor: "#1565C0", // Slightly darker blue for a more professional tone
+    backgroundColor: "#1565C0",
   },
-  buttonText: {
+  saveButtonText: {
     color: "#FFFFFF",
   },
 });

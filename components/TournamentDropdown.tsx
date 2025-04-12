@@ -41,6 +41,7 @@ const TournamentDropdown = ({
           date: Timestamp.now(),
           clubId: "",
           status: "upcoming",
+          isBoxCricket: false,
         });
       }
       setTournaments(tournamentList);

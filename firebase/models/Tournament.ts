@@ -9,6 +9,7 @@ export class Tournament implements tournament {
   date: Timestamp;
   clubId: string;
   status: "upcoming" | "ongoing" | "completed";
+  isBoxCricket: boolean;
 
   constructor(id: string, data: tournament) {
     this.id = id;
@@ -16,6 +17,7 @@ export class Tournament implements tournament {
     this.date = data.date;
     this.clubId = data.clubId;
     this.status = data.status;
+    this.isBoxCricket = data.isBoxCricket;
   }
 
   static async create(data: Omit<tournament, "id">): Promise<Tournament> {
@@ -28,7 +30,7 @@ export class Tournament implements tournament {
     return data ? new Tournament(id, data) : null;
   }
 
-  static async getAllByClubId (clubId: string): Promise<Tournament[]> {
+  static async getAllByClubId(clubId: string): Promise<Tournament[]> {
     const data = await firestoreService.query<tournament>(COLLECTION_NAME, [
       { field: "clubId", operator: "==", value: clubId },
     ]);

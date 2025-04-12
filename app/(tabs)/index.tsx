@@ -37,11 +37,13 @@ import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
 import Loader from "@/components/Loader";
+import { Tournament } from "@/firebase/models/Tournament";
 
 export default function HomeScreen() {
   const router = useRouter();
 
   const [run, setRun] = useState(0);
+  const [isDeclared, setIsDeclared] = useState(false);
   const [isWicket, setIsWicket] = useState(false);
   const [isNoBall, setIsNoBall] = useState(false);
   const [isWideBall, setIsWideBall] = useState(false);
@@ -117,8 +119,17 @@ export default function HomeScreen() {
   );
   const [manOfTheMatch, setManOfTheMatch] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [possibleRuns, setPossibleRuns] = useState<string[]>([
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "6",
+  ]);
 
-  const { currentTheme, currentSettings } = useAppContext();
+  const { currentTheme, currentSettings, club, currentTournament } =
+    useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -132,6 +143,14 @@ export default function HomeScreen() {
   const fetchMatch = async () => {
     try {
       setShowLoader(true);
+      if (currentTournament) {
+        const tournament = await Tournament.getById(currentTournament);
+        if (tournament) {
+          if (tournament.isBoxCricket) {
+            setPossibleRuns(["0", "1d", "1", "2", "3", "4"]);
+          }
+        }
+      }
       const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
       if (!isNewMatch) {
         let club: Club | null = null;
@@ -350,6 +369,14 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       const fetchMatchAfterNewMatch = async () => {
+        if (currentTournament) {
+          const tournament = await Tournament.getById(currentTournament);
+          if (tournament) {
+            if (tournament.isBoxCricket) {
+              setPossibleRuns(["0", "1d", "1", "2", "3", "4"]);
+            }
+          }
+        }
         const isNewMatch = await getItem(STORAGE_ITEMS.IS_NEW_MATCH);
         if (isNewMatch) {
           clearAllState();
@@ -405,6 +432,7 @@ export default function HomeScreen() {
   };
 
   const handleRunPress = (run: string) => {
+    setIsDeclared(run.includes("d"));
     setRun(parseInt(run));
     setIsEntryDone(true);
   };
@@ -586,6 +614,7 @@ export default function HomeScreen() {
       }
 
       setRun(0);
+      setIsDeclared(false);
       setIsWicket(false);
       setIsNoBall(false);
       setIsWideBall(false);
@@ -830,7 +859,7 @@ export default function HomeScreen() {
 
       //handle swap logic for batters
       let swap = false;
-      if (scoreThisBall.run == 1 || scoreThisBall.run == 3) {
+      if (!isDeclared && (scoreThisBall.run == 1 || scoreThisBall.run == 3)) {
         swap = !swap;
       }
       if (scoreThisBall.isOverEnd) {
@@ -1136,7 +1165,7 @@ export default function HomeScreen() {
                     {isWicket
                       ? `W${outBatter ? "(" + outBatter.name + ")" : ""} + `
                       : ""}
-                    {run}
+                    {run + (isDeclared ? "d" : "")}
                   </Text>
                 ) : (
                   <View style={styles.pickPlayerContainer}>
@@ -1181,14 +1210,17 @@ export default function HomeScreen() {
       <View style={{ flex: 0.3 }}></View>
       <View style={styles.subContainer}>
         <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
-          {["0", "1", "2", "3", "4", "6"].map((score, index) => (
+          {possibleRuns.map((score, index) => (
             <TouchableOpacity
               key={index}
               style={[
                 styles.bubbleButton,
                 themeStyles.bubbleButton,
                 isEntryDone &&
-                  run == parseInt(score) && { backgroundColor: "#019999" },
+                  run == parseInt(score) &&
+                  (isDeclared ? score.includes("d") : !score.includes("d")) && {
+                    backgroundColor: "#019999",
+                  },
               ]}
               disabled={showLoader}
               onPress={() => handleRunPress(score)}

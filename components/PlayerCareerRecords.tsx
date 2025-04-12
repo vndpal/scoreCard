@@ -24,6 +24,7 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
     date: Timestamp.now(),
     clubId: "",
     status: "upcoming",
+    isBoxCricket: false,
   });
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;

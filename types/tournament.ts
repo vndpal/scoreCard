@@ -5,6 +5,7 @@ type tournament = {
   name: string;
   date: Timestamp;
   clubId: string;
+  isBoxCricket: boolean;
   status: "upcoming" | "ongoing" | "completed";
 };
 

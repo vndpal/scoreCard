@@ -18,7 +18,7 @@ import { Club } from "@/firebase/models/Club";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Tournament } from "@/firebase/models/Tournament";
-
+import { View, Image, ActivityIndicator } from "react-native";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -43,6 +43,7 @@ export default function RootLayout() {
     id: "",
     name: "",
   });
+  const [isAppInitialized, setIsAppInitialized] = useState(false);
 
   const [currentTournament, setCurrentTournament] = useState<string>("");
 
@@ -70,9 +71,14 @@ export default function RootLayout() {
           );
 
           if (currentTournament) {
+            console.log(
+              "currentTournament from _layout.tsx",
+              currentTournament[0].id
+            );
             setCurrentTournament(currentTournament[0].id);
           }
         }
+        setIsAppInitialized(true);
       };
 
       initializeApp();
@@ -124,98 +130,113 @@ export default function RootLayout() {
           currentTournament={currentTournament}
           updateCurrentTournament={updateCurrentTournament}
         >
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-            <Stack.Screen
-              name="createMatch"
-              options={{
-                headerTitle: "Create match",
-                animation: "slide_from_right",
+          {isAppInitialized ? (
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+              <Stack.Screen
+                name="createMatch"
+                options={{
+                  headerTitle: "Create match",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="toss"
+                options={{ headerTitle: "Toss", animation: "slide_from_right" }}
+              />
+              <Stack.Screen
+                name="createTeam"
+                options={{
+                  headerTitle: "Create new team",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="teamLineup"
+                options={{
+                  headerTitle: "Team Selection",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="matchSettings"
+                options={{
+                  headerTitle: "Match settings",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="players"
+                options={{
+                  headerTitle: "Players",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="createPlayer"
+                options={{
+                  headerTitle: "Add new player",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="player/[id]"
+                options={{
+                  headerTitle: "Player profile",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="matchSummary"
+                options={{
+                  headerTitle: "Match summary",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="playerRecords"
+                options={{
+                  headerTitle: "Player stats",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="settings"
+                options={{
+                  headerTitle: "Settings",
+                  animation: "slide_from_right",
+                }}
+              />
+              <Stack.Screen
+                name="club"
+                options={{
+                  headerShown: false,
+                  animation: "flip",
+                }}
+              />
+              <Stack.Screen
+                name="tournaments"
+                options={{
+                  headerTitle: "Tournaments",
+                  animation: "slide_from_right",
+                }}
+              />
+            </Stack>
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
               }}
-            />
-            <Stack.Screen
-              name="toss"
-              options={{ headerTitle: "Toss", animation: "slide_from_right" }}
-            />
-            <Stack.Screen
-              name="createTeam"
-              options={{
-                headerTitle: "Create new team",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="teamLineup"
-              options={{
-                headerTitle: "Team Selection",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="matchSettings"
-              options={{
-                headerTitle: "Match settings",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="players"
-              options={{
-                headerTitle: "Players",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="createPlayer"
-              options={{
-                headerTitle: "Add new player",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="player/[id]"
-              options={{
-                headerTitle: "Player profile",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="matchSummary"
-              options={{
-                headerTitle: "Match summary",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="playerRecords"
-              options={{
-                headerTitle: "Player stats",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="settings"
-              options={{
-                headerTitle: "Settings",
-                animation: "slide_from_right",
-              }}
-            />
-            <Stack.Screen
-              name="club"
-              options={{
-                headerShown: false,
-                animation: "flip",
-              }}
-            />
-            <Stack.Screen
-              name="tournaments"
-              options={{
-                headerTitle: "Tournaments",
-                animation: "slide_from_right",
-              }}
-            />
-          </Stack>
+            >
+              <Image
+                source={require("../assets/images/logo.png")}
+                style={{ width: 350, height: 350, resizeMode: "contain" }}
+              />
+            </View>
+          )}
         </AppContextProvider>
       </PaperProvider>
     </ThemeProvider>

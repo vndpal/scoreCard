@@ -21,7 +21,7 @@ module.exports = {
     scheme: "myapp",
     userInterfaceStyle: "automatic",
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/logo.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
@@ -39,7 +39,7 @@ module.exports = {
     web: {
       bundler: "metro",
       output: "static",
-      favicon: "./assets/images/favicon.png",
+      favicon: "./assets/images/logo.png",
     },
     plugins: ["expo-router"],
     experiments: {

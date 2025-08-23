@@ -15,13 +15,13 @@ import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useAppContext } from "@/context/AppContext";
 import { LinearGradient } from "expo-linear-gradient";
-import { ActivityIndicator, Icon } from "react-native-paper";
 import Loader from "./Loader";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 import TournamentDropdown from "./TournamentDropdown";
 import { Tournament } from "@/firebase/models/Tournament";
 import { PlayerTournamentStats } from "@/firebase/models/PlayerTournamentStats";
+import { Icon } from "react-native-elements";
 const PlayerCareerSummary = () => {
   const [battingStats, setBattingStats] = useState<playerCareerStats[]>([]);
   const [bowlingStats, setBowlingStats] = useState<playerCareerStats[]>([]);
@@ -85,8 +85,117 @@ const PlayerCareerSummary = () => {
 
   const webViewRef = useRef<WebView>(null);
 
-  const exportAsImage = () => {
+  const exportAsImage = (type: "all" | "batting" | "bowling") => {
     setIsLoader(true);
+
+    // Generate table HTML based on type
+    const generateTableHTML = (
+      stats: playerCareerStats[],
+      tableType: "batting" | "bowling"
+    ) => {
+      if (tableType === "batting") {
+        return `
+          <h2>Batting Records</h2>
+          <table>
+            <tr>
+              <th>Player</th>
+              <th>Runs</th>
+              <th>Balls</th>
+              <th>Sixes</th>
+              <th>Fours</th>
+              <th>SR</th>
+              <th>Avg</th>
+              <th>NO</th>
+              <th>Innings</th>
+              <th>Wins</th>
+              <th>Matches</th>
+            </tr>
+            ${stats
+              .slice(0, 30)
+              .map(
+                (player) => `
+              <tr>
+                <td>${playersMap.get(player.playerId) || player.playerId}</td>
+                <td>${player.runs}</td>
+                <td>${player.ballsFaced}</td>
+                <td>${player.sixes}</td>
+                <td>${player.fours}</td>
+                <td>${
+                  player.strikeRate ? player.strikeRate.toFixed(2) : "-"
+                }</td>
+                <td>${player.average ? player.average.toFixed(2) : "-"}</td>
+                <td>${player.notOuts}</td>
+                <td>${player.innings}</td>
+                <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
+                <td>${player.matches}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </table>
+        `;
+      } else {
+        return `
+          <h2>Bowling Records</h2>
+          <table>
+            <tr>
+              <th>Player</th>
+              <th>Overs</th>
+              <th>Runs</th>
+              <th>Wickets</th>
+              <th>Eco</th>
+              <th>Extras</th>
+              <th>6s</th>
+              <th>4s</th> 
+              <th>Wins</th>
+              <th>Matches</th>
+            </tr>
+            ${stats
+              .slice(0, 30)
+              .map(
+                (player) => `
+              <tr>
+                <td>${playersMap.get(player.playerId) || player.playerId}</td>
+                <td>${player.overs}${
+                  player.ballsBowled > 0 ? "." + player.ballsBowled : ""
+                }</td>
+                <td>${player.runsConceded}</td>
+                <td>${player.wickets}</td>
+                <td>${
+                  player.bowlingEconomy ? player.bowlingEconomy.toFixed(2) : "-"
+                }</td>
+                <td>${player.extras}</td>
+                <td>${player.sixesConceded}</td>
+                <td>${player.foursConceded}</td>
+                <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
+                <td>${player.matches}</td>
+              </tr>
+            `
+              )
+              .join("")}
+          </table>
+        `;
+      }
+    };
+
+    // Generate content based on type
+    let tableContent = "";
+    let title = "";
+
+    if (type === "batting") {
+      tableContent = generateTableHTML(battingStats, "batting");
+      title = "Batting Stats";
+    } else if (type === "bowling") {
+      tableContent = generateTableHTML(bowlingStats, "bowling");
+      title = "Bowling Stats";
+    } else {
+      tableContent = `
+        ${generateTableHTML(battingStats, "batting")}
+        ${generateTableHTML(bowlingStats, "bowling")}
+      `;
+      title = "Player Stats";
+    }
+
     const htmlContent = `
       <html>
         <head>
@@ -195,91 +304,13 @@ const PlayerCareerSummary = () => {
         <body>
           <div class="container">
             <h1>
-              <span class="main-title">Player Stats</span>
+              <span class="main-title">${title}</span>
               <span class="tournament-name">${
                 selectedTournament ? selectedTournament.name : "All Tournaments"
               }</span>
             </h1>
             
-            <h2>Batting Records</h2>
-            <table>
-              <tr>
-                <th>Player</th>
-                <th>Runs</th>
-                <th>Balls</th>
-                <th>Sixes</th>
-                <th>Fours</th>
-                <th>SR</th>
-                <th>Avg</th>
-                <th>NO</th>
-                <th>Innings</th>
-                <th>Wins</th>
-                <th>Matches</th>
-              </tr>
-              ${battingStats
-                .slice(0, 30)
-                .map(
-                  (player) => `
-                <tr>
-                  <td>${playersMap.get(player.playerId) || player.playerId}</td>
-                  <td>${player.runs}</td>
-                  <td>${player.ballsFaced}</td>
-                  <td>${player.sixes}</td>
-                  <td>${player.fours}</td>
-                  <td>${
-                    player.strikeRate ? player.strikeRate.toFixed(2) : "-"
-                  }</td>
-                  <td>${player.average ? player.average.toFixed(2) : "-"}</td>
-                  <td>${player.notOuts}</td>
-                  <td>${player.innings}</td>
-                  <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
-                  <td>${player.matches}</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </table>
-
-            <h2>Bowling Records</h2>
-            <table>
-              <tr>
-                <th>Player</th>
-                <th>Overs</th>
-                <th>Runs</th>
-                <th>Wickets</th>
-                <th>Eco</th>
-                <th>Extras</th>
-                <th>6s</th>
-                <th>4s</th> 
-                <th>Wins</th>
-                <th>Matches</th>
-              </tr>
-              ${bowlingStats
-                .slice(0, 30)
-                .map(
-                  (player) => `
-                <tr>
-                  <td>${playersMap.get(player.playerId) || player.playerId}</td>
-                  <td>${player.overs}${
-                    player.ballsBowled > 0 ? "." + player.ballsBowled : ""
-                  }</td>
-                  <td>${player.runsConceded}</td>
-                  <td>${player.wickets}</td>
-                  <td>${
-                    player.bowlingEconomy
-                      ? player.bowlingEconomy.toFixed(2)
-                      : "-"
-                  }</td>
-                  <td>${player.extras}</td>
-                  <td>${player.sixesConceded}</td>
-                  <td>${player.foursConceded}</td>
-                  <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
-                  <td>${player.matches}</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </table>
+            ${tableContent}
           </div>
           <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
           <script>
@@ -298,7 +329,6 @@ const PlayerCareerSummary = () => {
                 window.ReactNativeWebView.postMessage(imageData);
               });
             };
-            // Wait for fonts and images to load
             window.onload = () => {
               setTimeout(sendImage, 500);
             };
@@ -519,14 +549,80 @@ const PlayerCareerSummary = () => {
         )}
       </ScrollView>
       <View style={[styles.footer, themeStyles.footer]}>
-        <TouchableOpacity
-          onPress={exportAsImage}
-          style={[styles.shareButton, themeStyles.shareButton]}
-        >
-          <Text style={[styles.shareButtonText, themeStyles.shareButtonText]}>
-            <Icon source="share" size={20} color="white" /> Share
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          {/* First row: Batting and Bowling buttons side by side */}
+          <View style={styles.topRow}>
+            <TouchableOpacity
+              onPress={() => exportAsImage("batting")}
+              style={[
+                styles.shareButton,
+                themeStyles.shareButton,
+                styles.battingButton,
+              ]}
+            >
+              <View style={styles.buttonContent}>
+                <Icon
+                  name="cricket"
+                  type="material-community"
+                  size={20}
+                  color="white"
+                />
+                <Text
+                  style={[styles.shareButtonText, themeStyles.shareButtonText]}
+                >
+                  Share Batting
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => exportAsImage("bowling")}
+              style={[
+                styles.shareButton,
+                themeStyles.shareButton,
+                styles.bowlingButton,
+              ]}
+            >
+              <View style={styles.buttonContent}>
+                <Icon
+                  name="basketball"
+                  type="material-community"
+                  size={20}
+                  color="white"
+                />
+                <Text
+                  style={[styles.shareButtonText, themeStyles.shareButtonText]}
+                >
+                  Share Bowling
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Second row: Share All button (full width) */}
+          <TouchableOpacity
+            onPress={() => exportAsImage("all")}
+            style={[
+              styles.shareButton,
+              themeStyles.shareButton,
+              styles.shareAllButton,
+            ]}
+          >
+            <View style={styles.buttonContent}>
+              <Icon
+                name="share-variant"
+                type="material-community"
+                size={20}
+                color="white"
+              />
+              <Text
+                style={[styles.shareButtonText, themeStyles.shareButtonText]}
+              >
+                Share All Stats
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
       {webViewContent && (
         <WebView
@@ -563,16 +659,21 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   shareButton: {
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    width: "100%",
-    alignSelf: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    minHeight: 44,
   },
   shareButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+    color: "#FFFFFF",
   },
   table: {
     borderRadius: 12,
@@ -626,6 +727,39 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 8,
   },
+  buttonContainer: {
+    gap: 8,
+    paddingHorizontal: 8,
+  },
+
+  topRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  battingButton: {
+    backgroundColor: "#019999",
+    flex: 1,
+    minWidth: 0,
+  },
+
+  bowlingButton: {
+    backgroundColor: "#019999",
+    flex: 1,
+    minWidth: 0,
+  },
+
+  shareAllButton: {
+    backgroundColor: "#3498db", // Blue color for share all
+    width: "100%",
+  },
+
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
 });
 
 const darkStyles = StyleSheet.create({
@@ -667,6 +801,17 @@ const darkStyles = StyleSheet.create({
   dropdownContainer: {
     borderBottomColor: "#333",
   },
+  battingButton: {
+    backgroundColor: "#019999",
+  },
+
+  bowlingButton: {
+    backgroundColor: "#019999",
+  },
+
+  shareAllButton: {
+    backgroundColor: "#3498db",
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -707,6 +852,17 @@ const lightStyles = StyleSheet.create({
   },
   dropdownContainer: {
     borderBottomColor: "#E0E0E0",
+  },
+  battingButton: {
+    backgroundColor: "#3498db",
+  },
+
+  bowlingButton: {
+    backgroundColor: "#3498db",
+  },
+
+  shareAllButton: {
+    backgroundColor: "#3498db",
   },
 });
 

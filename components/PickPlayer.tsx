@@ -96,41 +96,132 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
     player.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderItem = ({ item }: { item: player }) => (
-    <TouchableOpacity
-      style={[styles.playerItem, themeStyles.playerItem]}
-      onPress={() => {
-        if (isSubmitting) return;
-        setIsSubmitting(true);
-        onSubmit(item);
-        onDismiss();
-      }}
-      disabled={isSubmitting}
-    >
-      <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
-      <View style={styles.statsContainer}>
-        {playerType === "Batsman" ? (
-          <>
-            <Text style={[styles.statsText, themeStyles.text]}>
-              {playerStats.find((p) => p.playerId === item.id)?.innings || 0}{" "}
-              innings
-            </Text>
-            {playerStats.find((p) => p.playerId === item.id)
-              ?.isRecommendedBatter && <View style={styles.recommendedDot} />}
-          </>
-        ) : (
-          <>
-            <Text style={[styles.statsText, themeStyles.text]}>
-              {playerStats.find((p) => p.playerId === item.id)?.overs || 0}{" "}
-              overs
-            </Text>
-            {playerStats.find((p) => p.playerId === item.id)
-              ?.isRecommendedBowler && <View style={styles.recommendedDot} />}
-          </>
-        )}
+  const renderStatsHeader = () => (
+    <View style={[styles.statsHeader, themeStyles.statsHeader]}>
+      <Text style={[styles.playerName, themeStyles.text]}>Player</Text>
+      <View style={styles.rightBlock}>
+        <View style={styles.statsRow}>
+          {playerType === "Batsman" ? (
+            <>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Inns
+                </Text>
+              </View>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Runs
+                </Text>
+              </View>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Balls
+                </Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Overs
+                </Text>
+              </View>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Runs
+                </Text>
+              </View>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Wkts
+                </Text>
+              </View>
+              <View style={styles.statCellHeader}>
+                <Text style={[styles.headerLabel, themeStyles.headerLabel]}>
+                  Econ
+                </Text>
+              </View>
+            </>
+          )}
+        </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
+
+  const renderItem = ({ item }: { item: player }) => {
+    const stats = playerStats.find((p) => p.playerId === item.id);
+    const isRecommended =
+      playerType === "Batsman"
+        ? stats?.isRecommendedBatter
+        : stats?.isRecommendedBowler;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.playerItem,
+          themeStyles.playerItem,
+          isRecommended && styles.recommendedPlayer,
+        ]}
+        onPress={() => {
+          if (isSubmitting) return;
+          setIsSubmitting(true);
+          onSubmit(item);
+          onDismiss();
+        }}
+        disabled={isSubmitting}
+      >
+        <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
+        <View style={styles.rightBlock}>
+          <View style={styles.statsRow}>
+            {playerType === "Batsman" ? (
+              <>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats?.innings || 0}
+                  </Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats?.runs || 0}
+                  </Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats?.ballsFaced || 0}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats?.overs || 0}.{stats?.ballsBowled || 0}
+                  </Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats?.runsConceded || 0}
+                  </Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats?.wickets || 0}
+                  </Text>
+                </View>
+                <View style={styles.statCell}>
+                  <Text style={[styles.statsValue, themeStyles.text]}>
+                    {stats && stats.overs > 0
+                      ? (stats.runsConceded / stats.overs).toFixed(1)
+                      : "0.0"}
+                  </Text>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <Modal
@@ -145,14 +236,7 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
         <Text style={[styles.headerText, themeStyles.headerText]}>
           {playerType === "Bowler" ? "Select Bowler" : "Select Next Batsman"}
         </Text>
-        {/* <Searchbar
-          placeholder="Search players"
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={[styles.searchBar, themeStyles.searchBar]}
-          inputStyle={themeStyles.searchBarInput}
-          iconColor={themeStyles.searchBarIcon.color}
-        /> */}
+        {renderStatsHeader()}
         <FlatList
           data={filteredPlayers}
           renderItem={renderItem}
@@ -180,81 +264,241 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   container: {
-    padding: 20,
+    padding: 16,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: "85%",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   headerText: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 16,
+    fontSize: 18,
+    fontWeight: "800",
+    marginBottom: 12,
     textAlign: "center",
+    letterSpacing: 0.8,
+    color: "#0F172A",
   },
   searchBar: {
-    marginBottom: 16,
+    marginBottom: 12,
     elevation: 0,
   },
   list: {
-    marginBottom: 4,
-    marginRight: 4, // Increased margin to accommodate the scrollbar
+    marginBottom: 12,
+    marginRight: 4,
+  },
+  statsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 6,
+    borderRadius: 10,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  headerStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: "#475569",
   },
   playerItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    borderRadius: 10,
     marginBottom: 8,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   playerName: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 14,
+    fontWeight: "700",
+    flex: 1,
+    letterSpacing: 0.4,
+    color: "#0F172A",
   },
   cancelButton: {
-    borderRadius: 8,
+    borderRadius: 10,
+    marginTop: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: "#3B82F6",
+    shadowColor: "#3B82F6",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   cancelButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
+    letterSpacing: 0.4,
+    color: "#FFFFFF",
+  },
+  rightBlock: {
+    flex: 1,
+    alignItems: "flex-end",
   },
   statsContainer: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  statsRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
   },
-  statsText: {
-    marginRight: 8,
+  statCellHeader: {
+    minWidth: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  recommendedDot: {
-    width: 8,
-    height: 8,
-    backgroundColor: "green",
-    borderRadius: 4,
+  statCell: {
+    minWidth: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statsValue: {
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "center",
+    letterSpacing: 0.5,
+    fontFamily: "monospace",
+    color: "#475569",
+  },
+  separator: {
+    width: 12,
+    height: 2,
+    borderRadius: 2,
+    marginHorizontal: 8,
+  },
+  recommendedPlayer: {
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
 });
 
 const darkStyles = StyleSheet.create({
   container: {
-    backgroundColor: "#1E1E1E",
+    backgroundColor: "#0F172A",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
   },
   headerText: {
-    color: "#FFFFFF",
+    color: "#F8FAFC",
   },
   text: {
-    color: "#FFFFFF",
+    color: "#F1F5F9",
   },
   playerItem: {
-    backgroundColor: "#2C2C2C",
+    backgroundColor: "#1E293B",
+    borderWidth: 1,
+    borderColor: "#334155",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statsHeader: {
+    backgroundColor: "#334155",
+    borderWidth: 1,
+    borderColor: "#475569",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  headerLabel: {
+    color: "#94A3B8",
+  },
+  rowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
+  },
+  separator: {
+    backgroundColor: "#64748B",
   },
   searchBar: {
-    backgroundColor: "#2C2C2C",
+    backgroundColor: "#1E293B",
   },
   searchBarInput: {
-    color: "#FFFFFF",
+    color: "#F1F5F9",
   },
   searchBarIcon: {
-    color: "#FFFFFF",
+    color: "#94A3B8",
+  },
+  recommendedPlayer: {
+    backgroundColor: "#064E3B",
+    borderColor: "#10B981",
+    shadowColor: "#10B981",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
   },
 });
 
@@ -263,22 +507,35 @@ const lightStyles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   headerText: {
-    color: "#212121",
+    color: "#0F172A",
   },
   text: {
-    color: "#212121",
+    color: "#0F172A",
   },
   playerItem: {
-    backgroundColor: "#F0F0F0", // Slightly darker background for better contrast
+    backgroundColor: "#FFFFFF",
+  },
+  statsHeader: {
+    backgroundColor: "#F1F5F9",
+  },
+  headerLabel: {
+    color: "#475569",
+  },
+  rowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#CBD5E1",
+  },
+  separator: {
+    backgroundColor: "#CBD5E1",
   },
   searchBar: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#F1F5F9",
   },
   searchBarInput: {
-    color: "#212121",
+    color: "#0F172A",
   },
   searchBarIcon: {
-    color: "#666666",
+    color: "#475569",
   },
 });
 

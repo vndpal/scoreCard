@@ -2,7 +2,7 @@ const APP_ENVIRONMENT = process.env.APP_ENV;
 let AndroidGoogleServicesFile;
 
 if (APP_ENVIRONMENT === "development") {
-  AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON_DEV;
+  AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON;
 } else if (APP_ENVIRONMENT === "preview") {
   AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON;
 } else if (APP_ENVIRONMENT === "testing") {
@@ -35,6 +35,8 @@ module.exports = {
       },
       googleServicesFile: AndroidGoogleServicesFile,
       package: "com.vndpal.ScoreCard",
+      targetSdkVersion: 35,
+      compileSdkVersion: 35,
     },
     web: {
       bundler: "metro",

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "scorecard-425315",
+  "private_key_id": "2d9f910345200e6e8eeeb6b03963dc83496f8676",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC0sIP7ORynzZXQ\nM9lCWDOTRL5yrD49gxPZ+xk4oLTjyO4B6z0rjNtEZtlH4KkufJKYkBjHm9odWbeg\n448HV9U2ZZYlu7v4jMFHfDdXFWplNahwRystoo4Ik3XLkjjmCeAAKQYsP9JoOuvZ\nH9z4Do+/ZbxRLVavyO+g51cPWJsPm3kQHIl5jXhlynh+2QuEH++21dSa4aM9EhDb\nkpJrpRx5jfcRZ3d8HlNqonAzre1h8Fnh12ekPYmzkEYYNKDt6Z5RPoUWhv2T5GxR\njME+rGWGCTEgTwmoSq04pK88Fco3QiOTuJIs1B9YIY/rHBZ8W+SOCaUgNiFjysSu\nkKlmT3t/AgMBAAECggEADUfgG4oCGi9ZMJlvAZpcCBoIaYNRe9HzlpUHMItXYFq3\na7qvn1DWGPv6Qnc32Cvd1orY12sUKA4dGh0/uQlyqXHkDFf1I/qshiWSJ7tyO4gr\nHj2M5ejJycWU5eaUegwFw91AD+aM/449IZNe+XiQhj/jDJBpi7gYLNp0IrOfihEC\nwY/8OMrdDtSaYQ8/Eoykyrhlp3IPRiGRCcjM22W8DtgE8s9DPGLUgQ7k+t051lxv\nznTMNaobLHnWgQfYN24fsI9d7Mc7W0f+7Z3QssT5EcQZtcvExMwN49T7AS6eAUJU\nJxlAcUUgxKndy8drjeJdebzsFxK68Byt02n2eZsmCQKBgQDZrAVNGiwzn43KCjSP\nP74VjpgzEIeNy446g3dU+eFvvapHBYzuRpjawjLZ6xIjnSVPIzA3QPOvdkrpaqQG\nlnN2GKu1TeL92BRi29JbCBqm2SNjOzHANjgKHeMo2eyrDUENPqXkgC9k1zZricxq\nuGZH5QZjGg2rGfZWsGUoUlDhJQKBgQDUgXDL+4QIk8RnJx+rNIHGNVuIJTthe+MC\n3HJB84Nl6fZMrI2h8LHoDljWwvAJ/W5msQQNIMmEAc0K5QeiguqJ3YhsLp4lVUbp\nU+NpGuXvbF7X8eWdLBcQlujqBZoZKk4tzLv4UMdFVGb/upVhL8uOF8yUqjn/1hmg\nvdKLkhMi0wKBgEMI9gz7rXcsgQciw3MGR2zuIDNBuO1TLfcZO6vg1KuL9p+utus+\ntJ5SRkTUXx62q6HGjXfGugVkYcemvuMEfIR3LpJEbU6NuCGF3y+HvGV746kQts6i\nI/oBoE6ZZoh7KXiBvac0TuQ4XxsZMen/5gfoIWJtyJ3T/ghOhKi5SQ09AoGAR8vL\nzj8V5sf17Vv8iR1eUxcn66GYpGD027ybJckeNcqMGm+aEoJ9uQdP4I9QBjAHos5f\nrgfLzbvGCM5EfBV7JEUimFpPuBFNuftLs/EQiom0qYTirO1+hW5XFun5nFL8wuCP\nCWBRUw0nF3N0kLdTMJi91+SDX/p4AiTgA6PAr10CgYEAuQ3pIkLPiq78qIGK5YUh\nqXCKPm112K+WY/Y4XIcU2zu3F/3W+2LY22Fnp3VTG900vuJR2Hvf9KD0BYnndFWP\nI2pdJR/iiT0k6BRWluNNRAdZLCMrQF2+GQEOokp/g6l1rdO5HXsk9olW+Eggd70R\nuznFna6f6958xup3tdGeKTo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "firestore-bigquery-migrator@scorecard-425315.iam.gserviceaccount.com",
+  "client_id": "107228328589446784257",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firestore-bigquery-migrator%40scorecard-425315.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

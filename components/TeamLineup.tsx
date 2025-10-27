@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Menu, useTheme } from "react-native-paper";
 import { Icon } from "react-native-elements";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { player } from "@/types/player";
 import { team } from "@/types/team";
 import TeamSelection from "./TeamSelection";
@@ -55,6 +56,7 @@ const TeamLineUp: React.FC = () => {
 
   const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => {
@@ -401,7 +403,12 @@ const TeamLineUp: React.FC = () => {
         }
         style={styles.gradientBackground}
       >
-        <View style={styles.contentContainer}>
+        <View
+          style={[
+            styles.contentContainer,
+            { paddingBottom: Math.max(insets.bottom, 12) },
+          ]}
+        >
           <View style={styles.teamsGrid}>
             {/* Team 1 Section */}
             <View style={[styles.teamSection, themeStyles.teamSection]}>

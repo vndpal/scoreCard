@@ -1,6 +1,7 @@
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Keyboard,
   View,
@@ -54,6 +55,7 @@ export const CreateMatch = () => {
   const [tournament, setTournament] = useState<tournament>();
   const [showSnackbar, setShowSnackbar] = useState(false);
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => {
@@ -247,7 +249,12 @@ export const CreateMatch = () => {
   });
 
   return (
-    <View style={styles.formContainer}>
+    <View
+      style={[
+        styles.formContainer,
+        { paddingBottom: Math.max(insets.bottom, 10) },
+      ]}
+    >
       <Dropdown
         label="Batting team"
         options={teams}

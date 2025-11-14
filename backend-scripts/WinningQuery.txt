@@ -1,0 +1,15 @@
+SELECT 
+  p.name AS player_name,
+  SUM(pt.matches) AS matches,
+  SUM(pt.matchesWon) AS wins,
+  ROUND((SUM(pt.matchesWon) / SUM(pt.matches)) * 100,2) AS win_percentage
+
+FROM `scorecard.PlayerTournamentStats` pt
+JOIN `scorecard.Players` p 
+  ON pt.playerId = p.id
+JOIN `scorecard.Tournaments` t 
+  ON pt.tournamentId = t.id
+WHERE pt.clubId = 'MD9kwAKqLef2ryVkBjpj'
+  AND t.date > '2025-09-01'
+GROUP BY p.name
+ORDER BY win_percentage desc;

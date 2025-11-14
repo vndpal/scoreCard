@@ -1,0 +1,38 @@
+SELECT 
+  p.name AS Name,
+  SUM(pt.matches) AS matches,
+  SUM(pt.matchesWon) AS wins,
+  ROUND((SUM(pt.matchesWon) / SUM(pt.matches)) * 100, 2) AS WinPercentage,
+
+  -- Bowling stats
+  SUM(pt.wickets) AS wickets,
+  SUM(pt.runsConceded) AS runs,
+  SUM(pt.dotBalls) AS dotBalls,
+  SUM(pt.sixesConceded) AS Sixes,
+  SUM(pt.foursConceded) As Fours,
+  SUM(pt.extras) As Extras,
+
+  -- Overs in X.Y format (e.g., 4.3 overs = 4 overs 3 balls)
+  CAST(
+    (SUM(pt.overs) + FLOOR(SUM(pt.ballsBowled) / 6)) AS STRING
+  ) || '.' || 
+  CAST(MOD(SUM(pt.ballsBowled), 6) AS STRING) AS overs,
+
+  -- Economy = runs conceded / overs
+  ROUND(
+    SAFE_DIVIDE(
+      SUM(pt.runsConceded),
+      (SUM(pt.overs) + FLOOR(SUM(pt.ballsBowled) / 6))
+    ),
+    2
+  ) AS economy
+
+FROM `scorecard.PlayerTournamentStats` pt
+JOIN `scorecard.Players` p 
+  ON pt.playerId = p.id
+JOIN `scorecard.Tournaments` t 
+  ON pt.tournamentId = t.id
+WHERE pt.clubId = 'MD9kwAKqLef2ryVkBjpj'
+  AND t.date > '2025-09-01'
+GROUP BY p.name
+ORDER BY wickets desc, economy;

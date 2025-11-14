@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScoreCard Stats Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏏 ScoreCard Statistics Dashboard</h1>
+            <p class="subtitle">Monthly Performance Analytics</p>
+        </header>
+
+        <div class="month-selector">
+            <label for="monthSelect">Select Month:</label>
+            <select id="monthSelect" class="month-select">
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9" selected>September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+            </select>
+            <label for="yearSelect">Year:</label>
+            <select id="yearSelect" class="year-select">
+                <!-- Years will be populated by JavaScript -->
+            </select>
+        </div>
+
+        <div class="stats-selector">
+            <button class="stat-btn" data-type="batting" id="battingBtn">
+                <span class="icon">🏏</span>
+                <span class="label">Batting Stats</span>
+            </button>
+            <button class="stat-btn" data-type="bowling" id="bowlingBtn">
+                <span class="icon">⚾</span>
+                <span class="label">Bowling Stats</span>
+            </button>
+            <button class="stat-btn" data-type="winning" id="winningBtn">
+                <span class="icon">🏆</span>
+                <span class="label">Winning Stats</span>
+            </button>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading data from BigQuery...</p>
+        </div>
+
+        <div class="error" id="error" style="display: none;"></div>
+
+        <div class="results-container" id="resultsContainer" style="display: none;">
+            <div class="table-wrapper">
+                <table id="resultsTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

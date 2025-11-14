@@ -1,0 +1,27 @@
+SELECT 
+  p.name AS player_name,
+  SUM(pt.matches) AS matches,
+  SUM(pt.matchesWon) AS wins,
+  ROUND((SUM(pt.matchesWon) / SUM(pt.matches)) * 100,2) AS win_percentage,
+
+  -- Batting stats
+  SUM(pt.runs) AS runs,
+  SUM(pt.ballsFaced) AS balls_faced,
+  SUM(pt.innings) AS innings,
+  SUM(pt.fours) AS fours,
+  SUM(pt.sixes) AS sixes,
+  SUM(pt.notOuts) AS not_outs,
+
+  -- Strike rate = runs/balls * 100 (if balls > 0)
+  ROUND(SAFE_DIVIDE(SUM(pt.runs), NULLIF(SUM(pt.ballsFaced), 0)) * 100,2) AS strike_rate,
+ROUND(AVG(pt.average),2) as Average
+
+FROM `scorecard.PlayerTournamentStats` pt
+JOIN `scorecard.Players` p 
+  ON pt.playerId = p.id
+JOIN `scorecard.Tournaments` t 
+  ON pt.tournamentId = t.id
+WHERE pt.clubId = 'MD9kwAKqLef2ryVkBjpj'
+  AND t.date > '2025-09-01'
+GROUP BY p.name
+ORDER BY runs desc,strike_rate desc;

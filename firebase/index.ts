@@ -1,6 +1,8 @@
-import firestore from "@react-native-firebase/firestore";
+import { getFirestore } from "@react-native-firebase/firestore";
+import { getApp } from "@react-native-firebase/app";
 
-const db = firestore();
+const app = getApp();
+const db = getFirestore(app);
 
 const toggleCache = (value: boolean) => {
   if (value) {

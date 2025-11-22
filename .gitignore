@@ -144,3 +144,5 @@ google-services.json
 
 # Native directories
 android/
+expo-env.d.ts
+.expo/devices.json

@@ -141,3 +141,6 @@ scorecard-425315-d1e3dd5520a8.json
 .expo/devices.json
 .expo/types/router.d.ts
 google-services.json
+
+# Native directories
+android/

@@ -19,12 +19,14 @@ import { Club } from "@/firebase/models/Club";
 import { getUniqueClubName } from "@/utils/getUniqueClubName";
 import { useAppContext } from "@/context/AppContext";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ClubsScreen() {
   const [clubName, setClubName] = useState("");
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const router = useRouter();
   const { updateClub } = useAppContext();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
@@ -86,7 +88,9 @@ export default function ClubsScreen() {
         </View>
       </>
 
-      <View style={styles.bottomContainer}>
+      <View
+        style={[styles.bottomContainer, { bottom: 40 + insets.bottom }]}
+      >
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}

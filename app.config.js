@@ -8,7 +8,7 @@ if (APP_ENVIRONMENT === "development") {
 } else if (APP_ENVIRONMENT === "testing") {
   AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON;
 } else {
-  AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON;
+  AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON || "./google-services.json";
 }
 
 module.exports = {
@@ -41,24 +41,7 @@ module.exports = {
       output: "static",
       favicon: "./assets/images/logo.png",
     },
-    plugins: [
-      "expo-router",
-      [
-        "expo-build-properties",
-        {
-          android: {
-            buildToolsVersion: "35.0.0",
-            compileSdkVersion: 34,
-            targetSdkVersion: 35,
-            // Ensure compatibility with devices using 16KB memory pages
-            // NDK r26+ sets appropriate linker flags for 16KB page support
-            ndkVersion: "26.1.10909125",
-            // Explicitly set minSdk to 23+ (required by modern NDK/toolchains)
-            minSdkVersion: 23,
-          },
-        },
-      ],
-    ],
+    plugins: ["expo-router", ["expo-build-properties"]],
     experiments: {
       typedRoutes: true,
     },

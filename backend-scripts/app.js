@@ -13,6 +13,9 @@ const resultsContainer = document.getElementById('resultsContainer');
 const tableHead = document.getElementById('tableHead');
 const tableBody = document.getElementById('tableBody');
 
+// Track current stats type
+let currentType = '';
+
 // Initialize year dropdown (current year and past 5 years)
 function initializeYearSelect() {
     const currentYear = new Date().getFullYear();
@@ -37,6 +40,7 @@ winningBtn.addEventListener('click', () => loadStats('winning'));
 
 // Function to load stats
 async function loadStats(type) {
+    currentType = type;
     // Update active button
     document.querySelectorAll('.stat-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -84,9 +88,29 @@ function displayData(data, type) {
         return;
     }
 
-    // Get column names from first row
-    const columns = Object.keys(data[0]);
-    
+    // Define column order based on type
+    let columns = [];
+    if (type === 'batting') {
+        columns = [
+            'player_name', 'matches', 'innings', 'runs', 'balls_faced',
+            'fours', 'sixes', 'strike_rate', 'Average', 'not_outs',
+            'wins', 'win_percentage'
+        ];
+    } else if (type === 'bowling') {
+        columns = [
+            'Name', 'matches', 'overs', 'wickets', 'runs',
+            'economy', 'dotBalls', 'Sixes', 'Fours', 'Extras',
+            'wins', 'WinPercentage'
+        ];
+    } else {
+        // Fallback to default order
+        columns = Object.keys(data[0]);
+    }
+
+    // Filter columns to ensure they exist in data
+    const availableColumns = Object.keys(data[0]);
+    columns = columns.filter(col => availableColumns.includes(col));
+
     // Create table header
     const headerRow = document.createElement('tr');
     columns.forEach(col => {
@@ -130,7 +154,7 @@ function formatValue(value, columnName) {
     // Format numbers
     if (typeof value === 'number') {
         // Check if it's a percentage or rate
-        if (columnName.includes('percentage') || columnName.includes('rate') || 
+        if (columnName.includes('percentage') || columnName.includes('rate') ||
             columnName.includes('economy') || columnName.includes('average')) {
             return value.toFixed(2);
         }
@@ -146,4 +170,65 @@ function showError(message) {
     error.textContent = `❌ ${message}`;
     error.style.display = 'block';
 }
+
+// Share as Image functionality
+const shareBtn = document.getElementById('shareBtn');
+
+shareBtn.addEventListener('click', async () => {
+    if (resultsContainer.style.display === 'none') {
+        showError('No stats to share. Please load some data first.');
+        return;
+    }
+
+    try {
+        shareBtn.disabled = true;
+        shareBtn.innerHTML = '<span class="spinner" style="width: 20px; height: 20px; border-width: 2px; display: inline-block; margin: 0;"></span> Generating...';
+
+        // Create header for export
+        const header = document.createElement('div');
+        header.className = 'export-header';
+
+        const monthName = monthSelect.options[monthSelect.selectedIndex].text;
+        const year = yearSelect.value;
+        const typeName = currentType.charAt(0).toUpperCase() + currentType.slice(1);
+
+        header.innerHTML = `
+            <h2>${typeName} Stats ${monthName}-${year}</h2>
+            <div class="branding">ScoreCard Analytics</div>
+        `;
+
+        // Insert header before table
+        resultsContainer.insertBefore(header, resultsContainer.firstChild);
+
+        const canvas = await html2canvas(resultsContainer, {
+            backgroundColor: '#ffffff',
+            scale: 2, // Higher quality
+            logging: false,
+            useCORS: true
+        });
+
+        // Remove header after capture
+        resultsContainer.removeChild(header);
+
+        // Create download link
+        const link = document.createElement('a');
+        link.download = `scorecard-stats-${currentType}-${monthName}-${year}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // Restore button state
+        shareBtn.disabled = false;
+        shareBtn.innerHTML = '<span class="icon">📸</span> <span class="label">Share as Image</span>';
+    } catch (err) {
+        console.error('Error generating image:', err);
+        showError('Failed to generate image. Please try again.');
+        // Ensure header is removed even if error occurs
+        const existingHeader = resultsContainer.querySelector('.export-header');
+        if (existingHeader) {
+            resultsContainer.removeChild(existingHeader);
+        }
+        shareBtn.disabled = false;
+        shareBtn.innerHTML = '<span class="icon">📸</span> <span class="label">Share as Image</span>';
+    }
+});
 

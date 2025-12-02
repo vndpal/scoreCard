@@ -18,7 +18,8 @@ import { Club } from "@/firebase/models/Club";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Tournament } from "@/firebase/models/Tournament";
-import { View, Image, ActivityIndicator } from "react-native";
+import { View, Image, ActivityIndicator, Button } from "react-native";
+import { getCrashlytics, log } from "@react-native-firebase/crashlytics";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -50,35 +51,48 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+
+      // Log app mount to Crashlytics
+      try {
+        log(getCrashlytics(), "App mounted.");
+      } catch (error) {
+        console.error("Failed to log to Crashlytics:", error);
+      }
+
       setCurrentSettings(settings);
 
       const initializeApp = async () => {
-        // Get saved theme
-        const savedTheme = await AsyncStorage.getItem(STORAGE_ITEMS.THEME);
-        if (savedTheme) {
-          const theme = savedTheme as "dark" | "light";
-          setCurrentTheme(theme);
-          setTheme(theme === "dark" ? DarkTheme : DefaultTheme);
-        }
-
-        // Get saved club
-        const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
-        if (club) {
-          setClub(JSON.parse(club));
-          const currentTournament = await Tournament.getByStatus(
-            "ongoing",
-            JSON.parse(club).id
-          );
-
-          if (currentTournament) {
-            console.log(
-              "currentTournament from _layout.tsx",
-              currentTournament[0].id
-            );
-            setCurrentTournament(currentTournament[0].id);
+        try {
+          // Get saved theme
+          const savedTheme = await AsyncStorage.getItem(STORAGE_ITEMS.THEME);
+          if (savedTheme) {
+            const theme = savedTheme as "dark" | "light";
+            setCurrentTheme(theme);
+            setTheme(theme === "dark" ? DarkTheme : DefaultTheme);
           }
+
+          // Get saved club
+          const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
+          if (club) {
+            setClub(JSON.parse(club));
+            const currentTournament = await Tournament.getByStatus(
+              "ongoing",
+              JSON.parse(club).id
+            );
+
+            if (currentTournament) {
+              console.log(
+                "currentTournament from _layout.tsx",
+                currentTournament[0].id
+              );
+              setCurrentTournament(currentTournament[0].id);
+            }
+          }
+        } catch (error) {
+          console.error("Error initializing app:", error);
+        } finally {
+          setIsAppInitialized(true);
         }
-        setIsAppInitialized(true);
       };
 
       initializeApp();
@@ -237,6 +251,8 @@ export default function RootLayout() {
               />
             </View>
           )}
+          {/* Temporary Crash Button for Testing */}
+          {/* <Button title="Crash" onPress={() => crashlytics().crash()} /> */}
         </AppContextProvider>
       </PaperProvider>
     </ThemeProvider>

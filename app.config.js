@@ -41,7 +41,12 @@ module.exports = {
       output: "static",
       favicon: "./assets/images/logo.png",
     },
-    plugins: ["expo-router", ["expo-build-properties"]],
+    plugins: [
+      "expo-router",
+      ["expo-build-properties"],
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics",
+    ],
     experiments: {
       typedRoutes: true,
     },

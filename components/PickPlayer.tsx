@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, TouchableOpacity, FlatList } from "react-native";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { Button, Text, Searchbar } from "react-native-paper";
-import Modal from "react-native-modal";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { player } from "@/types/player";
@@ -225,35 +231,43 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
 
   return (
     <Modal
-      isVisible={visible}
-      onBackdropPress={onDismiss}
-      onBackButtonPress={onDismiss}
-      swipeDirection="down"
-      onSwipeComplete={onDismiss}
-      style={styles.modal}
+      visible={visible}
+      onRequestClose={onDismiss}
+      transparent={true}
+      animationType="slide"
     >
-      <View style={[styles.container, themeStyles.container]}>
-        <Text style={[styles.headerText, themeStyles.headerText]}>
-          {playerType === "Bowler" ? "Select Bowler" : "Select Next Batsman"}
-        </Text>
-        {renderStatsHeader()}
-        <FlatList
-          data={filteredPlayers}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.list}
-          showsVerticalScrollIndicator={true}
-          persistentScrollbar={true}
-        />
-        <Button
-          mode="contained"
-          onPress={onDismiss}
-          style={styles.cancelButton}
-          labelStyle={styles.cancelButtonText}
-        >
-          Cancel
-        </Button>
-      </View>
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onDismiss}
+      >
+        <TouchableWithoutFeedback>
+          <View style={[styles.container, themeStyles.container]}>
+            <Text style={[styles.headerText, themeStyles.headerText]}>
+              {playerType === "Bowler"
+                ? "Select Bowler"
+                : "Select Next Batsman"}
+            </Text>
+            {renderStatsHeader()}
+            <FlatList
+              data={filteredPlayers}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              style={styles.list}
+              showsVerticalScrollIndicator={true}
+              persistentScrollbar={true}
+            />
+            <Button
+              mode="contained"
+              onPress={onDismiss}
+              style={styles.cancelButton}
+              labelStyle={styles.cancelButtonText}
+            >
+              Cancel
+            </Button>
+          </View>
+        </TouchableWithoutFeedback>
+      </TouchableOpacity>
     </Modal>
   );
 };
@@ -262,6 +276,11 @@ const styles = StyleSheet.create({
   modal: {
     justifyContent: "flex-end",
     margin: 0,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   container: {
     padding: 16,

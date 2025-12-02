@@ -25,18 +25,24 @@ export default function TabLayout() {
   useEffect(() => {
     if (pathname === "/" && rootNavigationState?.key) {
       const checkClub = async () => {
-        let club: Club | null = null;
-        const clubFromStorage = await AsyncStorage.getItem(
-          STORAGE_ITEMS.USER_CLUB
-        );
-        if (clubFromStorage) {
-          club = JSON.parse(clubFromStorage);
-        }
-        if (!club || !club.id) {
+        try {
+          let club: Club | null = null;
+          const clubFromStorage = await AsyncStorage.getItem(
+            STORAGE_ITEMS.USER_CLUB
+          );
+          if (clubFromStorage) {
+            club = JSON.parse(clubFromStorage);
+          }
+          if (!club || !club.id) {
+            router.replace("/club");
+            return;
+          }
+          // router.replace("/");
+        } catch (error) {
+          console.error("Error checking club:", error);
+          // Optionally redirect to club if error occurs
           router.replace("/club");
-          return;
         }
-        router.replace("/");
       };
       checkClub();
 

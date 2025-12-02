@@ -137,6 +137,8 @@ expo-env.d.ts
 scorecard-425315-d1e3dd5520a8.json
 %ProgramData%/Microsoft/Windows/UUS/State/_active.uusver
 
+# Expo
+.expo
 .expo/
 .expo/devices.json
 .expo/types/router.d.ts
@@ -145,4 +147,3 @@ google-services.json
 # Native directories
 android/
 expo-env.d.ts
-.expo/devices.json

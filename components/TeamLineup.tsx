@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -191,6 +191,10 @@ const TeamLineUp: React.FC = () => {
     return () => backHandler.remove();
   }, [hasUnsavedChanges]);
 
+  const lastMenuCloseTime = useRef<number>(0);
+
+
+
   const handleAddPlayer = (selectedPlayer: player) => {
     if (selectedPlayer) {
       setHasUnsavedChanges(true);
@@ -206,12 +210,16 @@ const TeamLineUp: React.FC = () => {
         );
       }
 
-      setTeam1DropdownOpen(false);
-      setTeam2DropdownOpen(false);
+      closeMenu();
     }
   };
 
   const openMenu = (team: "team1" | "team2") => {
+    // Prevent opening if the menu was just closed (debounce)
+    if (Date.now() - lastMenuCloseTime.current < 300) {
+      return;
+    }
+
     if (!team1 || !team2) {
       setTeamSelectionVisible(true);
       return;
@@ -224,6 +232,7 @@ const TeamLineUp: React.FC = () => {
   };
 
   const closeMenu = () => {
+    lastMenuCloseTime.current = Date.now();
     setTeam1DropdownOpen(false);
     setTeam2DropdownOpen(false);
   };
@@ -422,6 +431,7 @@ const TeamLineUp: React.FC = () => {
                   </Text>
                 </View>
                 <Menu
+                  key={`team1-menu-${availablePlayers.length}`}
                   visible={team1DropdownOpen}
                   onDismiss={closeMenu}
                   anchor={
@@ -488,6 +498,7 @@ const TeamLineUp: React.FC = () => {
                   </Text>
                 </View>
                 <Menu
+                  key={`team2-menu-${availablePlayers.length}`}
                   visible={team2DropdownOpen}
                   onDismiss={closeMenu}
                   anchor={

@@ -106,7 +106,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
             label="First team"
             options={items}
             value={formik.values.team1}
-            onSelect={formik.handleChange("team1")}
+            onSelect={(value) => formik.setFieldValue("team1", value)}
             mode="outlined"
             error={!!formik.errors.team1 && !!formik.touched.team1}
           />
@@ -121,7 +121,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
             label="Second team"
             options={items}
             value={formik.values.team2}
-            onSelect={formik.handleChange("team2")}
+            onSelect={(value) => formik.setFieldValue("team2", value)}
             mode="outlined"
             error={!!formik.errors.team2 && !!formik.touched.team2}
           />

@@ -406,7 +406,7 @@ const TeamLineUp: React.FC = () => {
         <View
           style={[
             styles.contentContainer,
-            { paddingBottom: Math.max(insets.bottom, 12) },
+            { paddingBottom: Math.max(insets.bottom, 12), paddingTop: insets.top },
           ]}
         >
           <View style={styles.teamsGrid}>

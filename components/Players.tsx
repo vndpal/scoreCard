@@ -7,6 +7,7 @@ import { getItem } from "@/utils/asyncStorage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View, FlatList, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Card, Text, FAB } from "react-native-paper";
 
 const Players = () => {
@@ -14,6 +15,7 @@ const Players = () => {
   const [players, setPlayers] = useState<player[]>([]);
   const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => {
@@ -31,7 +33,7 @@ const Players = () => {
       onPress={() =>
         router.push({
           pathname: "/player/[id]",
-          params: { playerId: item.id, playerName: item.name },
+          params: { id: item.id, playerName: item.name },
         })
       }
     >
@@ -47,9 +49,10 @@ const Players = () => {
         data={players}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 80 + insets.bottom }}
       />
       <FAB
-        style={[styles.fab, themeStyles.fab]}
+        style={[styles.fab, themeStyles.fab, { bottom: insets.bottom + 16 }]}
         small
         icon="plus"
         onPress={() => router.push("/createPlayer")}

@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { Tournament } from "@/firebase/models/Tournament";
 import { useEffect } from "react";
@@ -9,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 const Tournaments = () => {
   const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
 
   useEffect(() => {
@@ -44,7 +46,13 @@ const Tournaments = () => {
   };
 
   return (
-    <View style={[styles.container, themeStyles.container]}>
+    <View
+      style={[
+        styles.container,
+        themeStyles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <CreateTournament style={styles.formContainer} />
 
       <View style={styles.scrollWrapper}>

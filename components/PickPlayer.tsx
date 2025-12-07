@@ -7,6 +7,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Text, Searchbar } from "react-native-paper";
 import { getItem } from "@/utils/asyncStorage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
@@ -46,6 +47,7 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { currentTheme, currentTournament } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     (async () => {
@@ -242,7 +244,13 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
         onPress={onDismiss}
       >
         <TouchableWithoutFeedback>
-          <View style={[styles.container, themeStyles.container]}>
+          <View
+            style={[
+              styles.container,
+              themeStyles.container,
+              { paddingBottom: insets.bottom + 16 },
+            ]}
+          >
             <Text style={[styles.headerText, themeStyles.headerText]}>
               {playerType === "Bowler"
                 ? "Select Bowler"

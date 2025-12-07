@@ -8,6 +8,7 @@ import {
   VirtualizedList,
   ScrollView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { player } from "@/types/player"; // Import the player type
@@ -36,6 +37,7 @@ const MatchSummary = () => {
 
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   const battingColumns = [
     { key: "playerId", label: "Player" },
@@ -99,7 +101,13 @@ const MatchSummary = () => {
   }, [matchId]);
 
   return (
-    <ScrollView style={[styles.container, themeStyles.container]}>
+    <ScrollView
+      style={[
+        styles.container,
+        themeStyles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Table
         columns={battingColumns}
         data={battingRecordsTeamA.map((x) => ({

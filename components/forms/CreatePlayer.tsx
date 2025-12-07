@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput, Button } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { getItem, setItem } from "@/utils/asyncStorage";
@@ -13,6 +14,7 @@ export const CreatePlayer = () => {
   const [name, setName] = useState("");
   const router = useRouter();
   const { currentTheme, club } = useAppContext();
+  const insets = useSafeAreaInsets();
 
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
@@ -42,6 +44,7 @@ export const CreatePlayer = () => {
     const playerCareerStats = await PlayerCareerStats.create({
       playerId,
       matches: 0,
+      matchesWon: 0,
       innings: 0,
       runs: 0,
       ballsFaced: 0,
@@ -65,7 +68,12 @@ export const CreatePlayer = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <TextInput
         label="Player Name"
         value={name}

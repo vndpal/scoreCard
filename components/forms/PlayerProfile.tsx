@@ -1,6 +1,7 @@
 // app/player/[id].tsx
 import React, { useState } from "react";
 import { View, StyleSheet, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput, Button, Text, Icon } from "react-native-paper";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Player } from "@/firebase/models/Player";
@@ -18,6 +19,7 @@ export default function PlayerProfile() {
     "career"
   );
   const { currentTheme, club } = useAppContext();
+  const insets = useSafeAreaInsets();
   const handleSave = async () => {
     const trimmedName = name?.replace(/\s+/g, " ").trim();
     if (!trimmedName) {
@@ -85,7 +87,12 @@ export default function PlayerProfile() {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       {isEditing ? (
         <TextInput
           label="Player Name"

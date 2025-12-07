@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "GOOGLE_SERVICES_JSON": "{{ GOOGLE_SERVICES_JSON }}",
+        "GOOGLE_SERVICES_JSON": "{{ GOOGLE_SERVICES_JSON_DEV }}",
         "APP_ENV": "development"
       }
     },
@@ -28,17 +28,6 @@
         "buildType": "app-bundle"
       },
       "autoIncrement": true,
-      "env": {
-        "GOOGLE_SERVICES_JSON": "{{ GOOGLE_SERVICES_JSON }}",
-        "APP_ENV": "testing"
-      }
-    },
-    "deleteLaterTesting": {
-      "distribution": "internal",
-      "developmentClient": true,
-      "android": {
-        "buildType": "apk"
-      },
       "env": {
         "GOOGLE_SERVICES_JSON": "{{ GOOGLE_SERVICES_JSON }}",
         "APP_ENV": "testing"

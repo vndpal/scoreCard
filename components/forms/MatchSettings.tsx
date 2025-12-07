@@ -13,6 +13,7 @@ import {
   Keyboard,
   ActivityIndicator,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Switch, Button, TextInput } from "react-native-paper";
 import { Dropdown } from "react-native-paper-dropdown";
 import { playerMatchStats } from "@/types/playerMatchStats";
@@ -41,6 +42,7 @@ const MatchSettings = () => {
   const { currentTheme, club } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [loading, setLoading] = useState<boolean>(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     fetchMatch();
@@ -154,7 +156,8 @@ const MatchSettings = () => {
     }
   };
 
-  const handleDdlChange = (value: string) => {
+  const handleDdlChange = (value?: string) => {
+    if (!value) return;
     if (
       value === "tied" ||
       value === "draw" ||
@@ -167,7 +170,13 @@ const MatchSettings = () => {
   };
 
   return (
-    <View style={[styles.container, themeStyles.container]}>
+    <View
+      style={[
+        styles.container,
+        themeStyles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={[styles.settingItem, themeStyles.settingItem]}>
           <Text style={[styles.label, themeStyles.label]}>Change overs</Text>

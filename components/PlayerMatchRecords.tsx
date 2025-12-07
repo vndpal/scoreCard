@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { playerMatchStats } from "@/types/playerMatchStats";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { useAppContext } from "@/context/AppContext";
@@ -21,6 +22,7 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
   const [matchStats, setMatchStats] = useState<playerStats[]>([]);
   const { currentTheme, club, currentTournament } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 
@@ -65,7 +67,7 @@ const PlayerMatchRecords: React.FC<PlayerMatchRecordsProps> = ({
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
       <TournamentDropdown
         selectedTournament={selectedTournament}
         onTournamentSelect={setSelectedTournament}

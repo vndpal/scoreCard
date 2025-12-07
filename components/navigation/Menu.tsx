@@ -58,7 +58,7 @@ const Menu: React.FC<MenuProps> = ({ visible, hideMenu }) => {
 
   const handleLinkPress = (route: string) => {
     hideMenu();
-    router.push(route);
+    router.push(route as any);
   };
 
   const changeTheme = () => {

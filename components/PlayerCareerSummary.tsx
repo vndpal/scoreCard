@@ -5,9 +5,12 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Alert,
+  Platform,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { playerCareerStats } from "@/types/playerCareerStats";
 import { player } from "@/types/player";
@@ -29,6 +32,7 @@ const PlayerCareerSummary = () => {
   const [playersMap, setPlayersMap] = useState<Map<string, string>>(new Map());
   const [webViewContent, setWebViewContent] = useState<string | null>(null);
   const [isLoader, setIsLoader] = useState<boolean>(false);
+  const insets = useSafeAreaInsets();
 
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -111,17 +115,16 @@ const PlayerCareerSummary = () => {
               <th>Matches</th>
             </tr>
             ${stats
-              .slice(0, 30)
-              .map(
-                (player) => `
+            .slice(0, 30)
+            .map(
+              (player) => `
               <tr>
                 <td>${playersMap.get(player.playerId) || player.playerId}</td>
                 <td>${player.runs}</td>
                 <td>${player.ballsFaced}</td>
                 <td>${player.sixes}</td>
                 <td>${player.fours}</td>
-                <td>${
-                  player.strikeRate ? player.strikeRate.toFixed(2) : "-"
+                <td>${player.strikeRate ? player.strikeRate.toFixed(2) : "-"
                 }</td>
                 <td>${player.average ? player.average.toFixed(2) : "-"}</td>
                 <td>${player.notOuts}</td>
@@ -130,8 +133,8 @@ const PlayerCareerSummary = () => {
                 <td>${player.matches}</td>
               </tr>
             `
-              )
-              .join("")}
+            )
+            .join("")}
           </table>
         `;
       } else {
@@ -151,18 +154,16 @@ const PlayerCareerSummary = () => {
               <th>Matches</th>
             </tr>
             ${stats
-              .slice(0, 30)
-              .map(
-                (player) => `
+            .slice(0, 30)
+            .map(
+              (player) => `
               <tr>
                 <td>${playersMap.get(player.playerId) || player.playerId}</td>
-                <td>${player.overs}${
-                  player.ballsBowled > 0 ? "." + player.ballsBowled : ""
+                <td>${player.overs}${player.ballsBowled > 0 ? "." + player.ballsBowled : ""
                 }</td>
                 <td>${player.runsConceded}</td>
                 <td>${player.wickets}</td>
-                <td>${
-                  player.bowlingEconomy ? player.bowlingEconomy.toFixed(2) : "-"
+                <td>${player.bowlingEconomy ? player.bowlingEconomy.toFixed(2) : "-"
                 }</td>
                 <td>${player.extras}</td>
                 <td>${player.sixesConceded}</td>
@@ -171,8 +172,8 @@ const PlayerCareerSummary = () => {
                 <td>${player.matches}</td>
               </tr>
             `
-              )
-              .join("")}
+            )
+            .join("")}
           </table>
         `;
       }
@@ -204,26 +205,22 @@ const PlayerCareerSummary = () => {
           <style>
             body {
               font-family: Arial, sans-serif;
-              background-color: ${
-                currentTheme === "dark" ? "#1a1a1a" : "#e8ebe8"
-              };
+              background-color: ${currentTheme === "dark" ? "#1a1a1a" : "#e8ebe8"
+      };
               color: ${currentTheme === "dark" ? "#d0d6d0" : "#2d3d2d"};
             }
 
             .container {
               width: 1200px;
               padding: 20px;
-              background-color: ${
-                currentTheme === "dark" ? "#242824" : "#ffffff"
-              };
-              border: 1px solid ${
-                currentTheme === "dark" ? "#2d3d2d" : "#c8d6c8"
-              };
-              box-shadow: 0 6px 12px ${
-                currentTheme === "dark"
-                  ? "rgba(0, 0, 0, 0.7)"
-                  : "rgba(45, 61, 45, 0.1)"
-              };
+              background-color: ${currentTheme === "dark" ? "#242824" : "#ffffff"
+      };
+              border: 1px solid ${currentTheme === "dark" ? "#2d3d2d" : "#c8d6c8"
+      };
+              box-shadow: 0 6px 12px ${currentTheme === "dark"
+        ? "rgba(0, 0, 0, 0.7)"
+        : "rgba(45, 61, 45, 0.1)"
+      };
             }
 
             h1 {
@@ -231,9 +228,8 @@ const PlayerCareerSummary = () => {
               color: ${currentTheme === "dark" ? "#8ba88b" : "#3c4f3c"};
               margin: 24px 0;
               padding-bottom: 12px;
-              border-bottom: 3px solid ${
-                currentTheme === "dark" ? "#5c715c" : "#3c4f3c"
-              };
+              border-bottom: 3px solid ${currentTheme === "dark" ? "#5c715c" : "#3c4f3c"
+      };
             }
 
             h1 .main-title {
@@ -259,45 +255,39 @@ const PlayerCareerSummary = () => {
               font-weight: 600;
               margin: 20px 0;
               padding-left: 12px;
-              border-left: 4px solid ${
-                currentTheme === "dark" ? "#5c715c" : "#3c4f3c"
-              };
+              border-left: 4px solid ${currentTheme === "dark" ? "#5c715c" : "#3c4f3c"
+      };
             }
 
             table {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 20px;
-              border: 1px solid ${
-                currentTheme === "dark" ? "#2d3d2d" : "#c8d6c8"
-              };
+              border: 1px solid ${currentTheme === "dark" ? "#2d3d2d" : "#c8d6c8"
+      };
             }
 
             th, td {
-              border: 1px solid ${
-                currentTheme === "dark" ? "#3d4d3d" : "#c8d6c8"
-              };
+              border: 1px solid ${currentTheme === "dark" ? "#3d4d3d" : "#c8d6c8"
+      };
               padding: 12px;
               text-align: left;
             }
 
             th {
-              background-color: ${
-                currentTheme === "dark" ? "#3c4f3c" : "#4a5d4a"
-              };
+              background-color: ${currentTheme === "dark" ? "#3c4f3c" : "#4a5d4a"
+      };
               color: #d0d6d0;
             }
 
             tr:nth-child(even) {
-              background-color: ${
-                currentTheme === "dark" ? "#2a332a" : "#f2f4f2"
-              };
+              background-color: ${currentTheme === "dark" ? "#2a332a" : "#f2f4f2"
+      };
             }
 
             tr:hover {
-              background-color: ${
-                currentTheme === "dark" ? "#313931" : "#e0e6e0"
-              };
+              background-color: ${currentTheme === "dark" ? "#313931" : "#e0e6e0"
+      };
             }
           </style>  
         </head>
@@ -305,9 +295,8 @@ const PlayerCareerSummary = () => {
           <div class="container">
             <h1>
               <span class="main-title">${title}</span>
-              <span class="tournament-name">${
-                selectedTournament ? selectedTournament.name : "All Tournaments"
-              }</span>
+              <span class="tournament-name">${selectedTournament ? selectedTournament.name : "All Tournaments"
+      }</span>
             </h1>
             
             ${tableContent}
@@ -343,7 +332,24 @@ const PlayerCareerSummary = () => {
   const handleMessage = async (event: WebViewMessageEvent) => {
     const base64Data = event.nativeEvent.data.split(",")[1];
     const fileName = `player_career_summary_${Date.now()}.png`;
-    const filePath = `${FileSystem.cacheDirectory}${fileName}`;
+    let directory = (FileSystem as any).cacheDirectory || (FileSystem as any).documentDirectory;
+
+    if (!directory && Platform.OS === "android") {
+      directory = "file:///data/user/0/com.vndpal.ScoreCard/cache/";
+      try {
+        await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+      } catch (e) {
+        console.warn("Failed to create fallback directory", e);
+      }
+    }
+
+    if (!directory) {
+      console.error("Cache and document directories are null");
+      Alert.alert("Error", "Unable to save file. File system is not accessible.");
+      setIsLoader(false);
+      return;
+    }
+    const filePath = `${directory}${fileName}`;
 
     try {
       await FileSystem.writeAsStringAsync(filePath, base64Data, {
@@ -535,7 +541,13 @@ const PlayerCareerSummary = () => {
   ];
 
   return (
-    <View style={[styles.container, themeStyles.container]}>
+    <View
+      style={[
+        styles.container,
+        themeStyles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <View style={styles.dropdownContainer}>
         <TournamentDropdown
           selectedTournament={selectedTournament}

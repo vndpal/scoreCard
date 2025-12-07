@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { playerCareerStats } from "@/types/playerCareerStats";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 import { useAppContext } from "@/context/AppContext";
@@ -28,6 +29,7 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
   });
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -47,7 +49,9 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
 
   if (!stats) {
     return (
-      <ScrollView style={styles.container}>
+      <ScrollView
+        style={[styles.container, { paddingBottom: insets.bottom + 8 }]}
+      >
         <TournamentDropdown
           selectedTournament={selectedTournament}
           onTournamentSelect={setSelectedTournament}
@@ -79,7 +83,7 @@ const PlayerCareerRecords: React.FC<PlayerCareerRecordsProps> = ({
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { paddingBottom: insets.bottom + 8 }]}>
       <TournamentDropdown
         selectedTournament={selectedTournament}
         onTournamentSelect={setSelectedTournament}

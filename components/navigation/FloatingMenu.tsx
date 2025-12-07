@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, Href } from "expo-router";
 import React, { useState } from "react";
 import {
   TouchableOpacity,
@@ -31,7 +31,7 @@ export const FloatingMenu: React.FC = () => {
 
   const handleLinkPress = (route: string) => {
     toggleMenu();
-    router.push(route);
+    router.push(route as any);
   };
 
   const changeTheme = () => {

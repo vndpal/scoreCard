@@ -252,14 +252,14 @@ export const CreateMatch = () => {
     <View
       style={[
         styles.formContainer,
-        { paddingBottom: Math.max(insets.bottom, 10) },
+        { paddingBottom: Math.max(insets.bottom, 10), paddingTop: insets.top },
       ]}
     >
       <Dropdown
         label="Batting team"
         options={teams}
         value={formik.values.team1}
-        onSelect={formik.handleChange("team1")}
+        onSelect={(value) => formik.setFieldValue("team1", value)}
         mode="outlined"
         error={!!formik.errors.team1 && !!formik.touched.team1}
       />
@@ -274,7 +274,7 @@ export const CreateMatch = () => {
         label="Fielding team"
         options={teams}
         value={formik.values.team2}
-        onSelect={formik.handleChange("team2")}
+        onSelect={(value) => formik.setFieldValue("team2", value)}
         mode="outlined"
         error={!!formik.errors.team2 && !!formik.touched.team2}
       />

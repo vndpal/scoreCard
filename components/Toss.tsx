@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Toss: React.FC = () => {
     const [coinSide, setCoinSide] = useState("TOSS");
-
+    const insets = useSafeAreaInsets();
     const flipAnimation = useRef(new Animated.Value(0)).current;
 
     const flipCoin = () => {
@@ -24,7 +25,7 @@ const Toss: React.FC = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: insets.bottom, paddingTop: insets.top }]}>
             <TouchableOpacity onPress={flipCoin}>
                 {(
                     <Animated.View

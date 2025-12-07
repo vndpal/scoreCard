@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -221,10 +222,10 @@ const StatusBadge = ({
           {status === "abandoned"
             ? "Abandoned"
             : status === "draw"
-            ? "Draw"
-            : status === "noResult"
-            ? "No Result"
-            : "Tied"}
+              ? "Draw"
+              : status === "noResult"
+                ? "No Result"
+                : "Tied"}
         </Text>
       </View>
     );
@@ -303,6 +304,7 @@ const MatchHistory = ({
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
   const [selectedTournament, setSelectedTournament] = useState<Tournament>();
 
   const selectedTorunamen = (t: Tournament) => {
@@ -341,7 +343,12 @@ const MatchHistory = ({
   }, [filteredMatches]);
 
   return (
-    <View style={themeStyles.container}>
+    <View
+      style={[
+        themeStyles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <Text style={themeStyles.header}>Match History</Text>
 
       {matches && <TournamentStandings matchStandings={matchStandings} />}

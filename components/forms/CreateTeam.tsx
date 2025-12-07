@@ -7,6 +7,7 @@ import {
   Dimensions,
   GestureResponderEvent,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, TextInput, HelperText, Snackbar } from "react-native-paper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -25,6 +26,7 @@ const createTeamSchema = Yup.object().shape({
 export const CreateTeam = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const { club } = useAppContext();
+  const insets = useSafeAreaInsets();
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
@@ -58,7 +60,12 @@ export const CreateTeam = () => {
   });
 
   return (
-    <View style={styles.formContainer}>
+    <View
+      style={[
+        styles.formContainer,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <TextInput
         style={styles.input}
         label={"Team name"}

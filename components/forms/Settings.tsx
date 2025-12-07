@@ -20,6 +20,7 @@ import Loader from "../Loader";
 import { toggleCache } from "@/firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const Settings = () => {
   const {
     currentTheme,
@@ -29,6 +30,7 @@ const Settings = () => {
     club,
   } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+  const insets = useSafeAreaInsets();
 
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [notifications, setNotifications] = useState(false);
@@ -204,7 +206,12 @@ const Settings = () => {
   );
 
   return (
-    <View style={themeStyles.container}>
+    <View
+      style={[
+        themeStyles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={

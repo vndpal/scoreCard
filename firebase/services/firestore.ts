@@ -15,6 +15,7 @@ import {
   getDocsFromServer,
   FirebaseFirestoreTypes,
   getDocFromCache,
+  writeBatch,
 } from "@react-native-firebase/firestore";
 
 type WhereFilterOp = FirebaseFirestoreTypes.WhereFilterOp;
@@ -49,7 +50,7 @@ export const firestoreService = {
   getAll: async <T>(collectionName: string): Promise<T[]> => {
     const querySnapshot = await getDocs(collection(db, collectionName));
     return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as T)
+      (doc) => ({ id: doc.id, ...(doc.data() as any) } as T)
     );
   },
 
@@ -58,7 +59,7 @@ export const firestoreService = {
       collection(db, collectionName)
     );
     return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as T)
+      (doc) => ({ id: doc.id, ...(doc.data() as any) } as T)
     );
   },
 
@@ -66,15 +67,13 @@ export const firestoreService = {
     collectionName: string,
     filters: { field: string; operator: WhereFilterOp; value: any }
   ): Promise<T[]> => {
-    const querySnapshot = await getDocsFromCache(
-      collection(db, collectionName).where(
-        filters.field,
-        filters.operator,
-        filters.value
-      )
+    const q = query(
+      collection(db, collectionName),
+      where(filters.field, filters.operator, filters.value)
     );
+    const querySnapshot = await getDocsFromCache(q);
     return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as T)
+      (doc) => ({ id: doc.id, ...(doc.data() as any) } as T)
     );
   },
 
@@ -96,7 +95,7 @@ export const firestoreService = {
       const querySnapshot = await getDocs(q);
 
       return querySnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as T)
+        (doc) => ({ id: doc.id, ...(doc.data() as any) } as T)
       );
     } catch (error: any) {
       throw error;
@@ -131,8 +130,7 @@ export const firestoreService = {
     orderByField?: string,
     direction?: "asc" | "desc"
   ): Promise<T[]> => {
-    let q: FirebaseFirestoreTypes.Query<FirebaseFirestoreTypes.DocumentData> =
-      collection(db, collectionName);
+    let q: any = collection(db, collectionName);
     filters.forEach(({ field, operator, value }) => {
       q = query(q, where(field, operator, value));
     });
@@ -141,7 +139,7 @@ export const firestoreService = {
     }
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as T)
+      (doc) => ({ id: doc.id, ...(doc.data() as any) } as T)
     );
   },
 
@@ -167,7 +165,7 @@ export const firestoreService = {
       }
 
       const doc = querySnapshot.docs[0];
-      return { id: doc.id, ...doc.data() } as T;
+      return { id: doc.id, ...(doc.data() as any) } as T;
     } catch (error: any) {
       console.log("error in getting latest", error);
       return null;
@@ -243,20 +241,18 @@ export const firestoreService = {
           break;
         }
 
-        const batch = db.batch();
-        snapshot.docs.forEach((doc) => {
+        const batch = writeBatch(db);
+        for (const docSnapshot of snapshot.docs) {
           if (collectionName === "matchScores") {
-            doc.ref
-              .collection("balls")
-              .get()
-              .then((subSnapshot) => {
-                subSnapshot.docs.forEach((subDoc) => {
-                  subDoc.ref.delete();
-                });
-              });
+            const subSnapshot = await getDocs(
+              collection(docSnapshot.ref, "balls")
+            );
+            for (const subDoc of subSnapshot.docs) {
+              await deleteDoc(subDoc.ref);
+            }
           }
-          batch.delete(doc.ref);
-        });
+          batch.delete(docSnapshot.ref);
+        }
 
         await batch.commit();
 
@@ -291,20 +287,18 @@ export const firestoreService = {
           break;
         }
 
-        const batch = db.batch();
-        snapshot.docs.forEach((doc) => {
+        const batch = writeBatch(db);
+        for (const docSnapshot of snapshot.docs) {
           if (collectionName === "matchScores") {
-            doc.ref
-              .collection("balls")
-              .get()
-              .then((subSnapshot) => {
-                subSnapshot.docs.forEach((subDoc) => {
-                  subDoc.ref.delete();
-                });
-              });
+            const subSnapshot = await getDocs(
+              collection(docSnapshot.ref, "balls")
+            );
+            for (const subDoc of subSnapshot.docs) {
+              await deleteDoc(subDoc.ref);
+            }
           }
-          batch.delete(doc.ref);
-        });
+          batch.delete(docSnapshot.ref);
+        }
 
         await batch.commit();
 

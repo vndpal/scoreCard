@@ -38,6 +38,7 @@ import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat"
 import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
 import Loader from "@/components/Loader";
 import { Tournament } from "@/firebase/models/Tournament";
+import ScoringControls from "@/components/ScoringControls";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -695,7 +696,7 @@ export default function HomeScreen() {
       if (
         !isFirstInning &&
         finalSecondInningsScore.totalRuns + totalRun >
-          finalFirstInningsScore.totalRuns
+        finalFirstInningsScore.totalRuns
       ) {
         console.log("Second Inning Completed");
         let winner: "team1" | "team2" | undefined = "team2";
@@ -1190,8 +1191,8 @@ export default function HomeScreen() {
                 match.winner === "team1"
                   ? match.team1Fullname
                   : match.winner === "team2"
-                  ? match.team2Fullname
-                  : ""
+                    ? match.team2Fullname
+                    : ""
               }
               matchResultText={getMatchResultText(
                 match,
@@ -1209,72 +1210,23 @@ export default function HomeScreen() {
       </View>
       <View style={{ flex: 0.3 }}></View>
       <View style={styles.subContainer}>
-        <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
-          {possibleRuns.map((score, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.bubbleButton,
-                themeStyles.bubbleButton,
-                isEntryDone &&
-                  run == parseInt(score) &&
-                  (isDeclared ? score.includes("d") : !score.includes("d")) && {
-                    backgroundColor: "#019999",
-                  },
-              ]}
-              disabled={showLoader}
-              onPress={() => handleRunPress(score)}
-            >
-              <Text style={styles.buttonText}>{score}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
-          <TouchableOpacity
-            style={[
-              styles.specialBubbleButton,
-              isWicket && { backgroundColor: "#019999" },
-            ]}
-            disabled={showLoader}
-            onPress={handleWicket}
-          >
-            <Text style={styles.buttonText}>Out</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.specialBubbleButton,
-              isNoBall && { backgroundColor: "#019999" },
-            ]}
-            disabled={showLoader}
-            onPress={handleNoBall}
-          >
-            <Text style={styles.buttonText}>NoBall</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.specialBubbleButton,
-              isWideBall && { backgroundColor: "#019999" },
-            ]}
-            disabled={showLoader}
-            onPress={handleWideBall}
-          >
-            <Text style={styles.buttonText}>Wide</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            disabled={showLoader}
-            style={[styles.specialBubbleButton]}
-            onPress={handleUndoSubmit}
-          >
-            <Icon name="delete" type="feather" color="black" size={28} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            disabled={match.status !== "live"}
-            style={styles.specialBubbleButton}
-            onPress={handleMatchSettings}
-          >
-            <Icon name="settings" type="ionicon" color="black" size={28} />
-          </TouchableOpacity>
-        </View>
+        <ScoringControls
+          possibleRuns={possibleRuns}
+          run={run}
+          isDeclared={isDeclared}
+          isEntryDone={isEntryDone}
+          showLoader={showLoader}
+          isWicket={isWicket}
+          isNoBall={isNoBall}
+          isWideBall={isWideBall}
+          matchStatus={match.status}
+          onRunPress={handleRunPress}
+          onWicketPress={handleWicket}
+          onNoBallPress={handleNoBall}
+          onWideBallPress={handleWideBall}
+          onUndoPress={handleUndoSubmit}
+          onSettingsPress={handleMatchSettings}
+        />
         {currentSettings.showMatchTimer && match.status === "live" && (
           <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
             <MatchTimer
@@ -1299,8 +1251,8 @@ export default function HomeScreen() {
                 ? match.team1
                 : match.team2
               : bowler
-              ? match.team2
-              : match.team1
+                ? match.team2
+                : match.team1
           }
           remainingPlayers={playerMatchStats.filter((x: playerStats) => {
             return !bowler
@@ -1325,6 +1277,37 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     alignItems: "center",
   },
+  totalScoreContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    margin: 5,
+  },
+  totalScoreText: {
+    fontSize: 50,
+    color: "red",
+  },
+  bubbleButtonDisabled: {
+    margin: 5,
+    width: windowWidth * 0.15,
+    height: windowWidth * 0.15,
+    borderRadius: windowWidth * 0.1,
+    backgroundColor: "gray",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  ConfirmationButton: {
+    margin: 5,
+    width: windowWidth * 0.7,
+    height: windowWidth * 0.7,
+    borderRadius: windowWidth * 0.7,
+    backgroundColor: "#ddd",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  confirmationText: {
+    fontSize: 50,
+    textAlign: "center",
+  },
   scoreContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -1340,72 +1323,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 5,
     elevation: 3,
-  },
-  totalScoreContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    margin: 5,
-  },
-  totalScoreText: {
-    fontSize: 50,
-    color: "red",
-  },
-  bubbleButton: {
-    margin: 6,
-    width: windowWidth * 0.12,
-    height: windowWidth * 0.12,
-    borderRadius: windowWidth * 0.1,
-    backgroundColor: "#ddd",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 0.5,
-    borderColor: "#aaa",
-  },
-  specialBubbleButton: {
-    marginVertical: 6,
-    marginHorizontal: 4,
-    width: windowWidth * 0.17,
-    height: windowWidth * 0.1,
-    backgroundColor: "#e2e6ea",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 0.5,
-    borderColor: "#d3d9e0",
-  },
-  bubbleButtonDisabled: {
-    margin: 5,
-    width: windowWidth * 0.15,
-    height: windowWidth * 0.15,
-    borderRadius: windowWidth * 0.1,
-    backgroundColor: "gray",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#343a40",
-    letterSpacing: 0.2,
-    textAlign: "center",
-  },
-  ConfirmationButton: {
-    margin: 5,
-    width: windowWidth * 0.7,
-    height: windowWidth * 0.7,
-    borderRadius: windowWidth * 0.7,
-    backgroundColor: "#ddd",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  confirmationText: {
-    fontSize: 50,
-    textAlign: "center",
   },
   scoreBoardcontainer: {
     justifyContent: "flex-start",
@@ -1448,10 +1365,6 @@ const darkStyles = StyleSheet.create({
     backgroundColor: "#333",
     borderColor: "#555",
   },
-  bubbleButton: {
-    backgroundColor: "#ddd",
-    borderColor: "#aaa",
-  },
   ConfirmationButton: {
     backgroundColor: "#ddd",
   },
@@ -1465,16 +1378,6 @@ const lightStyles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderWidth: 2,
     borderColor: "#e0e0e0",
-  },
-  bubbleButton: {
-    backgroundColor: "#e2e6ea",
-    borderColor: "##d3d9e0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 0.5,
   },
   ConfirmationButton: {
     backgroundColor: "#fffffe",

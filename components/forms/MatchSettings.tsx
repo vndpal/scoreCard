@@ -92,6 +92,7 @@ const MatchSettings = () => {
         } else {
           if (winner === "") {
             alert("Winner cannot be empty");
+            setLoading(false);
             return;
           }
 
@@ -134,9 +135,11 @@ const MatchSettings = () => {
         if (overs === "" || parseInt(overs) != currentMatch.overs) {
           if (overs === "") {
             alert("Overs cannot be empty");
+            setLoading(false);
             return;
           } else if (!currentMatch.isFirstInning) {
             alert("Overs can only be changed during first innings only");
+            setLoading(false);
             return;
           } else if (
             parseInt(overs) < currentMatch.currentScore.team1.totalOvers
@@ -144,6 +147,7 @@ const MatchSettings = () => {
             alert(
               `${currentMatch.currentScore.team1.totalOvers} overs have already been bowled. Overs cannot be less than that`
             );
+            setLoading(false);
             return;
           }
         }
@@ -174,10 +178,10 @@ const MatchSettings = () => {
       style={[
         styles.container,
         themeStyles.container,
-        { paddingBottom: insets.bottom, paddingTop: insets.top },
+        { paddingTop: insets.top },
       ]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={[styles.scrollContainer, { paddingBottom: 60 + insets.bottom }]}>
         <View style={[styles.settingItem, themeStyles.settingItem]}>
           <Text style={[styles.label, themeStyles.label]}>Change overs</Text>
           <TextInput
@@ -214,7 +218,7 @@ const MatchSettings = () => {
           </View>
         )}
       </ScrollView>
-      <View style={[styles.buttonContainer, themeStyles.buttonContainer]}>
+      <View style={[styles.buttonContainer, themeStyles.buttonContainer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <Button
           textColor="white"
           buttonColor="#0c66e4"

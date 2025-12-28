@@ -1110,14 +1110,18 @@ export default function HomeScreen() {
           overs={finalFirstInningsScore.totalOvers}
           balls={finalFirstInningsScore.totalBalls}
           scorePerInning={totalScore}
+          teamName={match.team1}
         />
-        <ScoreBoard
-          totalScore={finalSecondInningsScore.totalRuns}
-          wickets={finalSecondInningsScore.totalWickets}
-          overs={finalSecondInningsScore.totalOvers}
-          balls={finalSecondInningsScore.totalBalls}
-          scorePerInning={scoreSecondInnings}
-        />
+        {!isFirstInning && (
+          <ScoreBoard
+            totalScore={finalSecondInningsScore.totalRuns}
+            wickets={finalSecondInningsScore.totalWickets}
+            overs={finalSecondInningsScore.totalOvers}
+            balls={finalSecondInningsScore.totalBalls}
+            scorePerInning={scoreSecondInnings}
+            teamName={match.team2}
+          />
+        )}
         {(bowler || batter1 || batter2) && match.status === "live" ? (
           <MatchPlayerStatsBar
             bowler={bowler}
@@ -1297,9 +1301,9 @@ const styles = StyleSheet.create({
   },
   ConfirmationButton: {
     margin: 5,
-    width: windowWidth * 0.7,
-    height: windowWidth * 0.7,
-    borderRadius: windowWidth * 0.7,
+    width: windowWidth * 0.6,
+    height: windowWidth * 0.6,
+    borderRadius: windowWidth * 0.6,
     backgroundColor: "#ddd",
     justifyContent: "center",
     alignItems: "center",

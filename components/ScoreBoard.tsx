@@ -10,12 +10,14 @@ const ScoreBoard = ({
   overs,
   balls,
   scorePerInning,
+  teamName
 }: {
   totalScore: Number;
   wickets: Number;
   overs: Number;
   balls: Number;
   scorePerInning: scorePerInning;
+  teamName: string;
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -26,46 +28,80 @@ const ScoreBoard = ({
         <Text style={[styles.scoreText, themeStyles.scoreText]}>
           {totalScore.toString()}/{wickets.toString()}
         </Text>
-        <Text style={[styles.oversText, themeStyles.oversText]}>
-          {overs.toString()}.{balls.toString()}
-        </Text>
+        <View style={styles.scoreDetailsRow}>
+          <Text style={[styles.teamNameText, themeStyles.teamNameText]}>
+            {teamName}
+          </Text>
+          <Text style={[styles.oversText, themeStyles.oversText]}>
+            {overs.toString()}.{balls.toString()}
+          </Text>
+        </View>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.inningsContainer}>
           {scorePerInning.map((overs, index) => (
-            <View style={styles.oversContainer} key={index}>
-              {overs.map((score: scorePerBall, ballIndex: number) => (
-                <View style={styles.ballsContainer} key={ballIndex}>
-                  {score.isOverEnd ? (
-                    <View style={[styles.overSummary, themeStyles.overSummary]}>
-                      <Text
+            <View style={[styles.oversContainer, themeStyles.oversContainer]} key={index}>
+              <View style={[styles.overSummaryContainer, themeStyles.overSummaryContainer]}>
+                <Text style={[styles.overSummaryText, themeStyles.overSummaryText]}>
+                  Ov {scorePerInning.length - index} | {overs.reduce((sum, over) => sum + over.totalRun, 0)} Runs
+                </Text>
+              </View>
+              <View style={styles.ballsRow}>
+                {overs.map((score: scorePerBall, ballIndex: number) => {
+                  let ballStyle = {};
+                  let textStyle = {};
+
+                  // Determine basic event type for styling
+                  const isWicket = score.isWicket;
+                  const isNoBall = score.isNoBall;
+                  const isSix = score.run === 6;
+                  const isFour = score.run === 4;
+
+                  // Apply styles based on priority
+                  if (isWicket) {
+                    ballStyle = themeStyles.ballWicket;
+                    textStyle = themeStyles.ballTextWicket;
+                  } else if (isNoBall) {
+                    ballStyle = themeStyles.ballNoBall;
+                    textStyle = themeStyles.ballTextNoBall;
+                  } else if (isSix) {
+                    ballStyle = themeStyles.ballSix;
+                    textStyle = themeStyles.ballTextSix;
+                  } else if (isFour) {
+                    ballStyle = themeStyles.ballFour;
+                    textStyle = themeStyles.ballTextFour;
+                  }
+
+                  return (
+                    <View style={styles.ballsContainer} key={ballIndex}>
+                      <View
+                        key={ballIndex}
                         style={[
-                          styles.ballScoreText,
-                          themeStyles.ballScoreText,
+                          styles.ballScore,
+                          themeStyles.ballScore,
+                          ballStyle // Apply dynamic style
                         ]}
                       >
-                        {overs.reduce((sum, over) => sum + over.totalRun, 0)}
-                      </Text>
+                        <Text
+                          style={[
+                            styles.ballScoreText,
+                            themeStyles.ballScoreText,
+                            textStyle // Apply dynamic text style
+                          ]}
+                        >
+                          {score.isNoBall
+                            ? "NB "
+                            : score.isWideBall
+                              ? "WD "
+                              : ""}
+                          {score.isWicket ? "W " : ""}
+                          {(score.run > 0 || (!score.isNoBall && !score.isWideBall && !score.isWicket)) ? score.run.toString() : ""}
+                        </Text>
+                      </View>
                     </View>
-                  ) : null}
-                  <View
-                    key={ballIndex}
-                    style={[styles.ballScore, themeStyles.ballScore]}
-                  >
-                    <Text
-                      style={[styles.ballScoreText, themeStyles.ballScoreText]}
-                    >
-                      {score.isNoBall
-                        ? "NB + "
-                        : score.isWideBall
-                        ? "WD + "
-                        : ""}
-                      {score.isWicket ? "W + " : ""}
-                      {score.run.toString()}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+                  );
+                })}
+              </View>
             </View>
           ))}
         </View>
@@ -87,22 +123,36 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   scoreContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    marginRight: 2,
   },
   scoreText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
-    marginRight: 6,
+    marginBottom: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
     borderRadius: 6,
   },
+  scoreDetailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
   oversText: {
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: "bold",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    borderRadius: 6,
+  },
+  teamNameText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    paddingVertical: 2,
+    paddingHorizontal: 4,
     borderRadius: 6,
   },
   inningsContainer: {
@@ -110,33 +160,54 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ballScore: {
-    width: 35,
-    height: 35,
+    width: 26,
+    height: 26,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 4,
-    elevation: 2,
-    borderWidth: 1, // Slightly thicker border for definition
-    borderRadius: 6, // Rounded corners for a modern look
+    marginLeft: 2,
+    elevation: 1,
+    borderWidth: 1,
+    borderRadius: 13,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   ballScoreText: {
-    fontSize: 10,
+    fontSize: 9,
     textAlign: "center",
-  },
-  overSummary: {
-    width: 35,
-    height: 35,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 4,
-    elevation: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   oversContainer: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
+    justifyContent: 'center',
+    marginRight: 8,
+    marginLeft: 2,
+    borderRadius: 8,
+    padding: 4,
+    borderWidth: 1.5,
+    elevation: 4, // slightly higher elevation for card feel
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+  },
+  overSummaryContainer: {
+    marginBottom: 4,
+    paddingHorizontal: 8, // slightly more padding for the pill
+    paddingVertical: 2,
+    borderRadius: 12, // fully rounded pill
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overSummaryText: {
+    fontSize: 9,
+    fontWeight: "800",
+    textTransform: 'uppercase',
+  },
+  ballsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   ballsContainer: {
     flexDirection: "row",
@@ -161,53 +232,126 @@ const darkStyles = StyleSheet.create({
     color: "#ffffff",
     backgroundColor: "#f57f17",
   },
+  teamNameText: {
+    color: "#ffffff",
+    backgroundColor: "#f57f17",
+  },
   ballScore: {
-    backgroundColor: "#f5f5f5", // Very light gray background for contrast
-    borderColor: "#cccccc", // Light gray border for subtle contrast
-    shadowColor: "#000000", // Dark shadow for depth
+    backgroundColor: "#3e4451",
+    borderColor: "#565c64",
+    shadowColor: "#000000",
   },
   ballScoreText: {
-    color: "#000000",
-    fontWeight: "bold",
+    color: "#abb2bf",
   },
-  overSummary: {
-    backgroundColor: "#b0b0b0",
-    borderWidth: 1,
-    borderColor: "#b0b0b0",
-    borderRadius: 6,
+  oversContainer: {
+    backgroundColor: '#333842', // Distinct card background for dark mode
+    borderColor: '#5c6370',
+    shadowColor: "#000",
+  },
+  overSummaryContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Darker pill
+  },
+  overSummaryText: {
+    color: '#dcdcdc',
+  },
+  // Dark Mode Specific Event Styles
+  ballSix: {
+    backgroundColor: '#4caf50', // Green
+    borderColor: '#388e3c',
+  },
+  ballTextSix: {
+    color: '#ffffff',
+  },
+  ballFour: {
+    backgroundColor: '#81c784', // Less green (Light Green)
+    borderColor: '#66bb6a',
+  },
+  ballTextFour: {
+    color: '#000000', // Better contrast on light green
+  },
+  ballWicket: {
+    backgroundColor: '#ef5350', // Red
+    borderColor: '#e53935',
+  },
+  ballTextWicket: {
+    color: '#ffffff',
+  },
+  ballNoBall: {
+    backgroundColor: '#fdd835', // Yellowish Warning
+    borderColor: '#fbc02d',
+  },
+  ballTextNoBall: {
+    color: '#000000',
   },
 });
 const lightStyles = StyleSheet.create({
   container: {
-    backgroundColor: "#f8f9fa", // Light gray background
-    borderBottomColor: "#e9ecef", // Subtle border
-    shadowColor: "#adb5bd", // Soft shadow
+    backgroundColor: "#f8f9fa",
+    borderBottomColor: "#e9ecef",
+    shadowColor: "#adb5bd",
   },
   scoreContainer: {
-    backgroundColor: "#e9ecef", // Light cool gray background
   },
   scoreText: {
-    color: "#ffffff", // White text for better contrast
-    backgroundColor: "#28a745", // Professional green for score
+    color: "#ffffff",
+    backgroundColor: "#28a745",
   },
   oversText: {
-    color: "#ffffff", // White text for better contrast
-    backgroundColor: "#007bff", // Professional blue for overs
+    color: "#ffffff",
+    backgroundColor: "#007bff",
+  },
+  teamNameText: {
+    color: "#ffffff",
+    backgroundColor: "#007bff",
   },
   ballScore: {
-    backgroundColor: "#ffffff", // White background
-    borderColor: "#ced4da", // Light border color
-    shadowColor: "#adb5bd", // Soft shadow
+    backgroundColor: "#ffffff",
+    borderColor: "#dee2e6",
+    shadowColor: "#adb5bd",
   },
   ballScoreText: {
-    color: "#212529", // Dark gray text for contrast
-    fontWeight: "bold",
+    color: "#495057",
   },
-  overSummary: {
-    backgroundColor: "#e9ecef",
-    borderWidth: 1,
-    borderColor: "#ced4da",
-    borderRadius: 6,
+  oversContainer: {
+    backgroundColor: '#ffffff', // Distinct card background for light mode
+    borderColor: '#ced4da',
+    shadowColor: "#adb5bd",
+  },
+  overSummaryContainer: {
+    backgroundColor: '#e9ecef', // Lighter pill
+  },
+  overSummaryText: {
+    color: '#495057',
+  },
+  // Light Mode Specific Event Styles
+  ballSix: {
+    backgroundColor: '#2e7d32', // Darker Green for light mode contrast
+    borderColor: '#1b5e20',
+  },
+  ballTextSix: {
+    color: '#ffffff',
+  },
+  ballFour: {
+    backgroundColor: '#4caf50', // Standard Green (less "deep" than 6)
+    borderColor: '#388e3c',
+  },
+  ballTextFour: {
+    color: '#ffffff',
+  },
+  ballWicket: {
+    backgroundColor: '#d32f2f', // Red
+    borderColor: '#c62828',
+  },
+  ballTextWicket: {
+    color: '#ffffff',
+  },
+  ballNoBall: {
+    backgroundColor: '#ffeb3b', // Yellow
+    borderColor: '#fbc02d',
+  },
+  ballTextNoBall: {
+    color: '#000000',
   },
 });
 

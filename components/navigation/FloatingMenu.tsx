@@ -97,9 +97,9 @@ export const FloatingMenu: React.FC = () => {
             </Text>
           </TouchableOpacity>
           <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />
-          <TouchableOpacity onPress={() => handleLinkPress("createTeam")}>
+          <TouchableOpacity onPress={() => handleLinkPress("teams")}>
             <Text style={[styles.menuOptionText, themeStyles.menuOptionText]}>
-              🙌 New team
+              🙌 Teams
             </Text>
           </TouchableOpacity>
           <View style={[styles.horizontalLine, themeStyles.horizontalLine]} />

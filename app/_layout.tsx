@@ -236,6 +236,13 @@ export default function RootLayout() {
                   animation: "slide_from_right",
                 }}
               />
+              <Stack.Screen
+                name="teams"
+                options={{
+                  headerTitle: "Teams",
+                  animation: "slide_from_right",
+                }}
+              />
             </Stack>
           ) : (
             <View

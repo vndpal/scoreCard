@@ -115,7 +115,7 @@ const PlayerCareerSummary = () => {
               <th>Matches</th>
             </tr>
             ${stats
-            .slice(0, 30)
+            .slice(0, 50)
             .map(
               (player) => `
               <tr>
@@ -154,7 +154,7 @@ const PlayerCareerSummary = () => {
               <th>Matches</th>
             </tr>
             ${stats
-            .slice(0, 30)
+            .slice(0, 50)
             .map(
               (player) => `
               <tr>

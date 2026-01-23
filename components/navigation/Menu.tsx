@@ -30,7 +30,7 @@ const menuItems = [
   { id: "2", title: "🏆 Tournament", route: "/tournaments" },
   { id: "3", title: "🪙 Toss", route: "/toss" },
   { id: "4", title: "📝 Team setup", route: "/teamLineup" },
-  { id: "5", title: "🙌 New team", route: "/createTeam" },
+  { id: "5", title: "🙌 Teams", route: "/teams" },
   { id: "6", title: "👦 Players", route: "/players" },
   { id: "7", title: "📊 Stats", route: "/playerRecords" },
   { id: "8", title: "⚙️ Settings", route: "/settings" },

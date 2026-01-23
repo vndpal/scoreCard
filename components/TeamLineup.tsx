@@ -140,14 +140,9 @@ const TeamLineUp: React.FC = () => {
         setAvailablePlayers(
           playersFromStorage.filter(
             (player) =>
-              !teamPlayersMapping
-                .find((mapping) => mapping.team === localTeam1?.teamInitials)
-                ?.players.map((p) => p.id)
-                .includes(player.id) &&
-              !teamPlayersMapping
-                .find((mapping) => mapping.team === localTeam2?.teamInitials)
-                ?.players.map((p) => p.id)
-                .includes(player.id)
+              !teamPlayersMapping.some((mapping) =>
+                mapping.players.map((p) => p.id).includes(player.id)
+              )
           )
         );
       } else if (playersFromStorage && playersFromStorage.length > 0) {
@@ -265,12 +260,39 @@ const TeamLineUp: React.FC = () => {
     setAvailablePlayers([]);
   };
 
-  const teamSelectionSubmit = (values: teams) => {
+  const teamSelectionSubmit = async (values: teams) => {
+    setLoader(true);
     setTeam1(values.team1);
     setTeam2(values.team2);
-    setTeam1Players([]);
-    setTeam2Players([]);
-    setAvailablePlayers(allPlayers);
+    const teamPlayersMapping = await TeamPlayerMapping.getAllFromClub(
+      club.id
+    );
+    const playersFromStorage: player[] = await Player.getAllFromClub(club.id);
+    setTeam1Players(
+      playersFromStorage.filter((player) =>
+        teamPlayersMapping
+          .find((mapping) => mapping.team === values.team1?.teamInitials)
+          ?.players.map((p) => p.id)
+          .includes(player.id)
+      )
+    );
+    setTeam2Players(
+      playersFromStorage.filter((player) =>
+        teamPlayersMapping
+          .find((mapping) => mapping.team === values.team2?.teamInitials)
+          ?.players.map((p) => p.id)
+          .includes(player.id)
+      )
+    );
+    setAvailablePlayers(
+      playersFromStorage.filter(
+        (player) =>
+          !teamPlayersMapping.some((mapping) =>
+            mapping.players.map((p) => p.id).includes(player.id)
+          )
+      )
+    );
+    setLoader(false);
   };
 
   const saveTeams = async () => {

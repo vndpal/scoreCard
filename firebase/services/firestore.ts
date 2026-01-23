@@ -16,6 +16,7 @@ import {
   FirebaseFirestoreTypes,
   getDocFromCache,
   writeBatch,
+  serverTimestamp,
 } from "@react-native-firebase/firestore";
 
 type WhereFilterOp = FirebaseFirestoreTypes.WhereFilterOp;
@@ -27,7 +28,10 @@ export const firestoreService = {
     data: T
   ): Promise<void> => {
     try {
-      setDoc(doc(db, collectionName, id), data);
+      setDoc(doc(db, collectionName, id), {
+        ...data,
+        updatedAt: serverTimestamp(),
+      });
     } catch (error: any) {
       console.log("error in creating doc", error);
     }
@@ -38,7 +42,7 @@ export const firestoreService = {
     data: T
   ): Promise<string> => {
     const docRef = doc(collection(db, collectionName));
-    setDoc(docRef, data);
+    setDoc(docRef, { ...data, updatedAt: serverTimestamp() });
     return docRef.id;
   },
 
@@ -108,7 +112,7 @@ export const firestoreService = {
     updates: Record<string, any>
   ): Promise<void> => {
     const docRef = doc(db, collectionName, id);
-    updateDoc(docRef, updates);
+    updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
   },
 
   upsert: async (
@@ -117,7 +121,7 @@ export const firestoreService = {
     updates: Record<string, any>
   ): Promise<void> => {
     const docRef = doc(db, collectionName, id);
-    setDoc(docRef, updates);
+    setDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
   },
 
   delete: async (collectionName: string, id: string): Promise<void> => {

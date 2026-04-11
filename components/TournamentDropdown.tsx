@@ -9,12 +9,14 @@ interface TournamentDropdownProps {
   selectedTournament: Tournament | undefined;
   onTournamentSelect: (tournament: Tournament) => void;
   isAllTournaments?: boolean;
+  compact?: boolean;
 }
 
 const TournamentDropdown = ({
   selectedTournament,
   onTournamentSelect,
   isAllTournaments = false,
+  compact = false,
 }: TournamentDropdownProps) => {
   const { currentTheme, currentTournament, club } = useAppContext();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -56,7 +58,7 @@ const TournamentDropdown = ({
   }));
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, compact && styles.containerCompact]}>
       <Dropdown
         label="Tournaments"
         options={dropdownItems}
@@ -78,6 +80,9 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 20,
     zIndex: 1,
+  },
+  containerCompact: {
+    marginBottom: 0,
   },
 });
 

@@ -1,23 +1,24 @@
-import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
   Text,
-  VirtualizedList,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
-import { player } from "@/types/player"; // Import the player type
-import { getItem } from "@/utils/asyncStorage";
+import { player } from "@/types/player";
 import { useAppContext } from "@/context/AppContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
-import Table from "./ui/table";
-import { Divider } from "react-native-elements";
+import { MatchScore } from "@/firebase/models/MatchScores";
+
+interface DismissalInfo {
+  playerId: string;
+  bowlerName: string;
+}
 
 const MatchSummary = () => {
   const { matchId, team1, team2 } = useLocalSearchParams();
@@ -34,40 +35,32 @@ const MatchSummary = () => {
     []
   );
   const [playersMap, setPlayersMap] = useState<Map<string, string>>(new Map());
+  const [dismissalMap, setDismissalMap] = useState<Map<string, DismissalInfo>>(
+    new Map()
+  );
 
   const { currentTheme } = useAppContext();
-  const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const insets = useSafeAreaInsets();
-
-  const battingColumns = [
-    { key: "playerId", label: "Player" },
-    { key: "runs", label: "Runs" },
-    { key: "ballsFaced", label: "Balls" },
-    { key: "fours", label: "4s" },
-    { key: "sixes", label: "6s" },
-    { key: "strikeRate", label: "SR" },
-  ];
-
-  const bowlingColumns = [
-    { key: "playerId", label: "Player" },
-    { key: "overs", label: "Overs" },
-    { key: "wickets", label: "Wickets" },
-    { key: "runsConceded", label: "Runs" },
-    { key: "extras", label: "Extras" },
-  ];
+  const isDark = currentTheme === "dark";
 
   useEffect(() => {
     (async () => {
       const players = await Player.getAll();
-      // Filter and sort records based on match and team
       const matchStats = await PlayerMatchStats.getByMatchId(matchId as string);
+
       if (matchStats && players) {
-        // Create a map from player IDs to player names
         const playersMap = new Map<string, string>();
         players.forEach((p: player) => {
           playersMap.set(p.id.toString(), p.name);
         });
         setPlayersMap(playersMap);
+
+        try {
+          const dismissals = await fetchDismissalInfo(matchId as string);
+          setDismissalMap(dismissals);
+        } catch (err) {
+          console.log("Could not fetch dismissal info:", err);
+        }
 
         if (matchStats) {
           const sortByRuns = (a: playerStats, b: playerStats) =>
@@ -83,6 +76,7 @@ const MatchSummary = () => {
           setBowlingRecordsTeamA(
             matchStats.playerMatchStats
               .filter((x: playerStats) => x.team === team1)
+              .filter((x: playerStats) => x.wickets > 0 || x.ballsBowled > 0)
               .sort(sortByWickets)
           );
           setBattingRecordsTeamB(
@@ -93,6 +87,7 @@ const MatchSummary = () => {
           setBowlingRecordsTeamB(
             matchStats.playerMatchStats
               .filter((x: playerStats) => x.team === team2)
+              .filter((x: playerStats) => x.wickets > 0 || x.ballsBowled > 0)
               .sort(sortByWickets)
           );
         }
@@ -100,64 +95,190 @@ const MatchSummary = () => {
     })();
   }, [matchId]);
 
+  const fetchDismissalInfo = async (
+    matchId: string
+  ): Promise<Map<string, DismissalInfo>> => {
+    const dismissals = new Map<string, DismissalInfo>();
+
+    try {
+      for (let inning = 1; inning <= 2; inning++) {
+        const matchScores = await MatchScore.getByMatchIdInningNumber(
+          matchId,
+          inning
+        );
+
+        if (matchScores && Array.isArray(matchScores)) {
+          matchScores.forEach((scoreData: any) => {
+            if (scoreData.overSummary && Array.isArray(scoreData.overSummary)) {
+              scoreData.overSummary.forEach((ball: any) => {
+                if (ball.isWicket && ball.strikerBatter && ball.bowler) {
+                  const playerId = ball.strikerBatter.id?.toString() || "";
+                  const bowlerName = ball.bowler.name || "Unknown";
+                  dismissals.set(playerId, {
+                    playerId,
+                    bowlerName,
+                  });
+                }
+              });
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.log("Error fetching dismissals:", err);
+    }
+
+    return dismissals;
+  };
+
+  const getEconomyRate = (bowler: playerStats): string => {
+    if (bowler.ballsBowled === 0) return "-";
+    const totalBalls = bowler.overs * 6 + bowler.ballsBowled;
+    return (bowler.runsConceded / (totalBalls / 6)).toFixed(2);
+  };
+
+  const getDismissalStatus = (stat: playerStats): string => {
+    const dismissal = dismissalMap.get(stat.playerId);
+    if (dismissal) {
+      return `b ${dismissal.bowlerName}`;
+    }
+    return "not out";
+  };
+
+  const BattingTable = ({
+    data,
+    teamColor,
+  }: {
+    data: playerStats[];
+    teamColor: string;
+  }) => (
+    <View style={styles.tableContainer}>
+      {/* Header */}
+      <View style={[styles.battingHeaderRow, { backgroundColor: teamColor }]}>
+        <Text style={[styles.battingHeaderCell, styles.playerCell]}>PLAYER</Text>
+        <Text style={[styles.battingHeaderCell, styles.smallCell]}>R</Text>
+        <Text style={[styles.battingHeaderCell, styles.smallCell]}>B</Text>
+        <Text style={[styles.battingHeaderCell, styles.smallCell]}>4</Text>
+        <Text style={[styles.battingHeaderCell, styles.smallCell]}>6</Text>
+        <Text style={[styles.battingHeaderCell, styles.srCell]}>SR</Text>
+        <Text style={[styles.battingHeaderCell, styles.statusCell]}>STATUS</Text>
+      </View>
+
+      {/* Rows */}
+      {data.map((row, idx) => (
+        <View key={idx} style={styles.battingRow}>
+          <Text
+            style={[styles.battingCell, styles.playerCell]}
+            numberOfLines={1}
+          >
+            {playersMap.get(row.playerId) || row.playerId}
+          </Text>
+          <Text style={[styles.battingCell, styles.smallCell]}>
+            {row.runs}
+          </Text>
+          <Text style={[styles.battingCell, styles.smallCell]}>
+            {row.ballsFaced}
+          </Text>
+          <Text style={[styles.battingCell, styles.smallCell]}>
+            {row.fours}
+          </Text>
+          <Text style={[styles.battingCell, styles.smallCell]}>
+            {row.sixes}
+          </Text>
+          <Text style={[styles.battingCell, styles.srCell]}>
+            {row.strikeRate.toFixed(0)}
+          </Text>
+          <Text
+            style={[styles.battingCell, styles.statusCell]}
+            numberOfLines={1}
+          >
+            {getDismissalStatus(row)}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  const BowlingTable = ({
+    data,
+    teamColor,
+  }: {
+    data: playerStats[];
+    teamColor: string;
+  }) => (
+    <View style={styles.tableContainer}>
+      {/* Header */}
+      <View style={[styles.bowlingHeaderRow, { backgroundColor: teamColor }]}>
+        <Text style={[styles.bowlingHeaderCell, styles.playerCell]}>PLAYER</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>O</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>W</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>R</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>ER</Text>
+      </View>
+
+      {/* Rows */}
+      {data.map((row, idx) => (
+        <View key={idx} style={styles.bowlingRow}>
+          <Text
+            style={[styles.bowlingCell, styles.playerCell]}
+            numberOfLines={1}
+          >
+            {playersMap.get(row.playerId) || row.playerId}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.smallCell]}>
+            {row.ballsBowled > 0 ? `${row.overs}.${row.ballsBowled}` : "0"}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.smallCell]}>
+            {row.wickets}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.smallCell]}>
+            {row.runsConceded}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.smallCell]}>
+            {getEconomyRate(row)}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  const TeamSectionHeader = ({
+    teamName,
+    backgroundColor,
+  }: {
+    teamName: string;
+    backgroundColor: string;
+  }) => (
+    <View style={[styles.sectionHeader, { backgroundColor }]}>
+      <Text style={styles.sectionHeaderText}>{teamName?.toUpperCase()}</Text>
+    </View>
+  );
+
   return (
     <ScrollView
-      style={[
-        styles.container,
-        themeStyles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
+      style={[styles.container, isDark ? styles.darkBg : styles.lightBg]}
+      contentContainerStyle={{ paddingBottom: 120 }}
     >
-      <Table
-        columns={battingColumns}
-        data={battingRecordsTeamA.map((x) => ({
-          playerId: playersMap.get(x.playerId) || x.playerId,
-          runs: x.runs,
-          ballsFaced: x.ballsFaced,
-          fours: x.fours,
-          sixes: x.sixes,
-          strikeRate: x.strikeRate.toFixed(2),
-        }))}
-        title={`${team1} - Batting`}
-      />
-      <Divider style={styles.divider} />
-      <Table
-        columns={bowlingColumns}
-        data={bowlingRecordsTeamA.map((x) => ({
-          playerId: playersMap.get(x.playerId) || x.playerId,
-          overs: x.ballsBowled > 0 ? `${x.overs}.${x.ballsBowled}` : x.overs,
-          wickets: x.wickets,
-          runsConceded: x.runsConceded,
-          extras: x.extras,
-        }))}
-        title={`${team1} - Bowling`}
-      />
-      <Divider style={styles.divider} />
-      <Table
-        columns={battingColumns}
-        data={battingRecordsTeamB.map((x) => ({
-          playerId: playersMap.get(x.playerId) || x.playerId,
-          runs: x.runs,
-          ballsFaced: x.ballsFaced,
-          fours: x.fours,
-          sixes: x.sixes,
-          strikeRate: x.strikeRate.toFixed(2),
-        }))}
-        title={`${team2} - Batting`}
-      />
-      <Divider style={styles.divider} />
-      <Table
-        columns={bowlingColumns}
-        data={bowlingRecordsTeamB.map((x) => ({
-          playerId: playersMap.get(x.playerId) || x.playerId,
-          overs: x.ballsBowled > 0 ? `${x.overs}.${x.ballsBowled}` : x.overs,
-          wickets: x.wickets,
-          runsConceded: x.runsConceded,
-          extras: x.extras,
-        }))}
-        title={`${team2} - Bowling`}
-      />
-      <Divider style={styles.divider} />
+      {/* Team 1 - Batting */}
+      <TeamSectionHeader teamName={team1 as string} backgroundColor="#1e40af" />
+      <Text style={styles.subHeader}>BATTING</Text>
+      <BattingTable data={battingRecordsTeamA} teamColor="#334155" />
+
+      {/* Team 1 - Bowling */}
+      <Text style={styles.subHeader}>BOWLING</Text>
+      <BowlingTable data={bowlingRecordsTeamA} teamColor="#334155" />
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* Team 2 - Batting */}
+      <TeamSectionHeader teamName={team2 as string} backgroundColor="#16a34a" />
+      <Text style={styles.subHeader}>BATTING</Text>
+      <BattingTable data={battingRecordsTeamB} teamColor="#334155" />
+
+      {/* Team 2 - Bowling */}
+      <Text style={styles.subHeader}>BOWLING</Text>
+      <BowlingTable data={bowlingRecordsTeamB} teamColor="#334155" />
     </ScrollView>
   );
 };
@@ -165,24 +286,117 @@ const MatchSummary = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#121212",
-    padding: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+  },
+  darkBg: {
+    backgroundColor: "#0f172a",
+  },
+  lightBg: {
+    backgroundColor: "#fafafa",
+  },
+  sectionHeader: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginVertical: 8,
+    borderRadius: 4,
+  },
+  sectionHeaderText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+  subHeader: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    color: "#64748b",
+    marginLeft: 8,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  tableContainer: {
+    marginHorizontal: 4,
+    marginVertical: 4,
+    borderRadius: 3,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+  },
+  // Batting Table Styles
+  battingHeaderRow: {
+    flexDirection: "row",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  battingHeaderCell: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#ffffff",
+    textAlign: "center",
+  },
+  battingRow: {
+    flexDirection: "row",
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+  },
+  battingCell: {
+    fontSize: 10,
+    fontWeight: "500",
+    color: "#1e293b",
+    textAlign: "center",
+  },
+  // Bowling Table Styles
+  bowlingHeaderRow: {
+    flexDirection: "row",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  bowlingHeaderCell: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#ffffff",
+    textAlign: "center",
+  },
+  bowlingRow: {
+    flexDirection: "row",
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+  },
+  bowlingCell: {
+    fontSize: 10,
+    fontWeight: "500",
+    color: "#1e293b",
+    textAlign: "center",
+  },
+  // Column widths
+  playerCell: {
+    flex: 2.5,
+    textAlign: "left",
+    paddingLeft: 4,
+  },
+  smallCell: {
+    flex: 1,
+  },
+  srCell: {
+    flex: 1.2,
+  },
+  statusCell: {
+    flex: 1.8,
+    textAlign: "left",
+    paddingLeft: 2,
   },
   divider: {
-    marginVertical: 10,
+    height: 12,
+    marginVertical: 8,
   },
 });
 
-const darkStyles = StyleSheet.create({
-  container: {
-    backgroundColor: "#121212",
-  },
-});
-
-const lightStyles = StyleSheet.create({
-  container: {
-    backgroundColor: "#f5f5f5",
-  },
-});
 export default MatchSummary;

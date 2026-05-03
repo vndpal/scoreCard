@@ -8,7 +8,8 @@ if (APP_ENVIRONMENT === "development") {
 } else if (APP_ENVIRONMENT === "testing") {
   AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON;
 } else {
-  AndroidGoogleServicesFile = process.env.GOOGLE_SERVICES_JSON || "./google-services.json";
+  AndroidGoogleServicesFile =
+    process.env.GOOGLE_SERVICES_JSON || "./google-services.json";
 }
 
 module.exports = {
@@ -46,6 +47,7 @@ module.exports = {
       ["expo-build-properties"],
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
+      "expo-web-browser",
     ],
     experiments: {
       typedRoutes: true,

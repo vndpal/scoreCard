@@ -22,6 +22,16 @@ export class TeamPlayerMapping implements teamPlayerMapping {
     clubId: string,
     players: player[]
   ): Promise<TeamPlayerMapping> {
+    // Firestore rejects `undefined`. Drop any keys whose value is undefined
+    // (e.g. `role` on legacy players that haven't been backfilled yet).
+    const sanitizedPlayers: player[] = players.map((p) => {
+      const out: Record<string, unknown> = {};
+      Object.entries(p).forEach(([k, v]) => {
+        if (v !== undefined) out[k] = v;
+      });
+      return out as player;
+    });
+
     const isTeamPlayerMappingExists: teamPlayerMapping[] =
       await firestoreService.query<teamPlayerMapping>(COLLECTION_NAME, [
         {
@@ -41,22 +51,22 @@ export class TeamPlayerMapping implements teamPlayerMapping {
         COLLECTION_NAME,
         isTeamPlayerMappingExists[0].id,
         {
-          players,
+          players: sanitizedPlayers,
         }
       );
       return new TeamPlayerMapping(
         isTeamPlayerMappingExists[0].id,
         team,
         clubId,
-        players
+        sanitizedPlayers
       );
     } else {
       const id = await firestoreService.createWithAutoId(COLLECTION_NAME, {
         team,
         clubId,
-        players,
+        players: sanitizedPlayers,
       });
-      return new TeamPlayerMapping(id, team, clubId, players);
+      return new TeamPlayerMapping(id, team, clubId, sanitizedPlayers);
     }
   }
 

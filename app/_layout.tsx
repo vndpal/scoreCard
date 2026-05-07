@@ -182,7 +182,7 @@ export default function RootLayout() {
                 <Stack.Screen
                   name="teamLineup"
                   options={{
-                    headerTitle: "Team Selection",
+                    headerShown: false,
                     animation: "slide_from_right",
                   }}
                 />

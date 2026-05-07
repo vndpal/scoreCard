@@ -1,23 +1,39 @@
 import { firestoreService } from "../services/firestore";
-import { player } from "../../types/player";
+import { player, PlayerRole } from "../../types/player";
 import { v4 as uuidv4 } from "uuid";
 
 const COLLECTION_NAME = "players";
+
+const stripUndefined = <T extends Record<string, unknown>>(obj: T): T => {
+  const out: Record<string, unknown> = {};
+  Object.entries(obj).forEach(([k, v]) => {
+    if (v !== undefined) out[k] = v;
+  });
+  return out as T;
+};
 
 export class Player implements player {
   id: string;
   name: string;
   clubId: string;
+  role?: PlayerRole;
 
   constructor(id: string, data: player) {
     this.id = id;
     this.name = data.name;
     this.clubId = data.clubId;
+    this.role = data.role;
   }
 
   static async create(data: Omit<player, "id">): Promise<Player> {
-    const id = await firestoreService.createWithAutoId(COLLECTION_NAME, data);
-    return new Player(id, { id, name: data.name, clubId: data.clubId });
+    const payload = stripUndefined(data);
+    const id = await firestoreService.createWithAutoId(COLLECTION_NAME, payload);
+    return new Player(id, {
+      id,
+      name: data.name,
+      clubId: data.clubId,
+      role: data.role,
+    });
   }
 
   static async getById(id: string): Promise<Player | null> {
@@ -49,7 +65,7 @@ export class Player implements player {
   }
 
   static async update(id: string, data: Partial<player>): Promise<void> {
-    await firestoreService.update(COLLECTION_NAME, id, data);
+    await firestoreService.update(COLLECTION_NAME, id, stripUndefined(data));
   }
 
   static async delete(id: string): Promise<void> {
@@ -80,6 +96,7 @@ export class Player implements player {
       id: this.id,
       name: this.name,
       clubId: this.clubId,
+      role: this.role,
     };
   }
 }

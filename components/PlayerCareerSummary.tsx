@@ -126,39 +126,44 @@ const PlayerCareerSummary = () => {
 
   useEffect(() => {
     (async () => {
-      const currentlySelectedTournament = selectedTournament
-        ? selectedTournament.id
-        : currentTournament;
+      setIsLoader(true);
+      try {
+        const currentlySelectedTournament = selectedTournament
+          ? selectedTournament.id
+          : currentTournament;
 
-      let stats: playerCareerStats[] = [];
-      if (currentlySelectedTournament === "all") {
-        stats = await PlayerCareerStats.getAllFromClub(club.id);
-      } else {
-        stats = await PlayerTournamentStats.getAllFromTournamentAndClub(
-          currentlySelectedTournament,
-          club.id,
-        );
-      }
+        const statsPromise: Promise<playerCareerStats[]> =
+          currentlySelectedTournament === "all"
+            ? PlayerCareerStats.getAllFromClub(club.id)
+            : PlayerTournamentStats.getAllFromTournamentAndClub(
+                currentlySelectedTournament,
+                club.id,
+              );
 
-      const players = await Player.getAllFromClub(club.id);
+        const [stats, players, teamMappings] = await Promise.all([
+          statsPromise,
+          Player.getAllFromClub(club.id),
+          TeamPlayerMapping.getAllFromClub(club.id),
+        ]);
 
-      // Build player-to-team mapping
-      const teamMappings = await TeamPlayerMapping.getAllFromClub(club.id);
-      const teamMap = new Map<string, string>();
-      teamMappings.forEach((mapping) => {
-        mapping.players.forEach((p: player) => {
-          teamMap.set(p.id.toString(), mapping.team);
+        const teamMap = new Map<string, string>();
+        teamMappings.forEach((mapping) => {
+          mapping.players.forEach((p: player) => {
+            teamMap.set(p.id.toString(), mapping.team);
+          });
         });
-      });
-      setPlayerTeamMap(teamMap);
+        setPlayerTeamMap(teamMap);
 
-      if (stats && players) {
-        const pMap = new Map<string, string>();
-        players.forEach((p: player) => {
-          pMap.set(p.id.toString(), p.name);
-        });
-        setPlayersMap(pMap);
-        setCareerStats(stats);
+        if (stats && players) {
+          const pMap = new Map<string, string>();
+          players.forEach((p: player) => {
+            pMap.set(p.id.toString(), p.name);
+          });
+          setPlayersMap(pMap);
+          setCareerStats(stats);
+        }
+      } finally {
+        setIsLoader(false);
       }
     })();
   }, [selectedTournament]);

@@ -1,5 +1,5 @@
 // app/player/[id].tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput, Button, Text, Icon } from "react-native-paper";
@@ -9,17 +9,39 @@ import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
 import PlayerCareerRecords from "../PlayerCareerRecords";
 import PlayerMatchRecords from "../PlayerMatchRecords";
 import { useAppContext } from "@/context/AppContext";
+import { PlayerRole } from "@/types/player";
+import { ROLE_META, getPlayerRole } from "@/constants/playerRoles";
+import RolePicker from "@/components/RolePicker";
 
 export default function PlayerProfile() {
   const router = useRouter();
-  const { playerId, playerName } = useLocalSearchParams();
-  const [name, setName] = useState(playerName?.toString());
+  const params = useLocalSearchParams();
+  const playerId =
+    params.playerId?.toString() || params.id?.toString() || "";
+  const playerName = params.playerName?.toString() || "";
+
+  const [name, setName] = useState(playerName);
+  const [role, setRole] = useState<PlayerRole>("BAT");
+  const [originalName, setOriginalName] = useState(playerName);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<"career" | "matches" | null>(
     "career"
   );
   const { currentTheme, club } = useAppContext();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    (async () => {
+      if (!playerId) return;
+      const fetched = await Player.getById(playerId);
+      if (fetched) {
+        setName(fetched.name);
+        setOriginalName(fetched.name);
+        setRole(getPlayerRole(fetched));
+      }
+    })();
+  }, [playerId]);
+
   const handleSave = async () => {
     const trimmedName = name?.replace(/\s+/g, " ").trim();
     if (!trimmedName) {
@@ -27,13 +49,16 @@ export default function PlayerProfile() {
       return;
     }
 
-    if (await Player.isPlayerExists(trimmedName, club.id)) {
+    if (
+      trimmedName !== originalName &&
+      (await Player.isPlayerExists(trimmedName, club.id))
+    ) {
       alert("Player with this name already exists");
       return;
     }
 
     if (playerId) {
-      await Player.update(playerId.toString(), { name: trimmedName });
+      await Player.update(playerId, { name: trimmedName, role });
       router.replace("/players");
     }
   };
@@ -45,10 +70,9 @@ export default function PlayerProfile() {
         text: "Delete",
         onPress: async () => {
           if (playerId) {
-            const id = playerId.toString();
             await Promise.all([
-              Player.delete(id),
-              PlayerCareerStats.delete(id),
+              Player.delete(playerId),
+              PlayerCareerStats.delete(playerId),
             ]);
             router.replace("/players");
           }
@@ -86,6 +110,9 @@ export default function PlayerProfile() {
     </View>
   );
 
+  const roleMeta = ROLE_META[role];
+  const isDark = currentTheme === "dark";
+
   return (
     <View
       style={[
@@ -94,22 +121,46 @@ export default function PlayerProfile() {
       ]}
     >
       {isEditing ? (
-        <TextInput
-          label="Player Name"
-          value={name}
-          onChangeText={setName}
-          mode="outlined"
-        />
+        <>
+          <TextInput
+            label="Player Name"
+            value={name}
+            onChangeText={setName}
+            mode="outlined"
+          />
+          <Text
+            style={[
+              styles.sectionLabel,
+              { color: isDark ? "#9AA39F" : "#6B7571" },
+            ]}
+          >
+            ROLE
+          </Text>
+          <RolePicker value={role} onChange={setRole} />
+        </>
       ) : (
         <>
           <Text
             style={[
               styles.subtitle,
-              { color: currentTheme === "dark" ? "white" : "black" },
+              { color: isDark ? "white" : "black" },
             ]}
           >
-            {playerName}
+            {name || playerName}
           </Text>
+          <View style={styles.roleBadgeWrap}>
+            <View
+              style={[
+                styles.roleBadge,
+                { backgroundColor: `${roleMeta.color}14` },
+              ]}
+            >
+              <View style={[styles.roleDot, { backgroundColor: roleMeta.color }]} />
+              <Text style={[styles.roleBadgeText, { color: roleMeta.color }]}>
+                {roleMeta.label}
+              </Text>
+            </View>
+          </View>
           <View style={styles.tabs}>
             <Button
               mode={activeTab === "career" ? "contained" : "outlined"}
@@ -134,12 +185,12 @@ export default function PlayerProfile() {
           </View>
           {activeTab === "career" && (
             <>
-              <PlayerCareerRecords playerId={playerId?.toString() || ""} />
+              <PlayerCareerRecords playerId={playerId} />
             </>
           )}
           {activeTab === "matches" && (
             <>
-              <PlayerMatchRecords playerId={playerId?.toString() || ""} />
+              <PlayerMatchRecords playerId={playerId} />
             </>
           )}
         </>
@@ -156,9 +207,38 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 20,
-    marginBottom: 24,
+    marginBottom: 8,
     textAlign: "center",
     opacity: 0.8,
+  },
+  roleBadgeWrap: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  roleBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  roleDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  roleBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    marginTop: 20,
+    marginBottom: 8,
   },
   actions: {
     flexDirection: "row",

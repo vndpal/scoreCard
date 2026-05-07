@@ -3,4 +3,5 @@ export const STORAGE_ITEMS = {
   SETTINGS: "settings",
   USER_CLUB: "userClub",
   THEME: "theme",
+  TEAM_SELECTION_CAPTAINS: "teamSelectionCaptains",
 };

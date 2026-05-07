@@ -1,17 +1,17 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TextInput, Button } from "react-native-paper";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { getItem, setItem } from "@/utils/asyncStorage";
-import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { player } from "@/types/player";
+import { useRouter } from "expo-router";
 import { useAppContext } from "@/context/AppContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerCareerStats } from "@/firebase/models/PlayerCareerStats";
+import { PlayerRole } from "@/types/player";
+import RolePicker from "@/components/RolePicker";
 
 export const CreatePlayer = () => {
   const [name, setName] = useState("");
+  const [role, setRole] = useState<PlayerRole>("BAT");
   const router = useRouter();
   const { currentTheme, club } = useAppContext();
   const insets = useSafeAreaInsets();
@@ -31,7 +31,11 @@ export const CreatePlayer = () => {
       return;
     }
 
-    const player = await Player.create({ name: trimmedName, clubId: club.id });
+    const player = await Player.create({
+      name: trimmedName,
+      clubId: club.id,
+      role,
+    });
     if (player) {
       await insertPlayerCareerStats(player.id);
     }
@@ -81,6 +85,8 @@ export const CreatePlayer = () => {
         style={[{ backgroundColor: "#fff" }, themeStyles.input]}
         mode="outlined"
       />
+      <Text style={[styles.sectionLabel, themeStyles.sectionLabel]}>ROLE</Text>
+      <RolePicker value={role} onChange={setRole} />
       <Button mode="contained" onPress={handleSave} style={styles.button}>
         Add new player
       </Button>
@@ -94,7 +100,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   button: {
-    marginTop: 16,
+    marginTop: 24,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.6,
+    marginTop: 20,
+    marginBottom: 8,
   },
 });
 
@@ -102,10 +115,16 @@ const lightStyles = StyleSheet.create({
   input: {
     backgroundColor: "#fff",
   },
+  sectionLabel: {
+    color: "#6B7571",
+  },
 });
 
 const darkStyles = StyleSheet.create({
   input: {
     backgroundColor: "#151718",
+  },
+  sectionLabel: {
+    color: "#9AA39F",
   },
 });

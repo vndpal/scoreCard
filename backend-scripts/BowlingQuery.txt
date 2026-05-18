@@ -28,9 +28,9 @@ SELECT
   ) AS economy
 
 FROM `scorecard.PlayerTournamentStats` pt
-JOIN `scorecard.Players` p 
+JOIN `scorecard.Players` p
   ON pt.playerId = p.id
-JOIN `scorecard.Tournaments` t 
+JOIN `scorecard.Tournaments` t
   ON pt.tournamentId = t.id
 WHERE pt.clubId = 'MD9kwAKqLef2ryVkBjpj'
   AND t.date > '2025-09-01'

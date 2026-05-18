@@ -1,0 +1,36 @@
+name: Migrate Firestore to BigQuery
+
+on:
+  schedule:
+    # Wed 3:00 AM IST = Tue 21:30 UTC (IST is UTC+5:30).
+    # GitHub-scheduled runs can be delayed ~5–20 min under load.
+    - cron: '30 21 * * 2'
+  workflow_dispatch:
+    inputs:
+      full_refresh:
+        description: 'Full refresh (rewrite all tables — use after schema changes)'
+        type: boolean
+        default: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-scripts
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run migration
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          BIGQUERY_DATASET_ID: scorecard
+          FULL_REFRESH: ${{ inputs.full_refresh || 'false' }}
+        run: npm run migrate-to-bigquery

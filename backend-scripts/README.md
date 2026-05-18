@@ -109,10 +109,21 @@ node migrateToBigQuery.js
 
 ## Notes
 
-- The script will create tables if they don't exist
-- If tables already exist, data will be appended (you may want to truncate tables first for fresh imports)
+- The script creates tables if they don't exist
+- **Incremental by default.** Each run reads `MAX(updatedAt)` from the target BigQuery table and only pulls Firestore docs where `updatedAt > <that watermark>`. First run (or any time the table is missing) does a full backfill.
+- **No DML, works on the BigQuery sandbox.** For incremental runs, the script reads the existing table contents into memory, merges new/updated rows by `id` (new wins), and rewrites the table with a single `WRITE_TRUNCATE` load job. SELECT queries and load jobs are both free on the sandbox.
+- **Balls subcollection**: the parent's `updatedAt` doesn't change when a ball is added/edited, so the script enumerates parent ids (from the BigQuery `MatchScores` table on incremental runs, so we don't re-scan all parents in Firestore) and queries each parent's `balls` subcollection with `where('updatedAt', '>', watermark)`. The composite id `${matchScoreId}_${ballId}` keeps balls from different overs distinct.
+- **Deletes are not propagated.** Incremental queries can't see deleted Firestore docs, so a doc that's deleted in Firestore will linger in BigQuery. This is intentional and acceptable for this project — records rarely get deleted, and stale rows in BigQuery don't affect the analytics use case.
+- A `FULL_REFRESH=true` env flag is kept as an escape hatch for cases where you do want a clean rewrite (e.g., after a schema change, or to recover from a bad run):
+  ```bash
+  # Windows PowerShell
+  $env:FULL_REFRESH="true"; npm run migrate-to-bigquery
+  # Linux/Mac
+  FULL_REFRESH=true npm run migrate-to-bigquery
+  ```
+  You don't need to run this on any schedule.
 - Firestore Timestamps are converted to BigQuery TIMESTAMP format
-- The script handles missing/null values appropriately
+- Missing/null values are stored as `NULL` rather than empty strings
 
 ## Troubleshooting
 
@@ -127,8 +138,8 @@ node migrateToBigQuery.js
    - Grant permissions in Google Cloud Console > IAM & Admin
 
 3. **Table already exists:**
-   - The script will append data to existing tables
-   - To replace data, manually delete tables in BigQuery first
+   - That's expected. The script `MERGE`s on `id`, so re-running is safe.
+   - To reset, delete the table in BigQuery and re-run for a full backfill.
 
 ## Web Dashboard
 
@@ -174,7 +185,7 @@ The queries are stored in:
 - `BowlingQuery.txt` - Bowling statistics query
 - `WinningQuery.txt` - Winning statistics query
 
-**Note**: Make sure the dataset name in the query files matches your BigQuery dataset. The queries currently use `scorecard` as the dataset name. If your dataset is named differently (e.g., `scorecard_data`), update the queries accordingly.
+**Note**: The query files reference `scorecard_data` (the default `BIGQUERY_DATASET_ID`). If you set a different dataset name in `.env`, update the queries accordingly.
 
 ### Customization
 

@@ -1,4 +1,54 @@
-# Firestore to BigQuery Migration Script
+# ScoreCard Stats — Backend & Analytics Portal
+
+This folder is self-contained — it ships its own `package.json`, dependencies,
+service account key, and static front-end. It can be cut into its own repo
+without depending on anything outside this directory.
+
+It contains two things:
+
+1. **Stats portal** (`server.js` + `index.html` + `data.js` + `app.jsx` + `ui.jsx` + `pages/*.jsx`) —
+   a Statsguru-style React web app that reads from BigQuery.
+2. **Firestore → BigQuery migration** (`migrateToBigQuery.js`) — the data
+   pipeline that populates the tables the portal queries.
+
+The legacy single-page dashboard was archived under `legacy/`.
+
+## Running the stats portal
+
+```bash
+npm install
+node server.js
+# open http://localhost:3000
+```
+
+Server endpoints (all read from `BQ_DATASET`, default `scorecard_data`):
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/bootstrap` | Returns clubs, tournaments, teams, players, teamPlayers, matches, playerMatchStats, playerCareerStats, playerTournamentStats, and matchScoreBalls (joined with MatchScores for matchId / inning). 60s in-memory cache. |
+| POST | `/api/bootstrap/refresh` | Force-clears the bootstrap cache (run after a migration). |
+| GET | `/api/match/:id/balls` | All balls for a single match. |
+| GET | `/api/h2h/balls?striker=&bowler=` | Every ball between a specific striker / bowler pair. |
+| GET | `/api/h2h/team-pair?team1=&team2=` | Matches played between two teams. |
+| GET | `/api/stats/:type?year=&month=` | Legacy monthly stats endpoints (kept for back-compat with `legacy/`). |
+
+`index.html` loads `data.js` first; `data.js` fetches `/api/bootstrap`, enriches
+the rows into the shape the design pages expect (lookup maps, per-match
+`inn1`/`inn2`, derived player role, `isFour`/`isSix` flags on balls), then
+dynamically injects all the Babel-compiled JSX modules. The whole front-end
+runs from the CDN-loaded React + Tailwind + Recharts + Lucide bundle wired in
+`index.html` — there is no build step.
+
+Defensive caps in `server.js`: `PlayerMatchStats LIMIT 50000`,
+`MatchScoreBalls LIMIT 200000`. Bump via the `BOOTSTRAP_LIMITS` object if the
+dataset grows.
+
+## Firestore → BigQuery migration
+
+The rest of this README covers the migration script that populates the BQ
+tables the portal reads.
+
+---
 
 This script migrates data from Firestore collections to BigQuery tables.
 

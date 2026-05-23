@@ -1,81 +1,169 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScoreCard Stats Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>ScoreCard Stats · Cricket Analytics</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Manrope', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        },
+        colors: {
+          ink: {
+            950: '#070A10',
+            900: '#0A0D14',
+            850: '#0E121A',
+            800: '#11151D',
+            750: '#151A24',
+            700: '#1B2230',
+            600: '#242C3D',
+            500: '#3A4458',
+            400: '#5A6275',
+            300: '#8B93A7',
+            200: '#B6BBC8',
+            100: '#E6E8EC',
+            50:  '#F4F5F8',
+          },
+          pitch: {
+            DEFAULT: '#A6E04C',
+            soft: '#7FB832',
+            deep: '#3B5818',
+            glow: 'oklch(0.82 0.17 135)',
+          },
+          orange: { cap: '#E8B84A', deep: '#7A5E18' },
+          purple: { cap: '#A78BFA', deep: '#3A2A6F' },
+          danger: '#E87A5A',
+          up: '#84CC4A',
+          down: '#E87A5A',
+        },
+        boxShadow: {
+          'card': '0 1px 0 0 rgba(255,255,255,0.03) inset, 0 0 0 1px rgba(255,255,255,0.04)',
+          'glow-pitch': '0 0 0 1px rgba(166,224,76,0.4), 0 0 24px -4px rgba(166,224,76,0.35)',
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  html, body { background: #0A0D14; color: #E6E8EC; }
+  body { font-family: 'Manrope', system-ui, sans-serif; font-feature-settings: "ss01","cv11"; }
+  .num, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0A0D14; }
+  ::-webkit-scrollbar-thumb { background: #1B2230; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #242C3D; }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .stripe-bg {
+    background: repeating-linear-gradient(
+      135deg,
+      rgba(166,224,76,0.04) 0 6px,
+      transparent 6px 14px
+    );
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #11151D 0%, #1B2230 50%, #11151D 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* recharts tooltip dark fix */
+  .recharts-default-tooltip {
+    background: #11151D !important;
+    border: 1px solid #1B2230 !important;
+    border-radius: 8px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+  }
+  .recharts-tooltip-label { color: #8B93A7 !important; }
+  .recharts-cartesian-axis-tick text { fill: #5A6275 !important; font-size: 10px; font-family: 'JetBrains Mono', monospace; }
+  .recharts-cartesian-grid line { stroke: #151A24 !important; }
+  .recharts-cartesian-axis line { stroke: #1B2230 !important; }
+
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+
+  .focus-ring:focus-visible { outline: 2px solid #A6E04C; outline-offset: 2px; }
+
+  /* page transitions */
+  .page-enter { animation: pageIn .25s ease-out both; }
+  @keyframes pageIn { from { opacity: 0.5; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+</style>
 </head>
+<body class="min-h-screen antialiased">
 
-<body>
-    <div class="container">
-        <header>
-            <h1>🏏 ScoreCard Statistics Dashboard</h1>
-            <p class="subtitle">Monthly Performance Analytics</p>
-        </header>
+<div id="root"></div>
 
-        <div class="month-selector">
-            <label for="monthSelect">Select Month:</label>
-            <select id="monthSelect" class="month-select">
-                <option value="1">January</option>
-                <option value="2">February</option>
-                <option value="3">March</option>
-                <option value="4">April</option>
-                <option value="5">May</option>
-                <option value="6">June</option>
-                <option value="7">July</option>
-                <option value="8">August</option>
-                <option value="9" selected>September</option>
-                <option value="10">October</option>
-                <option value="11">November</option>
-                <option value="12">December</option>
-            </select>
-            <label for="yearSelect">Year:</label>
-            <select id="yearSelect" class="year-select">
-                <!-- Years will be populated by JavaScript -->
-            </select>
-        </div>
+<!-- React + Babel -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-        <div class="stats-selector">
-            <button class="stat-btn" data-type="batting" id="battingBtn">
-                <span class="icon">🏏</span>
-                <span class="label">Batting Stats</span>
-            </button>
-            <button class="stat-btn" data-type="bowling" id="bowlingBtn">
-                <span class="icon">⚾</span>
-                <span class="label">Bowling Stats</span>
-            </button>
-            <button class="stat-btn" data-type="winning" id="winningBtn">
-                <span class="icon">🏆</span>
-                <span class="label">Winning Stats</span>
-            </button>
-            <button class="stat-btn" id="shareBtn"
-                style="background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white;">
-                <span class="icon">📸</span>
-                <span class="label">Share as Image</span>
-            </button>
-        </div>
+<!-- Recharts (UMD) -->
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
 
-        <div class="loading" id="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p>Loading data from BigQuery...</p>
-        </div>
+<!-- Lucide icons (UMD) -->
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.js"></script>
 
-        <div class="error" id="error" style="display: none;"></div>
+<!-- Data layer (plain JS, fetches /api/bootstrap then unlocks Babel scripts) -->
+<script src="data.js"></script>
 
-        <div class="results-container" id="resultsContainer" style="display: none;">
-            <div class="table-wrapper">
-                <table id="resultsTable">
-                    <thead id="tableHead"></thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<!--
+  App modules are loaded dynamically AFTER /api/bootstrap resolves so the pages
+  see a populated window.SCS_DATA at module-init time. Babel-standalone has
+  already finished its auto-scan by then, so we tell it to re-process tags.
+-->
+<script>
+  (function () {
+    const APP_MODULES = [
+      "ui.jsx",
+      "pages/home.jsx",
+      "pages/statsengine.jsx",
+      "pages/leaderboards.jsx",
+      "pages/player.jsx",
+      "pages/h2h.jsx",
+      "pages/matches.jsx",
+      "pages/tournament.jsx",
+      "app.jsx",
+    ];
+    if (!window.SCS_DATA_READY) {
+      console.error("[SCS] data.js failed to initialize");
+      return;
+    }
+    window.SCS_DATA_READY.then(function () {
+      APP_MODULES.forEach(function (src) {
+        const s = document.createElement("script");
+        s.type = "text/babel";
+        s.setAttribute("data-presets", "env,react");
+        s.src = src;
+        document.body.appendChild(s);
+      });
+      if (window.Babel && typeof window.Babel.transformScriptTags === "function") {
+        window.Babel.transformScriptTags();
+      }
+    }).catch(function () {
+      /* splash already shown by data.js */
+    });
+  })();
+</script>
 
-    <script src="app.js"></script>
 </body>
-
 </html>

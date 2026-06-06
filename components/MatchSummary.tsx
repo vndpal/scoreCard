@@ -76,7 +76,10 @@ const MatchSummary = () => {
           setBowlingRecordsTeamA(
             matchStats.playerMatchStats
               .filter((x: playerStats) => x.team === team1)
-              .filter((x: playerStats) => x.wickets > 0 || x.ballsBowled > 0)
+              .filter(
+                (x: playerStats) =>
+                  x.wickets > 0 || x.ballsBowled > 0 || x.overs > 0
+              )
               .sort(sortByWickets)
           );
           setBattingRecordsTeamB(
@@ -87,7 +90,10 @@ const MatchSummary = () => {
           setBowlingRecordsTeamB(
             matchStats.playerMatchStats
               .filter((x: playerStats) => x.team === team2)
-              .filter((x: playerStats) => x.wickets > 0 || x.ballsBowled > 0)
+              .filter(
+                (x: playerStats) =>
+                  x.wickets > 0 || x.ballsBowled > 0 || x.overs > 0
+              )
               .sort(sortByWickets)
           );
         }
@@ -129,12 +135,6 @@ const MatchSummary = () => {
     }
 
     return dismissals;
-  };
-
-  const getEconomyRate = (bowler: playerStats): string => {
-    if (bowler.ballsBowled === 0) return "-";
-    const totalBalls = bowler.overs * 6 + bowler.ballsBowled;
-    return (bowler.runsConceded / (totalBalls / 6)).toFixed(2);
   };
 
   const getDismissalStatus = (stat: playerStats): string => {
@@ -213,7 +213,9 @@ const MatchSummary = () => {
         <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>O</Text>
         <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>W</Text>
         <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>R</Text>
-        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>ER</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>Ex</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>4</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>6</Text>
       </View>
 
       {/* Rows */}
@@ -226,7 +228,7 @@ const MatchSummary = () => {
             {playersMap.get(row.playerId) || row.playerId}
           </Text>
           <Text style={[styles.bowlingCell, styles.smallCell]}>
-            {row.ballsBowled > 0 ? `${row.overs}.${row.ballsBowled}` : "0"}
+            {row.ballsBowled > 0 ? `${row.overs}.${row.ballsBowled}` : row.overs}
           </Text>
           <Text style={[styles.bowlingCell, styles.smallCell]}>
             {row.wickets}
@@ -235,7 +237,13 @@ const MatchSummary = () => {
             {row.runsConceded}
           </Text>
           <Text style={[styles.bowlingCell, styles.smallCell]}>
-            {getEconomyRate(row)}
+            {row.extras}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.smallCell]}>
+            {row.foursConceded}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.smallCell]}>
+            {row.sixesConceded}
           </Text>
         </View>
       ))}

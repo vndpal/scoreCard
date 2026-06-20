@@ -6,6 +6,9 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { playerStats } from "@/types/playerStats";
@@ -14,6 +17,10 @@ import { useAppContext } from "@/context/AppContext";
 import { Player } from "@/firebase/models/Player";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { MatchScore } from "@/firebase/models/MatchScores";
+import { Match } from "@/firebase/models/Match";
+
+const MAN_OF_THE_MATCH_API_URL =
+  "https://score-card-api-py.vercel.app/api/man-of-the-match";
 
 interface DismissalInfo {
   playerId: string;
@@ -38,6 +45,7 @@ const MatchSummary = () => {
   const [dismissalMap, setDismissalMap] = useState<Map<string, DismissalInfo>>(
     new Map()
   );
+  const [isPosting, setIsPosting] = useState(false);
 
   const { currentTheme } = useAppContext();
   const insets = useSafeAreaInsets();
@@ -143,6 +151,141 @@ const MatchSummary = () => {
       return `b ${dismissal.bowlerName}`;
     }
     return "not out";
+  };
+
+  // Builds the full match payload (match meta + player scorecard + ball-by-ball)
+  // expected by the external API.
+  const buildMatchPayload = async () => {
+    const id = matchId as string;
+
+    const [matchDoc, statsDoc, inning1, inning2] = await Promise.all([
+      Match.getById(id),
+      PlayerMatchStats.getByMatchId(id),
+      MatchScore.getByMatchIdInningNumber(id, 1),
+      MatchScore.getByMatchIdInningNumber(id, 2),
+    ]);
+
+    const toIso = (ts?: any) =>
+      ts && typeof ts.toDate === "function" ? ts.toDate().toISOString() : null;
+
+    const mapBall = (ball: any) => ({
+      run: ball.run,
+      extra: ball.extra,
+      totalRun: ball.totalRun,
+      isWicket: ball.isWicket,
+      isNoBall: ball.isNoBall,
+      isWideBall: ball.isWideBall,
+      isOverEnd: ball.isOverEnd,
+      strikerBatter: ball.strikerBatter
+        ? { id: ball.strikerBatter.id, name: ball.strikerBatter.name }
+        : null,
+      nonStrikerBatter: ball.nonStrikerBatter
+        ? { id: ball.nonStrikerBatter.id, name: ball.nonStrikerBatter.name }
+        : null,
+      bowler: ball.bowler
+        ? { id: ball.bowler.id, name: ball.bowler.name }
+        : null,
+    });
+
+    const buildInning = (inningNumber: number, scores: MatchScore[] | null) => {
+      if (!scores || scores.length === 0) return null;
+      return {
+        inningNumber,
+        teamId: scores[0].teamId,
+        overs: scores.map((s) => ({
+          overNumber: s.overNumber,
+          balls: (s.overSummary || []).map(mapBall),
+        })),
+      };
+    };
+
+    const innings = [buildInning(1, inning1), buildInning(2, inning2)].filter(
+      Boolean
+    );
+
+    return {
+      schemaVersion: 1,
+      source: "scorecard-mobile",
+      submittedAt: new Date().toISOString(),
+      match: matchDoc
+        ? {
+            matchId: matchDoc.matchId,
+            clubId: matchDoc.clubId,
+            tournamentId: matchDoc.tournamentId,
+            team1: matchDoc.team1,
+            team2: matchDoc.team2,
+            team1Fullname: matchDoc.team1Fullname,
+            team2Fullname: matchDoc.team2Fullname,
+            tossWin: matchDoc.tossWin,
+            choose: matchDoc.choose,
+            winner: matchDoc.winner ?? null,
+            status: matchDoc.status,
+            isFirstInning: matchDoc.isFirstInning,
+            quickMatch: matchDoc.quickMatch,
+            overs: matchDoc.overs,
+            wickets: matchDoc.wickets ?? null,
+            manOfTheMatch: matchDoc.manOfTheMatch,
+            startDateTime: toIso(matchDoc.startDateTime),
+            endDateTime: toIso(matchDoc.endDateTime),
+            currentScore: matchDoc.currentScore,
+          }
+        : null,
+      playerMatchStats: statsDoc?.playerMatchStats ?? [],
+      innings,
+    };
+  };
+
+  const handleFetchManOfTheMatch = async () => {
+    // Guard: never run twice concurrently or without a match id.
+    if (isPosting) return;
+    if (!matchId) {
+      Alert.alert("Error", "Match information is not available yet.");
+      return;
+    }
+
+    // Self-imposed timeout so a hanging network call can never leave the
+    // button stuck on a spinner.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    try {
+      setIsPosting(true);
+
+      const payload = await buildMatchPayload();
+
+      const response = await fetch(MAN_OF_THE_MATCH_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      // Tolerate non-JSON / empty responses without throwing.
+      let resultText: string;
+      try {
+        const data = await response.json();
+        resultText = JSON.stringify(data);
+      } catch {
+        resultText = "Request succeeded.";
+      }
+      Alert.alert("Man of the Match", resultText);
+    } catch (err: any) {
+      // Swallow everything here — this feature is fully isolated and must
+      // never propagate an error to the rest of the screen/app.
+      console.log("Fetch Man of the Match failed:", err);
+      const message =
+        err?.name === "AbortError"
+          ? "Request timed out. Please try again."
+          : err?.message || "Failed to fetch Man of the Match. Please try again.";
+      Alert.alert("Error", message);
+    } finally {
+      clearTimeout(timeoutId);
+      setIsPosting(false);
+    }
   };
 
   const BattingTable = ({
@@ -287,6 +430,20 @@ const MatchSummary = () => {
       {/* Team 2 - Bowling */}
       <Text style={styles.subHeader}>BOWLING</Text>
       <BowlingTable data={bowlingRecordsTeamB} teamColor="#334155" />
+
+      {/* Fetch Man of the Match */}
+      <TouchableOpacity
+        style={[styles.fetchButton, isPosting && styles.fetchButtonDisabled]}
+        onPress={handleFetchManOfTheMatch}
+        disabled={isPosting}
+        activeOpacity={0.8}
+      >
+        {isPosting ? (
+          <ActivityIndicator color="#ffffff" />
+        ) : (
+          <Text style={styles.fetchButtonText}>Fetch Man of the Match</Text>
+        )}
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -404,6 +561,25 @@ const styles = StyleSheet.create({
   divider: {
     height: 12,
     marginVertical: 8,
+  },
+  fetchButton: {
+    marginHorizontal: 8,
+    marginTop: 20,
+    marginBottom: 8,
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: "#1e40af",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fetchButtonDisabled: {
+    opacity: 0.6,
+  },
+  fetchButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
 });
 

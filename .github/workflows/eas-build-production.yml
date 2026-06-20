@@ -1,11 +1,11 @@
-name: EAS Android Build (Testing)
+name: EAS Android Build (Production)
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build (testing)
+    name: Build (production)
     runs-on: ubuntu-latest
 
     steps:
@@ -28,4 +28,4 @@ jobs:
         run: npm ci
 
       - name: Run EAS Build
-        run: eas build --profile testing --platform android --non-interactive --no-wait
+        run: eas build --profile production --platform android --non-interactive --no-wait

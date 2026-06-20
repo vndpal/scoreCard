@@ -49,7 +49,7 @@
     "testing": {
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",
-        "track": "internal"
+        "track": "production"
       }
     },
     "production": {

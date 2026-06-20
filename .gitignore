@@ -149,3 +149,6 @@ android/
 expo-env.d.ts
 .claude/settings.json
 .claude/settings.local.json
+
+# Google Play service account key (written from a CI secret; never commit)
+google-play-service-account.json

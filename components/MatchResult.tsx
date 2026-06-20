@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
   button: {
     width: "100%",
     padding: 12,
+    marginBottom: 16,
     borderRadius: 8,
     alignItems: "center",
   },

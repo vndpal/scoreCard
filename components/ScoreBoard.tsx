@@ -39,71 +39,134 @@ const ScoreBoard = ({
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.inningsContainer}>
-          {scorePerInning.map((overs, index) => (
-            <View style={[styles.oversContainer, themeStyles.oversContainer]} key={index}>
-              <View style={[styles.overSummaryContainer, themeStyles.overSummaryContainer]}>
-                <Text style={[styles.overSummaryText, themeStyles.overSummaryText]}>
-                  Ov {scorePerInning.length - index} | {overs.reduce((sum, over) => sum + over.totalRun, 0)} Runs
-                </Text>
-              </View>
-              <View style={styles.ballsRow}>
-                {overs.map((score: scorePerBall, ballIndex: number) => {
-                  let ballStyle = {};
-                  let textStyle = {};
+          {scorePerInning.map((over, index) => {
+            // Bowler for this over (same across the over; fall back to the
+            // first ball that actually carries a bowler).
+            const bowlerName =
+              over.find((ball) => ball.bowler)?.bowler?.name ?? "";
+            const overRuns = over.reduce((sum, ball) => sum + ball.totalRun, 0);
 
-                  // Determine basic event type for styling
-                  const isWicket = score.isWicket;
-                  const isNoBall = score.isNoBall;
-                  const isSix = score.run === 6;
-                  const isFour = score.run === 4;
+            // Group consecutive balls faced by the same batsman so the name is
+            // shown once per group. This keeps the ball circles the same size
+            // while still labelling who faced each ball.
+            const groups: { batsman: string; balls: scorePerBall[] }[] = [];
+            over.forEach((ball) => {
+              const batsman = ball.strikerBatter?.name ?? "";
+              const lastGroup = groups[groups.length - 1];
+              if (lastGroup && lastGroup.batsman === batsman) {
+                lastGroup.balls.push(ball);
+              } else {
+                groups.push({ batsman, balls: [ball] });
+              }
+            });
 
-                  // Apply styles based on priority
-                  if (isWicket) {
-                    ballStyle = themeStyles.ballWicket;
-                    textStyle = themeStyles.ballTextWicket;
-                  } else if (isNoBall) {
-                    ballStyle = themeStyles.ballNoBall;
-                    textStyle = themeStyles.ballTextNoBall;
-                  } else if (isSix) {
-                    ballStyle = themeStyles.ballSix;
-                    textStyle = themeStyles.ballTextSix;
-                  } else if (isFour) {
-                    ballStyle = themeStyles.ballFour;
-                    textStyle = themeStyles.ballTextFour;
-                  }
-
-                  return (
-                    <View style={styles.ballsContainer} key={ballIndex}>
-                      <View
-                        key={ballIndex}
-                        style={[
-                          styles.ballScore,
-                          themeStyles.ballScore,
-                          ballStyle // Apply dynamic style
-                        ]}
+            return (
+              <View
+                style={[styles.oversContainer, themeStyles.oversContainer]}
+                key={index}
+              >
+                {/* Over header: OV n · bowler ........ runs */}
+                <View style={styles.overHeaderRow}>
+                  <View style={[styles.overNumPill, themeStyles.overNumPill]}>
+                    <Text style={[styles.overNumText, themeStyles.overNumText]}>
+                      OV {scorePerInning.length - index}
+                    </Text>
+                  </View>
+                  {bowlerName ? (
+                    <View style={styles.bowlerWrap}>
+                      <View style={[styles.bowlerDot, themeStyles.bowlerDot]} />
+                      <Text
+                        style={[styles.bowlerText, themeStyles.bowlerText]}
+                        numberOfLines={1}
                       >
-                        <Text
-                          style={[
-                            styles.ballScoreText,
-                            themeStyles.ballScoreText,
-                            textStyle // Apply dynamic text style
-                          ]}
-                        >
-                          {score.isNoBall
-                            ? "NB "
-                            : score.isWideBall
-                              ? "WD "
-                              : ""}
-                          {score.isWicket ? "W " : ""}
-                          {(score.run > 0 || (!score.isNoBall && !score.isWideBall && !score.isWicket)) ? score.run.toString() : ""}
-                        </Text>
-                      </View>
+                        {bowlerName}
+                      </Text>
                     </View>
-                  );
-                })}
+                  ) : null}
+                  <Text style={[styles.overRunsText, themeStyles.overRunsText]}>
+                    {overRuns}
+                  </Text>
+                </View>
+
+                {/* Balls grouped by batsman */}
+                <View style={styles.groupsRow}>
+                  {groups.map((group, groupIndex) => (
+                    <View style={styles.group} key={groupIndex}>
+                      <View style={styles.groupBalls}>
+                        {group.balls.map(
+                          (score: scorePerBall, ballIndex: number) => {
+                            let ballStyle = {};
+                            let textStyle = {};
+
+                            // Determine basic event type for styling
+                            const isWicket = score.isWicket;
+                            const isNoBall = score.isNoBall;
+                            const isSix = score.run === 6;
+                            const isFour = score.run === 4;
+
+                            // Apply styles based on priority
+                            if (isWicket) {
+                              ballStyle = themeStyles.ballWicket;
+                              textStyle = themeStyles.ballTextWicket;
+                            } else if (isNoBall) {
+                              ballStyle = themeStyles.ballNoBall;
+                              textStyle = themeStyles.ballTextNoBall;
+                            } else if (isSix) {
+                              ballStyle = themeStyles.ballSix;
+                              textStyle = themeStyles.ballTextSix;
+                            } else if (isFour) {
+                              ballStyle = themeStyles.ballFour;
+                              textStyle = themeStyles.ballTextFour;
+                            }
+
+                            return (
+                              <View
+                                key={ballIndex}
+                                style={[
+                                  styles.ballScore,
+                                  themeStyles.ballScore,
+                                  ballStyle, // Apply dynamic style
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.ballScoreText,
+                                    themeStyles.ballScoreText,
+                                    textStyle, // Apply dynamic text style
+                                  ]}
+                                >
+                                  {score.isNoBall
+                                    ? "NB "
+                                    : score.isWideBall
+                                      ? "WD "
+                                      : ""}
+                                  {score.isWicket ? "W " : ""}
+                                  {score.run > 0 ||
+                                  (!score.isNoBall &&
+                                    !score.isWideBall &&
+                                    !score.isWicket)
+                                    ? score.run.toString()
+                                    : ""}
+                                </Text>
+                              </View>
+                            );
+                          }
+                        )}
+                      </View>
+                      {/* bracket tying the group's balls to the batsman name */}
+                      <View style={[styles.bracket, themeStyles.bracket]} />
+                      <Text
+                        style={[styles.batsmanName, themeStyles.batsmanName]}
+                        numberOfLines={1}
+                      >
+                        {group.batsman}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -164,7 +227,6 @@ const styles = StyleSheet.create({
     height: 26,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 2,
     elevation: 1,
     borderWidth: 1,
     borderRadius: 13,
@@ -175,43 +237,93 @@ const styles = StyleSheet.create({
   ballScoreText: {
     fontSize: 9,
     textAlign: "center",
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   oversContainer: {
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: 'center',
+    alignItems: "flex-start",
+    justifyContent: "center",
     marginRight: 8,
     marginLeft: 2,
     borderRadius: 8,
-    padding: 4,
+    padding: 6,
     borderWidth: 1.5,
     elevation: 4, // slightly higher elevation for card feel
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3,
   },
-  overSummaryContainer: {
-    marginBottom: 4,
-    paddingHorizontal: 8, // slightly more padding for the pill
-    paddingVertical: 2,
-    borderRadius: 12, // fully rounded pill
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  overSummaryText: {
-    fontSize: 9,
-    fontWeight: "800",
-    textTransform: 'uppercase',
-  },
-  ballsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  ballsContainer: {
+  // ---- Over header (OV pill · bowler · runs) ----
+  overHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "stretch",
+    gap: 6,
+    marginBottom: 5,
+  },
+  overNumPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  overNumText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+  },
+  bowlerWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flexShrink: 1,
+  },
+  bowlerDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  bowlerText: {
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  overRunsText: {
+    marginLeft: "auto",
+    paddingLeft: 6,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  // ---- Balls grouped by batsman ----
+  groupsRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  group: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  groupBalls: {
+    flexDirection: "row",
+    gap: 5,
+  },
+  bracket: {
+    alignSelf: "stretch",
+    height: 3,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    marginTop: 2,
+  },
+  batsmanName: {
+    fontSize: 7,
+    fontWeight: "600",
+    lineHeight: 9,
+    marginTop: 1,
   },
 });
 
@@ -245,44 +357,59 @@ const darkStyles = StyleSheet.create({
     color: "#abb2bf",
   },
   oversContainer: {
-    backgroundColor: '#333842', // Distinct card background for dark mode
-    borderColor: '#5c6370',
+    backgroundColor: "#333842", // Distinct card background for dark mode
+    borderColor: "#5c6370",
     shadowColor: "#000",
   },
-  overSummaryContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // Darker pill
+  overNumPill: {
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
   },
-  overSummaryText: {
-    color: '#dcdcdc',
+  overNumText: {
+    color: "#dcdcdc",
+  },
+  bowlerDot: {
+    backgroundColor: "#7f8794",
+  },
+  bowlerText: {
+    color: "#cdd3db",
+  },
+  overRunsText: {
+    color: "#ffffff",
+  },
+  bracket: {
+    borderColor: "#565c64",
+  },
+  batsmanName: {
+    color: "#9aa1ab",
   },
   // Dark Mode Specific Event Styles
   ballSix: {
-    backgroundColor: '#4caf50', // Green
-    borderColor: '#388e3c',
+    backgroundColor: "#4caf50", // Green
+    borderColor: "#388e3c",
   },
   ballTextSix: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   ballFour: {
-    backgroundColor: '#81c784', // Less green (Light Green)
-    borderColor: '#66bb6a',
+    backgroundColor: "#81c784", // Less green (Light Green)
+    borderColor: "#66bb6a",
   },
   ballTextFour: {
-    color: '#000000', // Better contrast on light green
+    color: "#000000", // Better contrast on light green
   },
   ballWicket: {
-    backgroundColor: '#ef5350', // Red
-    borderColor: '#e53935',
+    backgroundColor: "#ef5350", // Red
+    borderColor: "#e53935",
   },
   ballTextWicket: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   ballNoBall: {
-    backgroundColor: '#fdd835', // Yellowish Warning
-    borderColor: '#fbc02d',
+    backgroundColor: "#fdd835", // Yellowish Warning
+    borderColor: "#fbc02d",
   },
   ballTextNoBall: {
-    color: '#000000',
+    color: "#000000",
   },
 });
 const lightStyles = StyleSheet.create({
@@ -291,8 +418,7 @@ const lightStyles = StyleSheet.create({
     borderBottomColor: "#e9ecef",
     shadowColor: "#adb5bd",
   },
-  scoreContainer: {
-  },
+  scoreContainer: {},
   scoreText: {
     color: "#ffffff",
     backgroundColor: "#28a745",
@@ -314,44 +440,59 @@ const lightStyles = StyleSheet.create({
     color: "#495057",
   },
   oversContainer: {
-    backgroundColor: '#ffffff', // Distinct card background for light mode
-    borderColor: '#ced4da',
+    backgroundColor: "#ffffff", // Distinct card background for light mode
+    borderColor: "#ced4da",
     shadowColor: "#adb5bd",
   },
-  overSummaryContainer: {
-    backgroundColor: '#e9ecef', // Lighter pill
+  overNumPill: {
+    backgroundColor: "#eef1f4",
   },
-  overSummaryText: {
-    color: '#495057',
+  overNumText: {
+    color: "#5b626b",
+  },
+  bowlerDot: {
+    backgroundColor: "#9aa1a9",
+  },
+  bowlerText: {
+    color: "#3a3f47",
+  },
+  overRunsText: {
+    color: "#2b2f36",
+  },
+  bracket: {
+    borderColor: "#d9dde2",
+  },
+  batsmanName: {
+    color: "#7a828c",
   },
   // Light Mode Specific Event Styles
   ballSix: {
-    backgroundColor: '#2e7d32', // Darker Green for light mode contrast
-    borderColor: '#1b5e20',
+    backgroundColor: "#2e7d32", // Darker Green for light mode contrast
+    borderColor: "#1b5e20",
   },
   ballTextSix: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   ballFour: {
-    backgroundColor: '#4caf50', // Standard Green (less "deep" than 6)
-    borderColor: '#388e3c',
+    backgroundColor: "#4caf50", // Standard Green (less "deep" than 6)
+    borderColor: "#388e3c",
   },
   ballTextFour: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   ballWicket: {
-    backgroundColor: '#d32f2f', // Red
-    borderColor: '#c62828',
+    backgroundColor: "#d32f2f", // Red
+    borderColor: "#c62828",
   },
   ballTextWicket: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   ballNoBall: {
-    backgroundColor: '#ffeb3b', // Yellow
-    borderColor: '#fbc02d',
+    backgroundColor: "#ffeb3b", // Yellow
+    borderColor: "#fbc02d",
   },
   ballTextNoBall: {
-    color: '#000000',
+    color: "#000000",
   },
 });
 

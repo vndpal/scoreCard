@@ -1145,7 +1145,12 @@ export default function HomeScreen() {
           ""
         )}
       </View>
-      <View style={{ flex: 0.1 }}></View>
+      <View
+        style={{
+          flex:
+            match.status === "live" || match.status === "noResult" ? 0.6 : 0.1,
+        }}
+      ></View>
       <View style={styles.subContainer}>
         {match.status === "live" || match.status === "noResult" ? (
           <TouchableOpacity
@@ -1212,7 +1217,12 @@ export default function HomeScreen() {
           </View>
         )}
       </View>
-      <View style={{ flex: 0.3 }}></View>
+      <View
+        style={{
+          flex:
+            match.status === "live" || match.status === "noResult" ? 0.15 : 0.3,
+        }}
+      ></View>
       <View style={styles.subContainer}>
         <ScoringControls
           possibleRuns={possibleRuns}
@@ -1335,7 +1345,7 @@ const styles = StyleSheet.create({
   },
   subContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-end",
   },
   pickPlayerContainer: {
     flexDirection: "column",

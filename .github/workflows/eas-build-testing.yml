@@ -1,20 +1,12 @@
-name: EAS Android Builds
+name: EAS Android Build (Testing)
 
 on:
-  push:
-    branches:
-      - '**'
-  pull_request:
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build (${{ matrix.profile }})
+    name: Build (testing)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        profile: [preview, testing]
 
     steps:
       - name: Checkout
@@ -36,4 +28,4 @@ jobs:
         run: npm ci
 
       - name: Run EAS Build
-        run: eas build --profile ${{ matrix.profile }} --platform android --non-interactive --no-wait
+        run: eas build --profile testing --platform android --non-interactive --no-wait

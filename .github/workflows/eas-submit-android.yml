@@ -10,7 +10,7 @@ on:
 
 jobs:
   submit:
-    name: Submit (production)
+    name: Submit (testing)
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +33,7 @@ jobs:
         run: npm ci
 
       - name: Write Google Play service account key
-        # Path must match submit.production.android.serviceAccountKeyPath in eas.json
+        # Path must match submit.testing.android.serviceAccountKeyPath in eas.json
         run: printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > google-play-service-account.json
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
@@ -43,9 +43,9 @@ jobs:
           BUILD_ID: ${{ inputs.build_id }}
         run: |
           if [ -n "$BUILD_ID" ]; then
-            eas submit --platform android --profile production --id "$BUILD_ID" --non-interactive
+            eas submit --platform android --profile testing --id "$BUILD_ID" --non-interactive
           else
-            eas submit --platform android --profile production --latest --non-interactive
+            eas submit --platform android --profile testing --latest --non-interactive
           fi
 
       - name: Remove service account key

@@ -40,19 +40,24 @@ export const CreateTournament = ({
   const handleSubmit = async () => {
     const { name, isBoxCricket } = formik.values;
 
-    const lastMatch = await Match.getLatestMatch(club.id);
-
-    if (lastMatch && lastMatch.status === "live") {
-      Alert.alert("Complete the match before creating a new tournament.");
-      return;
-    }
-
     const latestTournament = await Tournament.getByStatus(
       "ongoing",
       club?.id ?? ""
     );
 
     if (latestTournament.length > 0) {
+      const ongoingMatches = await Match.getLiveMatchesByTournament(
+        latestTournament[0].id
+      );
+
+      if (ongoingMatches.length > 0) {
+        Alert.alert(
+          "Ongoing match in progress",
+          "Please complete all ongoing matches in the current tournament before creating a new one."
+        );
+        return;
+      }
+
       await Tournament.update(latestTournament[0].id, {
         status: "completed",
       });

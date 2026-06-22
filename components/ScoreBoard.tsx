@@ -46,6 +46,20 @@ const ScoreBoard = ({
               over.find((ball) => ball.bowler)?.bowler?.name ?? "";
             const overRuns = over.reduce((sum, ball) => sum + ball.totalRun, 0);
 
+            // Over label in cricket notation. Wides/no-balls don't count
+            // toward the over's six deliveries, so count only legal balls.
+            // While the over is in progress show "<completed overs>.<balls>"
+            // (e.g. 3 balls into the 3rd over -> "2.3"); once six legal balls
+            // are bowled the over is complete and we show the whole number.
+            const overNumber = scorePerInning.length - index;
+            const legalBalls = over.filter(
+              (ball) => !ball.isNoBall && !ball.isWideBall
+            ).length;
+            const overLabel =
+              legalBalls >= 6
+                ? `${overNumber}`
+                : `${overNumber - 1}.${legalBalls}`;
+
             // Group consecutive balls faced by the same batsman so the name is
             // shown once per group. This keeps the ball circles the same size
             // while still labelling who faced each ball.
@@ -65,11 +79,11 @@ const ScoreBoard = ({
                 style={[styles.oversContainer, themeStyles.oversContainer]}
                 key={index}
               >
-                {/* Over header: OV n · bowler ........ runs */}
+                {/* Over header: OV n · bowler · runs */}
                 <View style={styles.overHeaderRow}>
                   <View style={[styles.overNumPill, themeStyles.overNumPill]}>
                     <Text style={[styles.overNumText, themeStyles.overNumText]}>
-                      OV {scorePerInning.length - index}
+                      OV {overLabel}
                     </Text>
                   </View>
                   {bowlerName ? (
@@ -85,6 +99,9 @@ const ScoreBoard = ({
                   ) : null}
                   <Text style={[styles.overRunsText, themeStyles.overRunsText]}>
                     {overRuns}
+                    <Text style={styles.overRunsLabel}>
+                      {` ${overRuns === 1 ? "run" : "runs"}`}
+                    </Text>
                   </Text>
                 </View>
 
@@ -289,10 +306,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   overRunsText: {
-    marginLeft: "auto",
-    paddingLeft: 6,
     fontSize: 11,
     fontWeight: "800",
+  },
+  overRunsLabel: {
+    fontSize: 8,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.2,
   },
   // ---- Balls grouped by batsman ----
   groupsRow: {

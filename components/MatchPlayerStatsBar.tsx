@@ -21,6 +21,7 @@ const MatchPlayerStatsBar = ({
   handleOutBatter,
   handleSwapBatters,
   handleEditPlayer,
+  handleDeclareBatter,
 }: {
   strikerBatsman: player | undefined;
   nonStrikerBatsman: player | undefined;
@@ -30,6 +31,10 @@ const MatchPlayerStatsBar = ({
   handleOutBatter: (outBatter: player) => void;
   handleSwapBatters: () => void;
   handleEditPlayer: (playerType: "striker" | "nonStriker" | "bowler") => void;
+  handleDeclareBatter: (
+    batter: player,
+    playerType: "striker" | "nonStriker"
+  ) => void;
 }) => {
   const { currentTheme } = useAppContext();
 
@@ -59,8 +64,13 @@ const MatchPlayerStatsBar = ({
           themeStyles.striker,
           isOut && styles.highlightOutBatter,
         ]}
-        disabled={!isOut}
-        onPress={() => handleOut(strikerBatsman!)}
+        onPress={() => {
+          if (isOut) handleOut(strikerBatsman!);
+        }}
+        onLongPress={() => {
+          if (!isOut && strikerBatsman)
+            handleDeclareBatter(strikerBatsman, "striker");
+        }}
       >
         <View style={styles.playerNameContainer}>
           {strikerBatsman &&
@@ -112,8 +122,13 @@ const MatchPlayerStatsBar = ({
           themeStyles.batter,
           isOut && styles.highlightOutBatter,
         ]}
-        disabled={!isOut}
-        onPress={() => handleOut(nonStrikerBatsman!)}
+        onPress={() => {
+          if (isOut) handleOut(nonStrikerBatsman!);
+        }}
+        onLongPress={() => {
+          if (!isOut && nonStrikerBatsman)
+            handleDeclareBatter(nonStrikerBatsman, "nonStriker");
+        }}
       >
         <View style={styles.playerNameContainer}>
           {nonStrikerBatsman &&

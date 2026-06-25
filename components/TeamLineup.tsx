@@ -680,7 +680,8 @@ const TeamLineUp: React.FC = () => {
                   x.extras > 0 ||
                   x.runs > 0 ||
                   x.ballsFaced > 0 ||
-                  x.isOut === true,
+                  x.isOut === true ||
+                  x.retired === true,
               )
               .map((x) => x.playerId);
             setActivePlayerIds(playedPlayers);
@@ -1107,6 +1108,7 @@ const TeamLineUp: React.FC = () => {
             overs: 0,
             extras: 0,
             isOut: false,
+            retired: false,
             team: slotInitials,
             strikeRate: 0,
             average: 0,

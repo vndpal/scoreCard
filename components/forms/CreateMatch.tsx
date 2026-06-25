@@ -210,6 +210,7 @@ export const CreateMatch = () => {
             sixes: 0,
             average: 0,
             isOut: false,
+            retired: false,
             strikeRate: 0,
             wickets: 0,
             ballsBowled: 0,

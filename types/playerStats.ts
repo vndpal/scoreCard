@@ -9,6 +9,7 @@ type playerStats = {
   strikeRate: number;
   average: number;
   isOut: boolean;
+  retired?: boolean;
   wickets: number;
   overs: number;
   ballsBowled: number;

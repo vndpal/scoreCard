@@ -1059,13 +1059,33 @@ export default function HomeScreen() {
         return;
       }
       setBatter1(value);
+      clearRetiredFlag(value);
     } else if (!batter2) {
       if (batter1 && value?.id == batter1.id) {
         alert(`${value?.name} is already selected`);
         return;
       }
       setBatter2(value);
+      clearRetiredFlag(value);
     }
+  };
+
+  // When a previously declared (retired not out) batsman returns to bat, clear
+  // their retired flag so they no longer appear in the picker. Their runs/balls
+  // are left untouched so the innings resumes from where they left off.
+  const clearRetiredFlag = async (value: player | undefined) => {
+    if (!value) return;
+    const target = playerMatchStats.find(
+      (p: playerStats) => p.playerId == value.id
+    );
+    if (!target?.retired) return;
+    const updated = playerMatchStats.map((p: playerStats) =>
+      p.playerId == value.id ? { ...p, retired: false } : p
+    );
+    setPlayerMatchStats(updated);
+    await PlayerMatchStats.update(match.matchId, {
+      playerMatchStats: updated,
+    });
   };
 
   const swapBatters = () => {
@@ -1095,6 +1115,32 @@ export default function HomeScreen() {
     }
 
     setPickPlayerVisible(true);
+  };
+
+  const handleDeclareBatter = (
+    declaredBatter: player,
+    playerType: "striker" | "nonStriker"
+  ) => {
+    Alert.alert(
+      "Declare Batsman",
+      `Declare ${declaredBatter.name}? They'll be marked not out and can bat again later.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Declare",
+          onPress: async () => {
+            const updated = playerMatchStats.map((p: playerStats) =>
+              p.playerId == declaredBatter.id ? { ...p, retired: true } : p
+            );
+            setPlayerMatchStats(updated);
+            await PlayerMatchStats.update(match.matchId, {
+              playerMatchStats: updated,
+            });
+            handleEditPlayer(playerType);
+          },
+        },
+      ]
+    );
   };
 
   const handleNewMatch = () => {
@@ -1132,6 +1178,7 @@ export default function HomeScreen() {
             isOut={isWicket}
             handleOutBatter={(outBatter: player) => setOutBatter(outBatter)}
             handleEditPlayer={handleEditPlayer}
+            handleDeclareBatter={handleDeclareBatter}
           />
         ) : null}
 
@@ -1271,7 +1318,7 @@ export default function HomeScreen() {
           remainingPlayers={playerMatchStats.filter((x: playerStats) => {
             return !bowler
               ? x.ballsBowled == 0 && x.overs == 0 && x.extras == 0
-              : x.isOut == false && x.ballsFaced == 0;
+              : (x.isOut == false && x.ballsFaced == 0) || x.retired == true;
           })}
           onSubmit={handlePlayerPick}
           onDismiss={() => setPickPlayerVisible(false)}

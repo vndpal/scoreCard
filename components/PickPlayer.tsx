@@ -49,6 +49,12 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const insets = useSafeAreaInsets();
 
+  // Batsmen who were declared (retired not out) and are eligible to return.
+  // Derived from the prop so it is unaffected by the in-effect reassignment below.
+  const returningPlayerIds = new Set(
+    remainingPlayers.filter((p) => p.retired).map((p) => p.playerId)
+  );
+
   useEffect(() => {
     (async () => {
       if (visible) {
@@ -178,7 +184,16 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
         }}
         disabled={isSubmitting}
       >
-        <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
+        <View style={styles.nameContainer}>
+          <Text style={[styles.playerName, themeStyles.text]}>{item.name}</Text>
+          {returningPlayerIds.has(item.id) && (
+            <View style={[styles.returningTag, themeStyles.returningTag]}>
+              <Text style={[styles.returningTagText, themeStyles.returningTagText]}>
+                Returning
+              </Text>
+            </View>
+          )}
+        </View>
         <View style={styles.rightBlock}>
           <View style={styles.statsRow}>
             {playerType === "Batsman" ? (
@@ -372,12 +387,33 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
+  nameContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   playerName: {
     fontSize: 14,
     fontWeight: "700",
-    flex: 1,
+    flexShrink: 1,
     letterSpacing: 0.4,
     color: "#0F172A",
+  },
+  returningTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: "#FEF3C7",
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+  },
+  returningTagText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+    color: "#B45309",
   },
   cancelButton: {
     borderRadius: 10,
@@ -527,6 +563,13 @@ const darkStyles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 4,
   },
+  returningTag: {
+    backgroundColor: "#78350F",
+    borderColor: "#F59E0B",
+  },
+  returningTagText: {
+    color: "#FCD34D",
+  },
 });
 
 const lightStyles = StyleSheet.create({
@@ -563,6 +606,13 @@ const lightStyles = StyleSheet.create({
   },
   searchBarIcon: {
     color: "#475569",
+  },
+  returningTag: {
+    backgroundColor: "#FEF3C7",
+    borderColor: "#F59E0B",
+  },
+  returningTagText: {
+    color: "#B45309",
   },
 });
 

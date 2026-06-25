@@ -16,17 +16,17 @@ import { Team } from "@/firebase/models/Team";
 import { Match } from "@/firebase/models/Match";
 import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
 import { Player } from "@/firebase/models/Player";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, Searchbar, IconButton } from "react-native-paper";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { player } from "@/types/player";
 
 // Map of team ID to players
 type TeamPlayersMap = { [teamId: string]: player[] };
 
 const Teams = () => {
-  const { currentTheme, club } = useAppContext();
+  const { currentTheme, club, currentTournament } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const insets = useSafeAreaInsets();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -40,6 +40,11 @@ const Teams = () => {
   >(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLiveMatchOngoing, setIsLiveMatchOngoing] = useState(false);
+  // True when a live match exists in the current tournament — editing or
+  // disabling ANY team is blocked while it runs.
+  const [isTeamMutationLocked, setIsTeamMutationLocked] = useState(false);
+  // Soft-deleted teams, shown in a separate "Disabled" section for restoring.
+  const [disabledTeams, setDisabledTeams] = useState<Team[]>([]);
 
   const router = useRouter();
 
@@ -74,49 +79,142 @@ const Teams = () => {
     }
   }, [mainSearchQuery, teams]);
 
-  useEffect(() => {
-    const fetchTeamsAndPlayers = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch all teams
-        const fetchedTeams = await Team.getAllByClubId(club.id);
-        // Sort alphabetically by team name
-        fetchedTeams.sort((a, b) => a.teamName.localeCompare(b.teamName));
-        setTeams(fetchedTeams);
+  const fetchTeamsAndPlayers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch active teams (sorted by name) and disabled teams separately
+      const fetchedTeams = await Team.getAllByClubId(club.id);
+      fetchedTeams.sort((a, b) => a.teamName.localeCompare(b.teamName));
+      setTeams(fetchedTeams);
 
-        // Fetch all players for the club
-        const fetchedAllPlayers = await Player.getAllFromClub(club.id);
-        setAllPlayers(fetchedAllPlayers);
+      const fetchedDisabledTeams = await Team.getDisabledByClubId(club.id);
+      fetchedDisabledTeams.sort((a, b) => a.teamName.localeCompare(b.teamName));
+      setDisabledTeams(fetchedDisabledTeams);
 
-        // Fetch all team-player mappings for the club
-        const mappings = await TeamPlayerMapping.getAllFromClub(club.id);
+      // Fetch all players for the club
+      const fetchedAllPlayers = await Player.getAllFromClub(club.id);
+      setAllPlayers(fetchedAllPlayers);
 
-        // Check for live matches
-        const matches = await Match.getAllOrderby(
-          club.id,
-          "startDateTime",
-          "desc",
-        );
-        const hasLiveMatch = matches.some((m) => m.status === "live");
-        setIsLiveMatchOngoing(hasLiveMatch);
+      // Fetch all team-player mappings for the club
+      const mappings = await TeamPlayerMapping.getAllFromClub(club.id);
 
-        // Build a map of team ID to players
-        const playersMap: TeamPlayersMap = {};
-        mappings.forEach((mapping) => {
-          playersMap[mapping.team] = mapping.players || [];
-        });
-        setTeamPlayersMap(playersMap);
-      } catch (error) {
-        console.error("Error fetching teams:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchTeamsAndPlayers();
-  }, [club.id]);
+      const matches = await Match.getAllOrderby(
+        club.id,
+        "startDateTime",
+        "desc",
+      );
+      // Any live match in the club — gates player roster changes.
+      setIsLiveMatchOngoing(matches.some((m) => m.status === "live"));
+      // A live match in the current tournament — blocks editing/disabling any
+      // team so a mid-tournament rename can't confuse live scoring/standings.
+      setIsTeamMutationLocked(
+        matches.some(
+          (m) => m.status === "live" && m.tournamentId === currentTournament,
+        ),
+      );
+
+      // Build a map of team ID to players
+      const playersMap: TeamPlayersMap = {};
+      mappings.forEach((mapping) => {
+        playersMap[mapping.team] = mapping.players || [];
+      });
+      setTeamPlayersMap(playersMap);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [club.id, currentTournament]);
+
+  // Re-fetch on focus so renames made on the edit screen show on return.
+  useFocusEffect(
+    useCallback(() => {
+      fetchTeamsAndPlayers();
+    }, [fetchTeamsAndPlayers]),
+  );
 
   const handleAddTeam = () => {
     router.push("/createTeam");
+  };
+
+  const handleEditTeam = (team: Team) => {
+    // Block edits while a match in the current tournament is live: the live
+    // scoreboard shows the name captured when the match started, so a rename
+    // wouldn't reflect there and would confuse whoever is scoring.
+    if (isTeamMutationLocked) {
+      Alert.alert(
+        "Action Restricted",
+        "There is a live match in this tournament. Finish it before editing any team.",
+      );
+      return;
+    }
+    router.push({ pathname: "/editTeam", params: { teamId: team.id } });
+  };
+
+  const handleDisableTeam = (team: Team) => {
+    if (isTeamMutationLocked) {
+      Alert.alert(
+        "Can't disable this team",
+        "There is a live match in this tournament. Finish it before disabling any team.",
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Disable team?",
+      `"${team.teamName}" will be hidden from the teams list and match setup. Its players will be released back to the available pool. You can restore the team later.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Disable",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Release the roster so the players become available again, then
+              // mark the team disabled.
+              await TeamPlayerMapping.createOrUpdate(
+                team.teamInitials,
+                club.id,
+                [],
+              );
+              await team.update({ enabled: false });
+              await fetchTeamsAndPlayers();
+            } catch (error) {
+              console.error("Error disabling team:", error);
+              Alert.alert(
+                "Error",
+                "Failed to disable the team. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleRestoreTeam = (team: Team) => {
+    Alert.alert(
+      "Restore team?",
+      `"${team.teamName}" will reappear in the teams list and match setup. It will start with no players, so add them again as needed.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restore",
+          onPress: async () => {
+            try {
+              await team.update({ enabled: true });
+              await fetchTeamsAndPlayers();
+            } catch (error) {
+              console.error("Error restoring team:", error);
+              Alert.alert(
+                "Error",
+                "Failed to restore the team. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   const toggleTeamExpanded = (teamId: string) => {
@@ -216,7 +314,9 @@ const Teams = () => {
         <View style={[styles.modalContent, themeStyles.card]}>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, themeStyles.text]}>
-              Add Player to {selectedTeamInitials}
+              Add Player to{" "}
+              {teams.find((t) => t.teamInitials === selectedTeamInitials)
+                ?.teamShortName ?? selectedTeamInitials}
             </Text>
             <IconButton
               icon="close"
@@ -363,12 +463,26 @@ const Teams = () => {
                         <Text
                           style={[styles.teamInitials, themeStyles.subText]}
                         >
-                          {team.teamInitials} • {players.length} player
+                          {team.teamShortName} • {players.length} player
                           {players.length !== 1 ? "s" : ""}
                         </Text>
                       </View>
                     </View>
                     <View style={styles.headerRight}>
+                      <IconButton
+                        icon="pencil-outline"
+                        size={18}
+                        onPress={() => handleEditTeam(team)}
+                        iconColor={currentTheme === "dark" ? "#888" : "#999"}
+                        style={styles.headerActionIcon}
+                      />
+                      <IconButton
+                        icon="archive-arrow-down-outline"
+                        size={18}
+                        onPress={() => handleDisableTeam(team)}
+                        iconColor={currentTheme === "dark" ? "#888" : "#999"}
+                        style={styles.headerActionIcon}
+                      />
                       <View
                         style={[
                           styles.initialsBadge,
@@ -381,7 +495,7 @@ const Teams = () => {
                         <Text
                           style={[styles.initialsBadgeText, themeStyles.text]}
                         >
-                          {team.teamInitials}
+                          {team.teamShortName}
                         </Text>
                       </View>
                       <Ionicons
@@ -512,6 +626,55 @@ const Teams = () => {
               );
             })
           )}
+
+          {!mainSearchQuery && disabledTeams.length > 0 && (
+            <View style={styles.disabledSection}>
+              <Text style={[styles.disabledSectionTitle, themeStyles.subText]}>
+                DISABLED TEAMS
+              </Text>
+              {disabledTeams.map((team) => (
+                <View
+                  key={team.id}
+                  style={[styles.card, themeStyles.card, styles.disabledCard]}
+                >
+                  <View style={styles.cardHeader}>
+                    <View style={styles.teamInfo}>
+                      <Ionicons
+                        name="people-outline"
+                        size={24}
+                        color={currentTheme === "dark" ? "#777" : "#AAA"}
+                      />
+                      <View style={styles.teamDetails}>
+                        <Text style={[styles.teamName, themeStyles.subText]}>
+                          {team.teamName}
+                        </Text>
+                        <Text
+                          style={[styles.teamInitials, themeStyles.subText]}
+                        >
+                          {team.teamShortName} • Disabled
+                        </Text>
+                      </View>
+                    </View>
+                    <Button
+                      mode="outlined"
+                      icon="archive-arrow-up-outline"
+                      compact
+                      onPress={() => handleRestoreTeam(team)}
+                      textColor={
+                        currentTheme === "dark" ? "#00C4B4" : "#8E24AA"
+                      }
+                      style={{
+                        borderColor:
+                          currentTheme === "dark" ? "#00C4B4" : "#8E24AA",
+                      }}
+                    >
+                      Restore
+                    </Button>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </View>
 
@@ -580,6 +743,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  headerActionIcon: {
+    margin: 0,
+  },
+  disabledSection: {
+    marginTop: 8,
+  },
+  disabledSectionTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  disabledCard: {
+    opacity: 0.7,
   },
   initialsBadge: {
     paddingHorizontal: 12,

@@ -559,7 +559,7 @@
     return (
       <span className="inline-flex items-center justify-center rounded-md mono font-bold text-ink-900 select-none"
         style={{ width: size, height: size, background: color, fontSize: size * 0.36 }}>
-        {t.teamInitials}
+        {t.teamShortName || t.teamInitials}
       </span>
     );
   }

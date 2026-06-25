@@ -33,13 +33,14 @@ export default function RootLayout() {
 
   const { theme } = useMaterial3Theme();
   const { settings } = useSettings();
-  const { isUpdateAvailable, isDownloading, downloadAndRestart } = useUpdateCheck();
+  const { isUpdateAvailable, isDownloading, downloadAndRestart } =
+    useUpdateCheck();
 
   const [customTheme, setTheme] = useState(
-    colorScheme === "dark" ? DarkTheme : DefaultTheme
+    colorScheme === "dark" ? DarkTheme : DefaultTheme,
   );
   const [currentTheme, setCurrentTheme] = useState<"dark" | "light">(
-    colorScheme === "dark" ? "dark" : "light"
+    colorScheme === "dark" ? "dark" : "light",
   );
   const [currentSettings, setCurrentSettings] = useState<settings>(settings);
 
@@ -80,14 +81,10 @@ export default function RootLayout() {
             setClub(JSON.parse(club));
             const currentTournament = await Tournament.getByStatus(
               "ongoing",
-              JSON.parse(club).id
+              JSON.parse(club).id,
             );
 
             if (currentTournament) {
-              console.log(
-                "currentTournament from _layout.tsx",
-                currentTournament[0].id
-              );
               setCurrentTournament(currentTournament[0].id);
             }
           }
@@ -170,12 +167,22 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="toss"
-                  options={{ headerTitle: "Toss", animation: "slide_from_right" }}
+                  options={{
+                    headerTitle: "Toss",
+                    animation: "slide_from_right",
+                  }}
                 />
                 <Stack.Screen
                   name="createTeam"
                   options={{
                     headerTitle: "Create new team",
+                    animation: "slide_from_right",
+                  }}
+                />
+                <Stack.Screen
+                  name="editTeam"
+                  options={{
+                    headerTitle: "Edit team",
                     animation: "slide_from_right",
                   }}
                 />

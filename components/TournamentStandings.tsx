@@ -6,7 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 const TournamentStandings = ({
   matchStandings,
 }: {
-  matchStandings: Record<string, number>;
+  matchStandings: { name: string; wins: number }[];
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -15,12 +15,8 @@ const TournamentStandings = ({
     <View style={themeStyles.container}>
       <View style={themeStyles.matchContainer}>
         <View style={themeStyles.teamContainer}>
-          <Text style={themeStyles.teamName}>
-            {matchStandings && Object.keys(matchStandings)[0]}
-          </Text>
-          <Text style={themeStyles.score}>
-            {matchStandings && Object.values(matchStandings)[0]}
-          </Text>
+          <Text style={themeStyles.teamName}>{matchStandings?.[0]?.name}</Text>
+          <Text style={themeStyles.score}>{matchStandings?.[0]?.wins}</Text>
         </View>
         <View style={themeStyles.centerContainer}>
           <View style={themeStyles.vsContainer}>
@@ -32,12 +28,8 @@ const TournamentStandings = ({
           </View>
         </View>
         <View style={themeStyles.teamContainer}>
-          <Text style={themeStyles.teamName}>
-            {matchStandings && Object.keys(matchStandings)[1]}
-          </Text>
-          <Text style={themeStyles.score}>
-            {matchStandings && Object.values(matchStandings)[1]}
-          </Text>
+          <Text style={themeStyles.teamName}>{matchStandings?.[1]?.name}</Text>
+          <Text style={themeStyles.score}>{matchStandings?.[1]?.wins}</Text>
         </View>
       </View>
     </View>

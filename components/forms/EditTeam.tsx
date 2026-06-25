@@ -1,10 +1,9 @@
-import { router } from "expo-router";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   Keyboard,
   View,
   StyleSheet,
-  Dimensions,
   GestureResponderEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,68 +13,72 @@ import * as Yup from "yup";
 import { Team } from "@/firebase/models/Team";
 import { useAppContext } from "@/context/AppContext";
 
-const createTeamSchema = Yup.object().shape({
+const editTeamSchema = Yup.object().shape({
   teamName: Yup.string().required("Team name is required"),
   teamShortName: Yup.string()
     .max(3)
     .required("Short form of the team is required"),
-  clubId: Yup.string(),
 });
 
-export const CreateTeam = () => {
+export const EditTeam = () => {
   const [isSuccess, setIsSuccess] = useState(false);
+  const [team, setTeam] = useState<Team | null>(null);
   const { club } = useAppContext();
   const insets = useSafeAreaInsets();
+  const { teamId } = useLocalSearchParams<{ teamId: string }>();
+
+  useEffect(() => {
+    (async () => {
+      if (!teamId) return;
+      try {
+        const fetched = await Team.getById(teamId);
+        if (fetched) {
+          setTeam(fetched);
+          formik.setValues({
+            teamName: fetched.teamName,
+            teamShortName: fetched.teamShortName,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading team for edit:", error);
+      }
+    })();
+  }, [teamId]);
 
   const handleSubmit = async () => {
     Keyboard.dismiss();
+    if (!team) return;
 
     const { teamName, teamShortName } = formik.values;
 
-    // Reject only an exact duplicate (same name AND short name). Initials are
-    // auto-generated below, so they are never a source of conflict here.
-    const duplicates = await Team.findByNameAndShortName(
-      teamName,
-      teamShortName,
-      club.id
-    );
-    if (duplicates.length > 0) {
-      alert("A team with this name and short name already exists");
-      return;
+    try {
+      // Reject an exact duplicate of another team (same name AND short name),
+      // ignoring this team itself. teamInitials is never changed on edit.
+      const duplicates = (
+        await Team.findByNameAndShortName(teamName, teamShortName, club.id)
+      ).filter((t) => t.id !== team.id);
+      if (duplicates.length > 0) {
+        alert("A team with this name and short name already exists");
+        return;
+      }
+
+      await team.update({ teamName, teamShortName });
+
+      setIsSuccess(true);
+      router.back();
+    } catch (error) {
+      console.error("Error updating team:", error);
+      alert("Failed to update the team. Please try again.");
     }
-
-    // teamInitials is the immutable join key. Generate a unique code from the
-    // short name rather than taking it from the user.
-    const teamInitials = await Team.generateUniqueInitials(
-      teamShortName,
-      club.id
-    );
-    if (!teamInitials) {
-      alert(
-        "Couldn't generate a unique code for this short name. Please try a different short name."
-      );
-      return;
-    }
-
-    await Team.create({
-      teamName,
-      teamShortName,
-      teamInitials,
-      clubId: club.id,
-    });
-
-    setIsSuccess(true);
-    router.push("/explore");
   };
 
   const formik = useFormik({
     initialValues: {
       teamName: "",
       teamShortName: "",
-      clubId: "",
     },
-    validationSchema: createTeamSchema,
-    onSubmit: async (values, { resetForm }) => {
+    validationSchema: editTeamSchema,
+    onSubmit: async () => {
       await handleSubmit();
     },
   });
@@ -130,9 +133,10 @@ export const CreateTeam = () => {
         textColor="white"
         buttonColor="#0c66e4"
         mode="contained"
+        disabled={!team}
         onPress={formik.handleSubmit as (e?: GestureResponderEvent) => void}
       >
-        Create new team
+        Save changes
       </Button>
       <Snackbar
         visible={isSuccess}
@@ -146,13 +150,11 @@ export const CreateTeam = () => {
         }}
         onDismiss={() => setIsSuccess(false)}
       >
-        Team created successfully
+        Team updated successfully
       </Snackbar>
     </View>
   );
 };
-
-const windowWidth = Dimensions.get("window").width;
 
 const styles = StyleSheet.create({
   formContainer: {

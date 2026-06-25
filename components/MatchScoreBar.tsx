@@ -47,7 +47,7 @@ const MatchScoreBar = ({
         <View style={styles.liveContainer}>
           <View style={styles.mainInfoContainer}>
             <Text style={[styles.inProgressText, themeStyles.inProgressText]}>
-              {match.team2} need{" "}
+              {match.team2ShortName ?? match.team2} need{" "}
               <Text style={styles.numberText}>
                 {finalFirstInningsScore.totalRuns -
                   finalSecondInningsScore.totalRuns +

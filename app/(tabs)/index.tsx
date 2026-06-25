@@ -1110,7 +1110,7 @@ export default function HomeScreen() {
           overs={finalFirstInningsScore.totalOvers}
           balls={finalFirstInningsScore.totalBalls}
           scorePerInning={totalScore}
-          teamName={match.team1}
+          teamName={match.team1ShortName ?? match.team1}
         />
         {!isFirstInning && (
           <ScoreBoard
@@ -1119,7 +1119,7 @@ export default function HomeScreen() {
             overs={finalSecondInningsScore.totalOvers}
             balls={finalSecondInningsScore.totalBalls}
             scorePerInning={scoreSecondInnings}
-            teamName={match.team2}
+            teamName={match.team2ShortName ?? match.team2}
           />
         )}
         {(bowler || batter1 || batter2) && match.status === "live" ? (

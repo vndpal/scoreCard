@@ -47,6 +47,8 @@ const createMatchSchema = Yup.object().shape({
 type items = {
   label: string;
   value: string;
+  // Carries the team's current short label so new matches can snapshot it.
+  shortName: string;
 };
 
 export const CreateMatch = () => {
@@ -80,6 +82,7 @@ export const CreateMatch = () => {
           teams.map((team: team) => ({
             label: team.teamName,
             value: team.teamInitials,
+            shortName: team.teamShortName,
           }))
         );
       }
@@ -162,6 +165,10 @@ export const CreateMatch = () => {
       team2,
       team1Fullname: teams.find((team) => team.value === team1)?.label ?? "",
       team2Fullname: teams.find((team) => team.value === team2)?.label ?? "",
+      team1ShortName:
+        teams.find((team) => team.value === team1)?.shortName ?? "",
+      team2ShortName:
+        teams.find((team) => team.value === team2)?.shortName ?? "",
       tossWin: "team1",
       choose: "batting",
       status: "live",

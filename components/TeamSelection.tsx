@@ -83,6 +83,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
       ) || {
         teamName: "",
         teamInitials: "",
+        teamShortName: "",
         clubId: club.id,
       },
       team2: teams.find(
@@ -90,6 +91,7 @@ const TeamSelection: React.FC<PopupFormProps> = ({
       ) || {
         teamName: "",
         teamInitials: "",
+        teamShortName: "",
         clubId: club.id,
       },
     };

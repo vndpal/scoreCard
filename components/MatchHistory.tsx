@@ -77,6 +77,11 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
     return `${hours}:${minutes}:${seconds}`;
   };
 
+  // Display labels: prefer the short-name snapshot taken when the match was
+  // created; older matches fall back to the teamInitials stored in team1/team2.
+  const team1ShortLabel = match.team1ShortName ?? match.team1;
+  const team2ShortLabel = match.team2ShortName ?? match.team2;
+
   return (
     <TouchableOpacity onPress={handlePress}>
       <LinearGradient
@@ -91,17 +96,25 @@ const Card = ({ match, players }: { match: match; players: player[] }) => {
           <View style={themeStyles.headerRow}>
             <View style={themeStyles.leftColumn}>
               <Text style={themeStyles.title}>
-                {match.team1} vs {match.team2}
+                {team1ShortLabel} vs {team2ShortLabel}
               </Text>
               {match.status === "completed" && (
                 <WinnerBadge
-                  winner={match.winner === "team1" ? match.team1 : match.team2}
+                  winner={
+                    match.winner === "team1" ? team1ShortLabel : team2ShortLabel
+                  }
                 />
               )}
             </View>
             <View style={themeStyles.rightColumn}>
-              <TeamScore team={match.team1} score={match.currentScore?.team1} />
-              <TeamScore team={match.team2} score={match.currentScore?.team2} />
+              <TeamScore
+                team={team1ShortLabel}
+                score={match.currentScore?.team1}
+              />
+              <TeamScore
+                team={team2ShortLabel}
+                score={match.currentScore?.team2}
+              />
             </View>
           </View>
           <StatusBadge
@@ -318,28 +331,34 @@ const MatchHistory = ({
   }, [matches, selectedTournament]);
 
   const matchStandings = React.useMemo(() => {
-    return (
-      filteredMatches?.reduce((acc, match) => {
-        if (match.winner && match.status === "completed") {
-          const winningTeam =
-            match.winner === "team1"
-              ? match.team1Fullname
-              : match.team2Fullname;
-          const losingTeam =
-            match.winner === "team1"
-              ? match.team2Fullname
-              : match.team1Fullname;
-          if (
-            typeof winningTeam === "string" &&
-            typeof losingTeam === "string"
-          ) {
-            acc[winningTeam] = (acc[winningTeam] || 0) + 1;
-            acc[losingTeam] = acc[losingTeam] || 0;
-          }
+    // Aggregate wins keyed by the immutable teamInitials so a renamed team stays
+    // a single row. matches arrive newest-first, so the first snapshot we see for
+    // a team is its most recent name — used purely as the display label.
+    const acc: Record<string, { name: string; wins: number }> = {};
+    const ensure = (initials: string, name: string) => {
+      if (!acc[initials]) {
+        acc[initials] = { name: name || initials, wins: 0 };
+      }
+    };
+    filteredMatches?.forEach((match) => {
+      if (match.winner && match.status === "completed") {
+        const winInitials = match.winner === "team1" ? match.team1 : match.team2;
+        const loseInitials =
+          match.winner === "team1" ? match.team2 : match.team1;
+        const winName =
+          match.winner === "team1" ? match.team1Fullname : match.team2Fullname;
+        const loseName =
+          match.winner === "team1" ? match.team2Fullname : match.team1Fullname;
+        if (winInitials) {
+          ensure(winInitials, winName);
+          acc[winInitials].wins += 1;
         }
-        return acc;
-      }, {} as Record<string, number>) ?? {}
-    );
+        if (loseInitials) {
+          ensure(loseInitials, loseName);
+        }
+      }
+    });
+    return Object.values(acc);
   }, [filteredMatches]);
 
   return (

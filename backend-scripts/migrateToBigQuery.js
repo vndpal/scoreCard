@@ -482,6 +482,7 @@ async function migrateTeams() {
     { name: "id", type: "STRING", mode: "REQUIRED" },
     { name: "teamName", type: "STRING", mode: "NULLABLE" },
     { name: "teamInitials", type: "STRING", mode: "NULLABLE" },
+    { name: "teamShortName", type: "STRING", mode: "NULLABLE" },
     { name: "clubId", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
@@ -492,6 +493,10 @@ async function migrateTeams() {
       id: doc.id,
       teamName: emptyToNull(data.teamName),
       teamInitials: emptyToNull(data.teamInitials),
+      // Editable UI label introduced alongside the immutable teamInitials join
+      // key. Legacy docs have none, so fall back to teamInitials to match the
+      // app's Team model default.
+      teamShortName: emptyToNull(data.teamShortName ?? data.teamInitials),
       clubId: emptyToNull(data.clubId),
       updatedAt: formatDate(data.updatedAt),
     };
@@ -513,6 +518,8 @@ async function migrateMatches() {
     { name: "team2", type: "STRING", mode: "NULLABLE" },
     { name: "team1Fullname", type: "STRING", mode: "NULLABLE" },
     { name: "team2Fullname", type: "STRING", mode: "NULLABLE" },
+    { name: "team1ShortName", type: "STRING", mode: "NULLABLE" },
+    { name: "team2ShortName", type: "STRING", mode: "NULLABLE" },
     { name: "tossWin", type: "STRING", mode: "NULLABLE" },
     { name: "choose", type: "STRING", mode: "NULLABLE" },
     { name: "winner", type: "STRING", mode: "NULLABLE" },
@@ -539,6 +546,10 @@ async function migrateMatches() {
       team2: emptyToNull(data.team2),
       team1Fullname: emptyToNull(data.team1Fullname),
       team2Fullname: emptyToNull(data.team2Fullname),
+      // Short-label snapshots taken at match creation (optional; older matches
+      // predate them, so they stay null and consumers fall back to team1/team2).
+      team1ShortName: emptyToNull(data.team1ShortName),
+      team2ShortName: emptyToNull(data.team2ShortName),
       tossWin: emptyToNull(data.tossWin),
       choose: emptyToNull(data.choose),
       winner: emptyToNull(data.winner),

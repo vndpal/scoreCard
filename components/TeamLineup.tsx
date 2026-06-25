@@ -131,7 +131,7 @@ const TeamBalanceBar: React.FC<TeamBalanceBarProps> = ({
             style={[styles.balanceDot, { backgroundColor: team1Color }]}
           />
           <Text style={styles.balanceTeamName} numberOfLines={1}>
-            {team1.teamInitials}
+            {team1.teamShortName}
           </Text>
           <Text style={[styles.balancePct, { color: team1Color }]}>
             {pct1}%
@@ -144,7 +144,7 @@ const TeamBalanceBar: React.FC<TeamBalanceBarProps> = ({
             {pct2}%
           </Text>
           <Text style={styles.balanceTeamName} numberOfLines={1}>
-            {team2.teamInitials}
+            {team2.teamShortName}
           </Text>
           <View
             style={[styles.balanceDot, { backgroundColor: team2Color }]}
@@ -466,7 +466,7 @@ const TeamColumn: React.FC<TeamColumnProps> = ({
       >
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.columnHeaderTag}>
-            {team.teamInitials} · {players.length} PLAYERS
+            {team.teamShortName} · {players.length} PLAYERS
           </Text>
           <Text style={styles.columnHeaderName} numberOfLines={1}>
             {team.teamName}
@@ -1410,7 +1410,7 @@ const TeamLineUp: React.FC = () => {
             pickerFor ? teamForSlot(pickerFor)?.teamName || "" : ""
           }
           targetTeamShort={
-            pickerFor ? teamForSlot(pickerFor)?.teamInitials || "" : ""
+            pickerFor ? teamForSlot(pickerFor)?.teamShortName || "" : ""
           }
           targetTeamColor={pickerFor ? TEAM_PALETTE[pickerFor] : team1Color}
           pool={availablePlayers}

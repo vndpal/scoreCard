@@ -10,7 +10,9 @@ const ScoreBoard = ({
   overs,
   balls,
   scorePerInning,
-  teamName
+  teamName,
+  isLiveMatch = false,
+  isActiveInning = false,
 }: {
   totalScore: Number;
   wickets: Number;
@@ -18,6 +20,8 @@ const ScoreBoard = ({
   balls: Number;
   scorePerInning: scorePerInning;
   teamName: string;
+  isLiveMatch?: boolean;
+  isActiveInning?: boolean;
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -74,6 +78,8 @@ const ScoreBoard = ({
               }
             });
 
+            const isOngoingOver = isLiveMatch && isActiveInning && index === 0;
+
             return (
               <View
                 style={[styles.oversContainer, themeStyles.oversContainer]}
@@ -88,7 +94,11 @@ const ScoreBoard = ({
                   </View>
                   {bowlerName ? (
                     <View style={styles.bowlerWrap}>
-                      <View style={[styles.bowlerDot, themeStyles.bowlerDot]} />
+                      <View style={[
+                        styles.bowlerDot, 
+                        themeStyles.bowlerDot,
+                        isOngoingOver && { backgroundColor: "#4caf50" }
+                      ]} />
                       <Text
                         style={[styles.bowlerText, themeStyles.bowlerText]}
                         numberOfLines={1}

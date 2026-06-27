@@ -446,6 +446,16 @@ export default function HomeScreen() {
   };
 
   const handleWicket = () => {
+    if (match.status !== "live") {
+      return;
+    }
+
+    if (!match.quickMatch) {
+      if (!bowler || !batter1 || !batter2) {
+        setPickPlayerVisible(true);
+        return;
+      }
+    }
     // Quick matches don't track per-player stats, so keep the simple toggle
     // (no out-type / fielder capture).
     if (match.quickMatch) {
@@ -1276,6 +1286,8 @@ export default function HomeScreen() {
           balls={finalFirstInningsScore.totalBalls}
           scorePerInning={totalScore}
           teamName={match.team1ShortName ?? match.team1}
+          isLiveMatch={match.status === "live"}
+          isActiveInning={isFirstInning}
         />
         {!isFirstInning && (
           <ScoreBoard
@@ -1285,6 +1297,8 @@ export default function HomeScreen() {
             balls={finalSecondInningsScore.totalBalls}
             scorePerInning={scoreSecondInnings}
             teamName={match.team2ShortName ?? match.team2}
+            isLiveMatch={match.status === "live"}
+            isActiveInning={!isFirstInning}
           />
         )}
         {(bowler || batter1 || batter2) && match.status === "live" ? (

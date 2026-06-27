@@ -116,7 +116,7 @@ const MatchResult = ({
                     const catches =
                       (playerStats.catches || 0) + (playerStats.stumpings || 0);
                     const runOuts = playerStats.runOuts || 0;
-                    return `${catches} ${catches === 1 ? "catch" : "catches"} - ${runOuts} ${runOuts === 1 ? "rout" : "routs"}`;
+                    return `${catches} ct - ${runOuts} rout`;
                   })()}
               </Text>
             </View>

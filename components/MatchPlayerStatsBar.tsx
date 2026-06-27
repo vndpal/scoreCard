@@ -17,8 +17,6 @@ const MatchPlayerStatsBar = ({
   nonStrikerBatsman,
   bowler,
   playerMatchStats,
-  isOut,
-  handleOutBatter,
   handleSwapBatters,
   handleEditPlayer,
   handleDeclareBatter,
@@ -27,8 +25,6 @@ const MatchPlayerStatsBar = ({
   nonStrikerBatsman: player | undefined;
   bowler: player | undefined;
   playerMatchStats: playerStats[];
-  isOut: boolean;
-  handleOutBatter: (outBatter: player) => void;
   handleSwapBatters: () => void;
   handleEditPlayer: (playerType: "striker" | "nonStriker" | "bowler") => void;
   handleDeclareBatter: (
@@ -50,10 +46,6 @@ const MatchPlayerStatsBar = ({
 
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
-  const handleOut = (outBatter: player) => {
-    handleOutBatter(outBatter);
-  };
-
   return (
     <View style={[styles.statsBar, themeStyles.statsBar]}>
       <TouchableOpacity
@@ -62,14 +54,9 @@ const MatchPlayerStatsBar = ({
           styles.striker,
           themeStyles.batter,
           themeStyles.striker,
-          isOut && styles.highlightOutBatter,
         ]}
-        onPress={() => {
-          if (isOut) handleOut(strikerBatsman!);
-        }}
         onLongPress={() => {
-          if (!isOut && strikerBatsman)
-            handleDeclareBatter(strikerBatsman, "striker");
+          if (strikerBatsman) handleDeclareBatter(strikerBatsman, "striker");
         }}
       >
         <View style={styles.playerNameContainer}>
@@ -78,7 +65,6 @@ const MatchPlayerStatsBar = ({
           batterStats.runs == 0 &&
           batterStats.ballsFaced == 0 ? (
             <TouchableOpacity
-              disabled={isOut}
               onPress={() => handleEditPlayer("striker")}
               style={styles.removablePlayer}
             >
@@ -117,16 +103,9 @@ const MatchPlayerStatsBar = ({
         />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[
-          styles.batter,
-          themeStyles.batter,
-          isOut && styles.highlightOutBatter,
-        ]}
-        onPress={() => {
-          if (isOut) handleOut(nonStrikerBatsman!);
-        }}
+        style={[styles.batter, themeStyles.batter]}
         onLongPress={() => {
-          if (!isOut && nonStrikerBatsman)
+          if (nonStrikerBatsman)
             handleDeclareBatter(nonStrikerBatsman, "nonStriker");
         }}
       >
@@ -136,7 +115,6 @@ const MatchPlayerStatsBar = ({
           nonStrikerBatter.runs == 0 &&
           nonStrikerBatter.ballsFaced == 0 ? (
             <TouchableOpacity
-              disabled={isOut}
               onPress={() => handleEditPlayer("nonStriker")}
               style={styles.removablePlayer}
             >

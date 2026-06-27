@@ -20,6 +20,9 @@ type playerStats = {
   maidens: number;
   bowlingEconomy: number;
   dotBalls: number;
+  catches: number;
+  stumpings: number;
+  runOuts: number;
 };
 
 export type { playerStats };

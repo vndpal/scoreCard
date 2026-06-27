@@ -26,6 +26,9 @@ export class PlayerTournamentStats implements playerTournamentStats {
   maidens: number;
   bowlingEconomy: number;
   dotBalls: number;
+  catches: number;
+  stumpings: number;
+  runOuts: number;
   clubId: string;
 
   constructor(playerId: string, data: playerTournamentStats) {
@@ -51,6 +54,9 @@ export class PlayerTournamentStats implements playerTournamentStats {
     this.maidens = data.maidens;
     this.bowlingEconomy = data.bowlingEconomy;
     this.dotBalls = data.dotBalls;
+    this.catches = data.catches;
+    this.stumpings = data.stumpings;
+    this.runOuts = data.runOuts;
     this.clubId = data.clubId;
   }
 
@@ -177,6 +183,9 @@ export class PlayerTournamentStats implements playerTournamentStats {
       maidens: this.maidens,
       bowlingEconomy: this.bowlingEconomy,
       dotBalls: this.dotBalls,
+      catches: this.catches,
+      stumpings: this.stumpings,
+      runOuts: this.runOuts,
       clubId: this.clubId,
     };
   }

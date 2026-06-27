@@ -66,6 +66,13 @@ export const updatePlayerTournamentStats = async (
       );
 
       tournamentStat.dotBalls += playerMatchStat.dotBalls;
+
+      tournamentStat.catches =
+        (tournamentStat.catches || 0) + (playerMatchStat.catches || 0);
+      tournamentStat.stumpings =
+        (tournamentStat.stumpings || 0) + (playerMatchStat.stumpings || 0);
+      tournamentStat.runOuts =
+        (tournamentStat.runOuts || 0) + (playerMatchStat.runOuts || 0);
       return PlayerTournamentStats.update(
         playerTournamentStat.id || "",
         tournamentStat
@@ -103,6 +110,9 @@ export const updatePlayerTournamentStats = async (
           playerMatchStat.runsConceded
         ),
         dotBalls: playerMatchStat.dotBalls,
+        catches: playerMatchStat.catches || 0,
+        stumpings: playerMatchStat.stumpings || 0,
+        runOuts: playerMatchStat.runOuts || 0,
         clubId: clubId,
       });
       return tournamentStat;

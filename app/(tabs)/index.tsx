@@ -39,6 +39,7 @@ import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
 import Loader from "@/components/Loader";
 import { Tournament } from "@/firebase/models/Tournament";
 import ScoringControls from "@/components/ScoringControls";
+import WicketModal, { OutType, WicketResult } from "@/components/WicketModal";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -110,6 +111,12 @@ export default function HomeScreen() {
   const [batter1, setBatter1] = useState<player>();
   const [batter2, setBatter2] = useState<player>();
   const [outBatter, setOutBatter] = useState<player>();
+  const [outType, setOutType] = useState<OutType>();
+  const [fielder, setFielder] = useState<{ id: string; name: string }>();
+  const [wicketModalVisible, setWicketModalVisible] = useState<boolean>(false);
+  // Set when the wicket popup is confirmed so the ball auto-submits once the
+  // wicket state has committed (avoids reading stale state in handleSubmit).
+  const [pendingWicketSubmit, setPendingWicketSubmit] = useState<boolean>(false);
   const [bowler, setBowler] = useState<player>();
 
   const [pickPlayerVisible, setPickPlayerVisible] = useState<boolean>(false);
@@ -439,12 +446,58 @@ export default function HomeScreen() {
   };
 
   const handleWicket = () => {
-    if (isWicket) {
-      setOutBatter(undefined);
+    // Quick matches don't track per-player stats, so keep the simple toggle
+    // (no out-type / fielder capture).
+    if (match.quickMatch) {
+      if (isWicket) {
+        setOutBatter(undefined);
+      }
+      setIsWicket((prev) => !prev);
+      setIsEntryDone(true);
+      return;
     }
-    setIsWicket((prev) => !prev);
-    setIsEntryDone(true);
+
+    // Tapping "Out" again while a wicket is staged clears it.
+    if (isWicket) {
+      setIsWicket(false);
+      setOutBatter(undefined);
+      setOutType(undefined);
+      setFielder(undefined);
+      setIsEntryDone(true);
+      return;
+    }
+
+    setWicketModalVisible(true);
   };
+
+  const handleWicketConfirm = (result: WicketResult) => {
+    const outBatterPlayer =
+      result.outBatterId === batter1?.id
+        ? batter1
+        : result.outBatterId === batter2?.id
+          ? batter2
+          : undefined;
+    setIsWicket(true);
+    setOutType(result.outType);
+    setOutBatter(outBatterPlayer);
+    setFielder(result.fielder);
+    setIsEntryDone(true);
+    setWicketModalVisible(false);
+    // Submit this ball automatically once the above state commits.
+    setPendingWicketSubmit(true);
+  };
+
+  const handleWicketCancel = () => {
+    setWicketModalVisible(false);
+  };
+
+  // Fielders are the bowling side. In the first innings team1 bats / team2
+  // bowls; reversed in the second. Includes the current bowler (caught & bowled
+  // / bowler-effected run-outs).
+  const bowlingTeamInitials = isFirstInning ? match.team2 : match.team1;
+  const fielderOptions = playerMatchStats.filter(
+    (p: playerStats) => p.team === bowlingTeamInitials
+  );
 
   const handleNoBall = () => {
     setIsNoBall((prev) => !prev);
@@ -528,6 +581,12 @@ export default function HomeScreen() {
         strikerBatter: batter1,
         nonStrikerBatter: batter2,
         bowler: bowler,
+        outType: isWicket ? outType : undefined,
+        outBatterId: isWicket ? outBatter?.id : undefined,
+        fielder:
+          isWicket && fielder
+            ? { id: fielder.id, name: fielder.name, clubId: match.clubId }
+            : undefined,
       };
 
       if (!match.quickMatch) {
@@ -620,6 +679,8 @@ export default function HomeScreen() {
       setIsNoBall(false);
       setIsWideBall(false);
       setOutBatter(undefined);
+      setOutType(undefined);
+      setFielder(undefined);
 
       // This block of code is to check if current over is completed
       if (isValidBall && totalBalls == 5) {
@@ -732,6 +793,16 @@ export default function HomeScreen() {
     }
   };
 
+  // After the wicket popup is confirmed, the dismissal state is set
+  // asynchronously; submit the ball only once it has committed so handleSubmit
+  // reads the correct isWicket/outType/outBatter/fielder values.
+  useEffect(() => {
+    if (pendingWicketSubmit && isWicket) {
+      setPendingWicketSubmit(false);
+      handleSubmit();
+    }
+  }, [pendingWicketSubmit, isWicket]);
+
   function increaseOver(
     localFinalFirstInningsScore: currentTotalScore,
     localFinalSecondInningsScore: currentTotalScore
@@ -819,8 +890,9 @@ export default function HomeScreen() {
           scoreThisBall.run == 4 ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].sixesConceded +=
           scoreThisBall.run == 6 ? 1 : 0;
+        // Run-outs are not credited to the bowler; every other dismissal is.
         playerMatchStatsLocalState[bowlerIndex].wickets +=
-          scoreThisBall.isWicket ? 1 : 0;
+          scoreThisBall.isWicket && scoreThisBall.outType !== "runout" ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].bowlingEconomy =
           playerMatchStatsLocalState[bowlerIndex].runsConceded /
           (playerMatchStatsLocalState[bowlerIndex].ballsBowled > 0
@@ -850,6 +922,24 @@ export default function HomeScreen() {
             playerStats.playerId == scoreThisBall.nonStrikerBatter?.id
         );
         playerMatchStatsLocalState[nonStrikerBatterIndex].isOut = true;
+      }
+
+      // Credit the fielding contribution (caught / stumped / run out).
+      if (scoreThisBall.isWicket && scoreThisBall.fielder?.id) {
+        const fielderIndex = playerMatchStatsLocalState.findIndex(
+          (playerStats: playerStats) =>
+            playerStats.playerId == scoreThisBall.fielder?.id
+        );
+        if (fielderIndex > -1) {
+          const f = playerMatchStatsLocalState[fielderIndex];
+          if (scoreThisBall.outType == "caught") {
+            f.catches = (f.catches || 0) + 1;
+          } else if (scoreThisBall.outType == "stumped") {
+            f.stumpings = (f.stumpings || 0) + 1;
+          } else if (scoreThisBall.outType == "runout") {
+            f.runOuts = (f.runOuts || 0) + 1;
+          }
+        }
       }
 
       setPlayerMatchStats(playerMatchStatsLocalState);
@@ -898,7 +988,17 @@ export default function HomeScreen() {
             playerMatchStatsLocalState[batterIndex].ballsFaced) *
           100;
         if (scoreThisBall.isWicket) {
-          playerMatchStatsLocalState[batterIndex].isOut = false;
+          // Clear the dismissed batter — which may be the non-striker on a
+          // run-out — not just the striker. Falls back to the striker for
+          // legacy balls recorded before outBatterId existed.
+          const outId =
+            scoreThisBall.outBatterId || scoreThisBall.strikerBatter?.id;
+          const outIdx = playerMatchStatsLocalState.findIndex(
+            (p: playerStats) => p.playerId == outId
+          );
+          if (outIdx > -1) {
+            playerMatchStatsLocalState[outIdx].isOut = false;
+          }
         }
       }
       const bowlerIndex = playerMatchStatsLocalState.findIndex(
@@ -917,8 +1017,9 @@ export default function HomeScreen() {
             scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
         }
         playerMatchStatsLocalState[bowlerIndex].extras -= scoreThisBall.extra;
+        // Mirror the forward path: run-outs never credited the bowler.
         playerMatchStatsLocalState[bowlerIndex].wickets -=
-          scoreThisBall.isWicket ? 1 : 0;
+          scoreThisBall.isWicket && scoreThisBall.outType !== "runout" ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].foursConceded -=
           scoreThisBall.run == 4 ? 1 : 0;
         playerMatchStatsLocalState[bowlerIndex].sixesConceded -=
@@ -928,6 +1029,24 @@ export default function HomeScreen() {
           (playerMatchStatsLocalState[bowlerIndex].ballsBowled > 0
             ? playerMatchStatsLocalState[bowlerIndex].ballsBowled / 6
             : 1);
+      }
+
+      // Reverse the fielding credit recorded for this ball.
+      if (scoreThisBall.isWicket && scoreThisBall.fielder?.id) {
+        const fielderIndex = playerMatchStatsLocalState.findIndex(
+          (playerStats: playerStats) =>
+            playerStats.playerId == scoreThisBall.fielder?.id
+        );
+        if (fielderIndex > -1) {
+          const f = playerMatchStatsLocalState[fielderIndex];
+          if (scoreThisBall.outType == "caught") {
+            f.catches = (f.catches || 0) - 1;
+          } else if (scoreThisBall.outType == "stumped") {
+            f.stumpings = (f.stumpings || 0) - 1;
+          } else if (scoreThisBall.outType == "runout") {
+            f.runOuts = (f.runOuts || 0) - 1;
+          }
+        }
       }
 
       setPlayerMatchStats(playerMatchStatsLocalState);
@@ -1175,8 +1294,6 @@ export default function HomeScreen() {
             nonStrikerBatsman={batter2}
             playerMatchStats={playerMatchStats}
             handleSwapBatters={swapBatters}
-            isOut={isWicket}
-            handleOutBatter={(outBatter: player) => setOutBatter(outBatter)}
             handleEditPlayer={handleEditPlayer}
             handleDeclareBatter={handleDeclareBatter}
           />
@@ -1324,6 +1441,14 @@ export default function HomeScreen() {
           onDismiss={() => setPickPlayerVisible(false)}
         />
       ) : null}
+      <WicketModal
+        visible={wicketModalVisible}
+        striker={batter1}
+        nonStriker={batter2}
+        fielders={fielderOptions}
+        onConfirm={handleWicketConfirm}
+        onCancel={handleWicketCancel}
+      />
       {isLoading && <Loader />}
     </View>
   );

@@ -21,6 +21,9 @@ type playerCareerStats = {
   maidens: number;
   bowlingEconomy: number;
   dotBalls: number;
+  catches: number;
+  stumpings: number;
+  runOuts: number;
   clubId: string;
 };
 

@@ -73,6 +73,12 @@ const calculateMathPoints = (stats: playerStats): number => {
   // Dot balls points
   points += (stats.dotBalls || 0) * 1.5;
 
+  // Fielding points (light tie-breaker influence vs batting/bowling)
+  points +=
+    (stats.catches || 0) * 3 +
+    (stats.stumpings || 0) * 3 +
+    (stats.runOuts || 0) * 3;
+
   // Extras points
   points -= (stats.extras || 0) * 1.5;
   return points;

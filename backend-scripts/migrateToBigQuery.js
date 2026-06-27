@@ -327,6 +327,9 @@ async function migratePlayerTournamentStats() {
     { name: "maidens", type: "INTEGER", mode: "NULLABLE" },
     { name: "bowlingEconomy", type: "FLOAT", mode: "NULLABLE" },
     { name: "dotBalls", type: "INTEGER", mode: "NULLABLE" },
+    { name: "catches", type: "INTEGER", mode: "NULLABLE" },
+    { name: "stumpings", type: "INTEGER", mode: "NULLABLE" },
+    { name: "runOuts", type: "INTEGER", mode: "NULLABLE" },
     { name: "clubId", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
@@ -357,6 +360,9 @@ async function migratePlayerTournamentStats() {
       maidens: data.maidens ?? null,
       bowlingEconomy: data.bowlingEconomy ?? null,
       dotBalls: data.dotBalls ?? null,
+      catches: data.catches ?? null,
+      stumpings: data.stumpings ?? null,
+      runOuts: data.runOuts ?? null,
       clubId: emptyToNull(data.clubId),
       updatedAt: formatDate(data.updatedAt),
     };
@@ -399,6 +405,10 @@ async function migratePlayerMatchStats() {
     { name: "foursConceded", type: "INTEGER", mode: "NULLABLE" },
     { name: "sixesConceded", type: "INTEGER", mode: "NULLABLE" },
 
+    { name: "catches", type: "INTEGER", mode: "NULLABLE" },
+    { name: "stumpings", type: "INTEGER", mode: "NULLABLE" },
+    { name: "runOuts", type: "INTEGER", mode: "NULLABLE" },
+
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
 
@@ -437,6 +447,9 @@ async function migratePlayerMatchStats() {
           extras: player.extras ?? 0,
           foursConceded: player.foursConceded ?? 0,
           sixesConceded: player.sixesConceded ?? 0,
+          catches: player.catches ?? 0,
+          stumpings: player.stumpings ?? 0,
+          runOuts: player.runOuts ?? 0,
           updatedAt,
         });
       });
@@ -605,6 +618,9 @@ async function migratePlayerCareerStats() {
     { name: "maidens", type: "INTEGER", mode: "NULLABLE" },
     { name: "bowlingEconomy", type: "FLOAT", mode: "NULLABLE" },
     { name: "dotBalls", type: "INTEGER", mode: "NULLABLE" },
+    { name: "catches", type: "INTEGER", mode: "NULLABLE" },
+    { name: "stumpings", type: "INTEGER", mode: "NULLABLE" },
+    { name: "runOuts", type: "INTEGER", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
 
@@ -634,6 +650,9 @@ async function migratePlayerCareerStats() {
       maidens: data.maidens ?? null,
       bowlingEconomy: data.bowlingEconomy ?? null,
       dotBalls: data.dotBalls ?? null,
+      catches: data.catches ?? null,
+      stumpings: data.stumpings ?? null,
+      runOuts: data.runOuts ?? null,
       updatedAt: formatDate(data.updatedAt),
     };
   });
@@ -827,6 +846,9 @@ async function migrateBalls() {
           strikerName: b.strikerBatter?.name || null,
           nonStrikerId: b.nonStrikerBatter?.id || null,
           nonStrikerName: b.nonStrikerBatter?.name || null,
+          outType: b.outType || null,
+          fielderId: b.fielder?.id || null,
+          fielderName: b.fielder?.name || null,
           updatedAt: formatDate(b.updatedAt),
         });
       });
@@ -850,6 +872,9 @@ async function migrateBalls() {
     { name: "strikerName", type: "STRING", mode: "NULLABLE" },
     { name: "nonStrikerId", type: "STRING", mode: "NULLABLE" },
     { name: "nonStrikerName", type: "STRING", mode: "NULLABLE" },
+    { name: "outType", type: "STRING", mode: "NULLABLE" },
+    { name: "fielderId", type: "STRING", mode: "NULLABLE" },
+    { name: "fielderName", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
 

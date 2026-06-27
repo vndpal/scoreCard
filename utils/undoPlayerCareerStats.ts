@@ -69,6 +69,11 @@ export const undoPlayerCareerStats = async (matchId: string) => {
       );
 
       careerStat.dotBalls -= playerMatchStat.dotBalls;
+
+      careerStat.catches = (careerStat.catches || 0) - (playerMatchStat.catches || 0);
+      careerStat.stumpings =
+        (careerStat.stumpings || 0) - (playerMatchStat.stumpings || 0);
+      careerStat.runOuts = (careerStat.runOuts || 0) - (playerMatchStat.runOuts || 0);
       await PlayerCareerStats.update(careerStat.playerId, careerStat);
     }
   }

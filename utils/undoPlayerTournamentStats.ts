@@ -72,6 +72,13 @@ export const undoPlayerTournamentStats = async (matchId: string) => {
       );
 
       tournamentStat.dotBalls -= playerMatchStat.dotBalls;
+
+      tournamentStat.catches =
+        (tournamentStat.catches || 0) - (playerMatchStat.catches || 0);
+      tournamentStat.stumpings =
+        (tournamentStat.stumpings || 0) - (playerMatchStat.stumpings || 0);
+      tournamentStat.runOuts =
+        (tournamentStat.runOuts || 0) - (playerMatchStat.runOuts || 0);
       await PlayerTournamentStats.update(
         tournamentStat.id || "",
         tournamentStat

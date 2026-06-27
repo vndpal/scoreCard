@@ -96,6 +96,30 @@ const MatchResult = ({
                   `${playerStats.overs}.${playerStats.ballsBowled} overs`}
               </Text>
             </View>
+
+            {/* Divider */}
+            <View style={[styles.statDivider, themeStyles.statDivider]} />
+
+            {/* Fielding Stats — stumpings count as catches; run outs separate */}
+            <View style={styles.statColumn}>
+              <Text style={[styles.statLabel, themeStyles.statLabel]}>
+                Fielding
+              </Text>
+              <Text style={[styles.statValue, themeStyles.statValue]}>
+                {(playerStats?.catches || 0) +
+                  (playerStats?.stumpings || 0) +
+                  (playerStats?.runOuts || 0)}
+              </Text>
+              <Text style={[styles.statMeta, themeStyles.statMeta]}>
+                {playerStats &&
+                  (() => {
+                    const catches =
+                      (playerStats.catches || 0) + (playerStats.stumpings || 0);
+                    const runOuts = playerStats.runOuts || 0;
+                    return `${catches} ${catches === 1 ? "catch" : "catches"} - ${runOuts} ${runOuts === 1 ? "rout" : "routs"}`;
+                  })()}
+              </Text>
+            </View>
           </View>
         </View>
       ) : (
@@ -254,7 +278,7 @@ const styles = StyleSheet.create({
   statDivider: {
     width: 1,
     height: "100%",
-    marginHorizontal: 16,
+    marginHorizontal: 10,
   },
   statUnit: {
     fontSize: 14,

@@ -26,8 +26,12 @@ import { TeamPlayerMapping } from "@/firebase/models/TeamPlayerMapping";
 import { Icon } from "react-native-elements";
 
 type SortDir = "asc" | "desc";
-type SortKey = keyof playerCareerStats | "player" | "team";
+type SortKey = keyof playerCareerStats | "player" | "team" | "fielding";
 type SortConfig = { key: SortKey; dir: SortDir };
+
+// Combined fielding tally (catches + run-outs + stumpings) shown as one column.
+const fieldingTotal = (row: playerCareerStats) =>
+  (row.catches || 0) + (row.runOuts || 0) + (row.stumpings || 0);
 
 type ColumnDef = {
   key: SortKey;
@@ -58,6 +62,13 @@ const BATTING_COLUMNS: ColumnDef[] = [
     format: (v) => (v ? Number(v).toFixed(1) : "-"),
   },
   { key: "notOuts", label: "NO", defaultDir: "desc", numeric: true },
+  {
+    key: "fielding",
+    label: "Catches",
+    defaultDir: "desc",
+    numeric: true,
+    format: (_v, row) => fieldingTotal(row),
+  },
   {
     key: "matchesWon",
     label: "Wins",
@@ -90,6 +101,13 @@ const BOWLING_COLUMNS: ColumnDef[] = [
   { key: "extras", label: "Ext", defaultDir: "asc", numeric: true },
   { key: "sixesConceded", label: "6s", defaultDir: "asc", numeric: true },
   { key: "foursConceded", label: "4s", defaultDir: "asc", numeric: true },
+  {
+    key: "fielding",
+    label: "Catches",
+    defaultDir: "desc",
+    numeric: true,
+    format: (_v, row) => fieldingTotal(row),
+  },
   {
     key: "matchesWon",
     label: "Wins",
@@ -189,6 +207,9 @@ const PlayerCareerSummary = () => {
     if (key === "overs") {
       return oversValue(a) - oversValue(b);
     }
+    if (key === "fielding") {
+      return fieldingTotal(a) - fieldingTotal(b);
+    }
     const av = (a as any)[key];
     const bv = (b as any)[key];
     const aNum = typeof av === "number" && !isNaN(av) ? av : -Infinity;
@@ -265,6 +286,7 @@ const PlayerCareerSummary = () => {
               <th>SR</th>
               <th>Avg</th>
               <th>NO</th>
+              <th>Catches</th>
               <th>Innings</th>
               <th>Wins</th>
               <th>Matches</th>
@@ -283,6 +305,7 @@ const PlayerCareerSummary = () => {
                 <td>${player.strikeRate ? player.strikeRate.toFixed(2) : "-"}</td>
                 <td>${player.average ? player.average.toFixed(2) : "-"}</td>
                 <td>${player.notOuts}</td>
+                <td>${fieldingTotal(player)}</td>
                 <td>${player.innings}</td>
                 <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
                 <td>${player.matches}</td>
@@ -306,6 +329,7 @@ const PlayerCareerSummary = () => {
               <th>Extras</th>
               <th>6s</th>
               <th>4s</th>
+              <th>Catches</th>
               <th>Wins</th>
               <th>Matches</th>
             </tr>
@@ -323,6 +347,7 @@ const PlayerCareerSummary = () => {
                 <td>${player.extras}</td>
                 <td>${player.sixesConceded}</td>
                 <td>${player.foursConceded}</td>
+                <td>${fieldingTotal(player)}</td>
                 <td>${isNaN(player.matchesWon) ? "-" : player.matchesWon}</td>
                 <td>${player.matches}</td>
               </tr>

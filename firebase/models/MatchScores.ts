@@ -144,6 +144,13 @@ export class MatchScore implements MatchScoresData {
             name: ballData.bowler.name,
           }
         : null,
+      // Dismissal fields are absent on most balls. Firestore rejects
+      // `undefined`, so coerce to null (same convention as the players above).
+      outType: ballData.outType ?? null,
+      outBatterId: ballData.outBatterId ?? null,
+      fielder: ballData.fielder
+        ? { id: ballData.fielder.id, name: ballData.fielder.name }
+        : null,
     };
 
     await firestoreService.create(

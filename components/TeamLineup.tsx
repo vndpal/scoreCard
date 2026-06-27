@@ -940,6 +940,9 @@ const TeamLineUp: React.FC = () => {
         foursConceded: 0,
         sixesConceded: 0,
         dotBalls: 0,
+        catches: 0,
+        stumpings: 0,
+        runOuts: 0,
         clubId: club.id,
       });
     } catch {
@@ -1117,6 +1120,9 @@ const TeamLineUp: React.FC = () => {
             maidens: 0,
             bowlingEconomy: 0,
             dotBalls: 0,
+            catches: 0,
+            stumpings: 0,
+            runOuts: 0,
           });
         } else {
           existing.team = slotInitials;

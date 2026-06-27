@@ -67,6 +67,9 @@ export const CreatePlayer = () => {
       foursConceded: 0,
       sixesConceded: 0,
       dotBalls: 0,
+      catches: 0,
+      stumpings: 0,
+      runOuts: 0,
       clubId: club.id,
     });
   };

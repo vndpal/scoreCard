@@ -25,6 +25,8 @@ const MAN_OF_THE_MATCH_API_URL =
 interface DismissalInfo {
   playerId: string;
   bowlerName: string;
+  outType?: string;
+  fielderName?: string;
 }
 
 const MatchSummary = () => {
@@ -86,7 +88,12 @@ const MatchSummary = () => {
               .filter((x: playerStats) => x.team === team1)
               .filter(
                 (x: playerStats) =>
-                  x.wickets > 0 || x.ballsBowled > 0 || x.overs > 0
+                  x.wickets > 0 ||
+                  x.ballsBowled > 0 ||
+                  x.overs > 0 ||
+                  (x.catches || 0) > 0 ||
+                  (x.stumpings || 0) > 0 ||
+                  (x.runOuts || 0) > 0
               )
               .sort(sortByWickets)
           );
@@ -100,7 +107,12 @@ const MatchSummary = () => {
               .filter((x: playerStats) => x.team === team2)
               .filter(
                 (x: playerStats) =>
-                  x.wickets > 0 || x.ballsBowled > 0 || x.overs > 0
+                  x.wickets > 0 ||
+                  x.ballsBowled > 0 ||
+                  x.overs > 0 ||
+                  (x.catches || 0) > 0 ||
+                  (x.stumpings || 0) > 0 ||
+                  (x.runOuts || 0) > 0
               )
               .sort(sortByWickets)
           );
@@ -125,12 +137,20 @@ const MatchSummary = () => {
           matchScores.forEach((scoreData: any) => {
             if (scoreData.overSummary && Array.isArray(scoreData.overSummary)) {
               scoreData.overSummary.forEach((ball: any) => {
-                if (ball.isWicket && ball.strikerBatter && ball.bowler) {
-                  const playerId = ball.strikerBatter.id?.toString() || "";
-                  const bowlerName = ball.bowler.name || "Unknown";
+                if (ball.isWicket) {
+                  // Prefer the explicit out batter (covers run-outs of the
+                  // non-striker); fall back to the striker for older balls.
+                  const playerId =
+                    ball.outBatterId?.toString() ||
+                    ball.strikerBatter?.id?.toString() ||
+                    "";
+                  if (!playerId) return;
+                  const bowlerName = ball.bowler?.name || "Unknown";
                   dismissals.set(playerId, {
                     playerId,
                     bowlerName,
+                    outType: ball.outType,
+                    fielderName: ball.fielder?.name,
                   });
                 }
               });
@@ -146,11 +166,23 @@ const MatchSummary = () => {
   };
 
   const getDismissalStatus = (stat: playerStats): string => {
-    const dismissal = dismissalMap.get(stat.playerId);
-    if (dismissal) {
-      return `b ${dismissal.bowlerName}`;
+    const d = dismissalMap.get(stat.playerId);
+    if (!d) return "not out";
+    switch (d.outType) {
+      case "caught":
+        return d.fielderName
+          ? `c ${d.fielderName} b ${d.bowlerName}`
+          : `c & b ${d.bowlerName}`;
+      case "stumped":
+        return d.fielderName
+          ? `st ${d.fielderName} b ${d.bowlerName}`
+          : `st b ${d.bowlerName}`;
+      case "runout":
+        return d.fielderName ? `run out (${d.fielderName})` : "run out";
+      case "bowled":
+      default:
+        return `b ${d.bowlerName}`;
     }
-    return "not out";
   };
 
   // Builds the full match payload (match meta + player scorecard + ball-by-ball)
@@ -184,6 +216,11 @@ const MatchSummary = () => {
         : null,
       bowler: ball.bowler
         ? { id: ball.bowler.id, name: ball.bowler.name }
+        : null,
+      outType: ball.outType ?? null,
+      outBatterId: ball.outBatterId ?? null,
+      fielder: ball.fielder
+        ? { id: ball.fielder.id, name: ball.fielder.name }
         : null,
     });
 
@@ -359,6 +396,7 @@ const MatchSummary = () => {
         <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>Ex</Text>
         <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>4</Text>
         <Text style={[styles.bowlingHeaderCell, styles.smallCell]}>6</Text>
+        <Text style={[styles.bowlingHeaderCell, styles.srCell]}>Catches</Text>
       </View>
 
       {/* Rows */}
@@ -387,6 +425,9 @@ const MatchSummary = () => {
           </Text>
           <Text style={[styles.bowlingCell, styles.smallCell]}>
             {row.sixesConceded}
+          </Text>
+          <Text style={[styles.bowlingCell, styles.srCell]}>
+            {(row.catches || 0) + (row.runOuts || 0) + (row.stumpings || 0)}
           </Text>
         </View>
       ))}

@@ -6,6 +6,7 @@ import {
   ScrollView,
   Modal,
   TouchableWithoutFeedback,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "react-native-paper";
@@ -43,18 +44,19 @@ const DANGER = "#E23744";
 const OUT_TYPES: {
   value: OutType;
   label: string;
-  icon: string;
+  icon?: string;
+  imageIcon?: any;
   needsFielder: boolean;
 }[] = [
   {
     value: "caught",
     label: "Catch",
-    icon: "hand-back-right",
+    imageIcon: require("@/assets/images/catch.png"),
     needsFielder: true,
   },
-  { value: "bowled", label: "Bowled", icon: "cricket", needsFielder: false },
-  { value: "runout", label: "Run Out", icon: "run-fast", needsFielder: true },
-  { value: "stumped", label: "Stumping", icon: "account", needsFielder: true },
+  { value: "bowled", label: "Bowled", imageIcon: require("@/assets/images/bowled.png"), needsFielder: false },
+  { value: "runout", label: "Run Out", imageIcon: require("@/assets/images/run-out.png"), needsFielder: true },
+  { value: "stumped", label: "Stumping", imageIcon: require("@/assets/images/stumping.png"), needsFielder: true },
 ];
 
 const fielderActionLabel: Record<OutType, string> = {
@@ -237,12 +239,24 @@ const WicketModal: React.FC<WicketModalProps> = ({
                         setFielderId(null);
                       }}
                     >
-                      <Icon
-                        name={t.icon}
-                        type="material-community"
-                        size={21}
-                        color={active ? "#fff" : dark ? "#cbd5e1" : "#5A6675"}
-                      />
+                      {t.imageIcon ? (
+                        <Image
+                          source={t.imageIcon}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            tintColor: active ? "#fff" : dark ? "#cbd5e1" : "#5A6675",
+                            resizeMode: "contain"
+                          }}
+                        />
+                      ) : (
+                        <Icon
+                          name={t.icon!}
+                          type="material-community"
+                          size={21}
+                          color={active ? "#fff" : dark ? "#cbd5e1" : "#5A6675"}
+                        />
+                      )}
                       <Text
                         style={[
                           styles.outTypeText,

@@ -13,29 +13,46 @@ import { useAppContext } from "@/context/AppContext";
 export default function TabTwoScreen() {
   const [matches, setMatches] = useState<match[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { club } = useAppContext();
   useFocusEffect(
     useCallback(() => {
+      let active = true;
       const fetchMatch = async () => {
-        const matches = await Match.getAllOrderby(
-          club.id,
-          "startDateTime",
-          "desc"
-        );
-        const playersFromDB = await Player.getAll();
-        setMatches(matches);
-        if (playersFromDB && playersFromDB.length > 0) {
-          setPlayers(playersFromDB);
+        setIsLoading(true);
+        try {
+          const matches = await Match.getAllOrderby(
+            club.id,
+            "startDateTime",
+            "desc"
+          );
+          const playersFromDB = await Player.getAll();
+          if (!active) return;
+          setMatches(matches);
+          if (playersFromDB && playersFromDB.length > 0) {
+            setPlayers(playersFromDB);
+          }
+        } finally {
+          if (active) setIsLoading(false);
         }
       };
       fetchMatch();
+      return () => {
+        active = false;
+      };
     }, [])
   );
 
   return (
     <>
       <View style={styles.container}>
-        {<MatchHistory matches={matches} players={players} />}
+        {
+          <MatchHistory
+            matches={matches}
+            players={players}
+            matchesLoading={isLoading}
+          />
+        }
       </View>
     </>
   );

@@ -16,6 +16,7 @@ import {
   HelperText,
   Switch,
   Card,
+  IconButton,
 } from "react-native-paper";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -24,9 +25,14 @@ import { Tournament } from "@/firebase/models/Tournament";
 import { Timestamp } from "@react-native-firebase/firestore";
 import { Match } from "@/firebase/models/Match";
 
+const MIN_TEAMS = 2;
+
 const createTournamentSchema = Yup.object().shape({
   name: Yup.string().required("Tournament name is required"),
   isBoxCricket: Yup.boolean().required("Box Cricket is required"),
+  numberOfTeams: Yup.number()
+    .min(MIN_TEAMS, `At least ${MIN_TEAMS} teams`)
+    .required("Number of teams is required"),
 });
 
 export const CreateTournament = ({
@@ -38,7 +44,7 @@ export const CreateTournament = ({
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   const handleSubmit = async () => {
-    const { name, isBoxCricket } = formik.values;
+    const { name, isBoxCricket, numberOfTeams } = formik.values;
 
     const latestTournament = await Tournament.getByStatus(
       "ongoing",
@@ -69,6 +75,7 @@ export const CreateTournament = ({
       clubId: club?.id ?? "",
       status: "ongoing",
       isBoxCricket,
+      numberOfTeams,
     });
 
     updateCurrentTournament(newTournament.id);
@@ -81,6 +88,7 @@ export const CreateTournament = ({
     initialValues: {
       name: new Date().toLocaleDateString("en-GB").replace(/\//g, "-"),
       isBoxCricket: false,
+      numberOfTeams: MIN_TEAMS,
     },
     validationSchema: createTournamentSchema,
     onSubmit: async (values) => {
@@ -113,6 +121,38 @@ export const CreateTournament = ({
               void formik.setFieldValue("isBoxCricket", value)
             }
           />
+        </View>
+
+        <View style={[styles.switchContainer, themeStyles.switchContainer]}>
+          <Text style={[styles.label, themeStyles.label]}>Number of Teams</Text>
+          <View style={styles.stepperContainer}>
+            <IconButton
+              icon="minus"
+              mode="contained"
+              size={18}
+              disabled={formik.values.numberOfTeams <= MIN_TEAMS}
+              onPress={() =>
+                void formik.setFieldValue(
+                  "numberOfTeams",
+                  Math.max(MIN_TEAMS, formik.values.numberOfTeams - 1)
+                )
+              }
+            />
+            <Text style={[styles.stepperValue, themeStyles.label]}>
+              {formik.values.numberOfTeams}
+            </Text>
+            <IconButton
+              icon="plus"
+              mode="contained"
+              size={18}
+              onPress={() =>
+                void formik.setFieldValue(
+                  "numberOfTeams",
+                  formik.values.numberOfTeams + 1
+                )
+              }
+            />
+          </View>
         </View>
 
         <HelperText
@@ -166,6 +206,16 @@ const styles = StyleSheet.create({
     minWidth: 60,
     minHeight: 30,
     transform: [{ scaleX: 1.4 }, { scaleY: 1.1 }],
+  },
+  stepperContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  stepperValue: {
+    fontSize: 18,
+    fontWeight: "600",
+    minWidth: 32,
+    textAlign: "center",
   },
 });
 

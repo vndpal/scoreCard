@@ -36,6 +36,8 @@ import { getMatchResultText } from "@/utils/getMatchResultText";
 import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
+import { recomputeTournamentStandings } from "@/utils/recomputeTournamentStandings";
+import { updateTournamentStandings } from "@/utils/updateTournamentStandings";
 import Loader from "@/components/Loader";
 import { Tournament } from "@/firebase/models/Tournament";
 import ScoringControls from "@/components/ScoringControls";
@@ -757,6 +759,25 @@ export default function HomeScreen() {
             const manOfTheMatch = await updateManOfTheMatch(match.matchId);
             setManOfTheMatch(manOfTheMatch);
           }
+          // Standings are a derived table; keep this light (only touches the two
+          // teams' rows) and never let it block the post-match reload.
+          try {
+            await updateTournamentStandings(
+              match.tournamentId,
+              match.clubId,
+              {
+                ...match,
+                status: matchStatus,
+                winner: matchStatus === "completed" ? winner : undefined,
+                currentScore: {
+                  team1: localFinalFirstInningsScore,
+                  team2: localFinalSecondInningsScore,
+                },
+              }
+            );
+          } catch (e) {
+            console.error("updateTournamentStandings failed", e);
+          }
           await Updates.reloadAsync();
           return;
         }
@@ -794,6 +815,21 @@ export default function HomeScreen() {
           );
           const manOfTheMatch = await updateManOfTheMatch(match.matchId);
           setManOfTheMatch(manOfTheMatch);
+        }
+        // Standings are a derived table; keep this light (only touches the two
+        // teams' rows) and never let it block the post-match reload.
+        try {
+          await updateTournamentStandings(match.tournamentId, match.clubId, {
+            ...match,
+            status: "completed",
+            winner: winner,
+            currentScore: {
+              team1: localFinalFirstInningsScore,
+              team2: localFinalSecondInningsScore,
+            },
+          });
+        } catch (e) {
+          console.error("updateTournamentStandings failed", e);
         }
         await Updates.reloadAsync();
       }
@@ -1147,7 +1183,8 @@ export default function HomeScreen() {
           await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
         }
 
-        if (match.status !== "live") {
+        const wasDecisive = match.status !== "live";
+        if (wasDecisive) {
           await Match.update(match.matchId, {
             status: "live",
           });
@@ -1166,6 +1203,20 @@ export default function HomeScreen() {
             2,
             currentMatchTeam2Score.length
           );
+        }
+        if (wasDecisive) {
+          // The match is no longer decisive; recompute drops its contribution
+          // (finalizedMatch passed as "live" so it's excluded from the set).
+          // Runs after the core undo and never blocks it on failure.
+          try {
+            await recomputeTournamentStandings(
+              match.tournamentId,
+              match.clubId,
+              { ...match, status: "live" }
+            );
+          } catch (e) {
+            console.error("recomputeTournamentStandings failed", e);
+          }
         }
       }
       await fetchMatch();

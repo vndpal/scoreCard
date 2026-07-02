@@ -277,6 +277,7 @@ async function migrateTournaments() {
     { name: "clubId", type: "STRING", mode: "NULLABLE" },
     { name: "isBoxCricket", type: "BOOLEAN", mode: "NULLABLE" },
     { name: "status", type: "STRING", mode: "NULLABLE" },
+    { name: "numberOfTeams", type: "INTEGER", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
 
@@ -289,6 +290,7 @@ async function migrateTournaments() {
       clubId: emptyToNull(data.clubId),
       isBoxCricket: data.isBoxCricket ?? null,
       status: emptyToNull(data.status),
+      numberOfTeams: data.numberOfTeams ?? null,
       updatedAt: formatDate(data.updatedAt),
     };
   });
@@ -296,6 +298,57 @@ async function migrateTournaments() {
   await (FULL_REFRESH || !lastUpdated
     ? writeTableTruncate("Tournaments", rows, schema)
     : mergeAndLoad("Tournaments", schema, rows));
+}
+
+async function migrateTournamentStandings() {
+  console.log("Migrating tournamentStandings collection...");
+  const lastUpdated = await getLastUpdatedAt("TournamentStandings");
+  const snapshot = await fetchDocs("tournamentStandings", lastUpdated);
+
+  const schema = [
+    { name: "id", type: "STRING", mode: "REQUIRED" },
+    { name: "tournamentId", type: "STRING", mode: "NULLABLE" },
+    { name: "clubId", type: "STRING", mode: "NULLABLE" },
+    { name: "teamInitials", type: "STRING", mode: "NULLABLE" },
+    { name: "teamName", type: "STRING", mode: "NULLABLE" },
+    { name: "played", type: "INTEGER", mode: "NULLABLE" },
+    { name: "wins", type: "INTEGER", mode: "NULLABLE" },
+    { name: "losses", type: "INTEGER", mode: "NULLABLE" },
+    { name: "ties", type: "INTEGER", mode: "NULLABLE" },
+    { name: "points", type: "INTEGER", mode: "NULLABLE" },
+    { name: "totalRunsScored", type: "INTEGER", mode: "NULLABLE" },
+    { name: "totalOversFaced", type: "FLOAT", mode: "NULLABLE" },
+    { name: "totalRunsConceded", type: "INTEGER", mode: "NULLABLE" },
+    { name: "totalOversBowled", type: "FLOAT", mode: "NULLABLE" },
+    { name: "nrr", type: "FLOAT", mode: "NULLABLE" },
+    { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
+  ];
+
+  const rows = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      tournamentId: emptyToNull(data.tournamentId),
+      clubId: emptyToNull(data.clubId),
+      teamInitials: emptyToNull(data.teamInitials),
+      teamName: emptyToNull(data.teamName),
+      played: data.played ?? null,
+      wins: data.wins ?? null,
+      losses: data.losses ?? null,
+      ties: data.ties ?? null,
+      points: data.points ?? null,
+      totalRunsScored: data.totalRunsScored ?? null,
+      totalOversFaced: data.totalOversFaced ?? null,
+      totalRunsConceded: data.totalRunsConceded ?? null,
+      totalOversBowled: data.totalOversBowled ?? null,
+      nrr: data.nrr ?? null,
+      updatedAt: formatDate(data.updatedAt),
+    };
+  });
+
+  await (FULL_REFRESH || !lastUpdated
+    ? writeTableTruncate("TournamentStandings", rows, schema)
+    : mergeAndLoad("TournamentStandings", schema, rows));
 }
 
 async function migratePlayerTournamentStats() {
@@ -891,6 +944,7 @@ async function migrateToBigQuery() {
     await createDatasetIfNeeded();
     await migratePlayers();
     await migrateTournaments();
+    await migrateTournamentStandings();
     await migrateClubs();
     await migrateTeams();
     await migrateMatches();

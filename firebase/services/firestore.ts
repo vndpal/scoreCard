@@ -190,6 +190,7 @@ export const firestoreService = {
         "teamPlayerMapping",
         "clubs",
         "tournaments",
+        "tournamentStandings",
       ];
 
       // Clear each collection
@@ -217,6 +218,7 @@ export const firestoreService = {
         "teams",
         "teamPlayerMapping",
         "tournaments",
+        "tournamentStandings",
       ];
 
       // Clear each collection

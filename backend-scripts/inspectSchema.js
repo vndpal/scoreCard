@@ -63,6 +63,8 @@ async function run() {
     await inspect("clubs");
     await inspect("matches");
     await inspect("teams");
+    await inspect("tournaments");
+    await inspect("tournamentStandings");
     await inspect("playerCareerStats");
     await inspect("teamPlayerMapping");
     await inspect("matchScores");

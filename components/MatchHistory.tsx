@@ -17,6 +17,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { player } from "@/types/player";
 import MatchScoreBar from "./MatchScoreBar";
 import TournamentStandings from "./TournamentStandings";
+import TournamentStandingsTable from "./TournamentStandingsTable";
+import MatchCardSkeleton from "./MatchCardSkeleton";
+import { TournamentStanding } from "@/firebase/models/TournamentStanding";
+import { tournamentStanding } from "@/types/tournamentStanding";
 import { Timestamp } from "@react-native-firebase/firestore";
 import { getMatchResultText } from "@/utils/getMatchResultText";
 import { Dropdown } from "react-native-paper-dropdown";
@@ -311,9 +315,11 @@ const WinnerBadge = ({ winner }: { winner: string }) => {
 const MatchHistory = ({
   matches,
   players,
+  matchesLoading = false,
 }: {
   matches: match[];
   players: player[];
+  matchesLoading?: boolean;
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -361,6 +367,36 @@ const MatchHistory = ({
     return Object.values(acc);
   }, [filteredMatches]);
 
+  // Tournaments with more than two teams show a full standings table sourced
+  // from the persisted tournamentStandings collection (recomputed on match
+  // completion/undo). Two-team tournaments keep the head-to-head screen.
+  const isMultiTeam = (selectedTournament?.numberOfTeams ?? 2) > 2;
+  const [standingsRows, setStandingsRows] = useState<tournamentStanding[]>([]);
+  const [standingsLoading, setStandingsLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!selectedTournament?.id || !isMultiTeam) {
+      setStandingsRows([]);
+      setStandingsLoading(false);
+      return;
+    }
+    setStandingsLoading(true);
+    TournamentStanding.getByTournament(selectedTournament.id)
+      .then((rows) => {
+        if (active) setStandingsRows(rows);
+      })
+      .catch(() => {
+        if (active) setStandingsRows([]);
+      })
+      .finally(() => {
+        if (active) setStandingsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedTournament?.id, isMultiTeam]);
+
   return (
     <View
       style={[
@@ -370,7 +406,15 @@ const MatchHistory = ({
     >
       <Text style={themeStyles.header}>Match History</Text>
 
-      {matches && <TournamentStandings matchStandings={matchStandings} />}
+      {matches &&
+        (isMultiTeam ? (
+          <TournamentStandingsTable
+            rows={standingsRows}
+            loading={standingsLoading}
+          />
+        ) : (
+          <TournamentStandings matchStandings={matchStandings} />
+        ))}
 
       <TournamentDropdown
         selectedTournament={selectedTournament}
@@ -378,9 +422,13 @@ const MatchHistory = ({
       />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {filteredMatches?.map((item, index) => (
-          <Card key={index} match={item} players={players} />
-        ))}
+        {matchesLoading
+          ? Array.from({ length: 4 }).map((_, index) => (
+              <MatchCardSkeleton key={index} />
+            ))
+          : filteredMatches?.map((item, index) => (
+              <Card key={index} match={item} players={players} />
+            ))}
       </ScrollView>
     </View>
   );

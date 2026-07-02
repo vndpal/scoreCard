@@ -10,6 +10,7 @@ export class Tournament implements tournament {
   clubId: string;
   status: "upcoming" | "ongoing" | "completed";
   isBoxCricket: boolean;
+  numberOfTeams?: number;
 
   constructor(id: string, data: tournament) {
     this.id = id;
@@ -18,6 +19,7 @@ export class Tournament implements tournament {
     this.clubId = data.clubId;
     this.status = data.status;
     this.isBoxCricket = data.isBoxCricket;
+    this.numberOfTeams = data.numberOfTeams;
   }
 
   static async create(data: Omit<tournament, "id">): Promise<Tournament> {

@@ -128,6 +128,14 @@ export class Match implements Omit<match, "team1score" | "team2score"> {
     return matches.map((match) => new Match(match.id, match));
   }
 
+  static async getByTournament(tournamentId: string): Promise<Match[]> {
+    const matches = await firestoreService.query<match & { id: string }>(
+      COLLECTION_NAME,
+      [{ field: "tournamentId", operator: "==", value: tournamentId }]
+    );
+    return matches.map((match) => new Match(match.id, match));
+  }
+
   static async findByTeam(teamName: string): Promise<Match[]> {
     const matches = await firestoreService.query<match>(COLLECTION_NAME, [
       {

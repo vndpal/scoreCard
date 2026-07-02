@@ -50,7 +50,10 @@ const TournamentDropdown = ({
     };
 
     fetchTournaments();
-  }, []);
+    // Re-run when the current tournament changes (e.g. a new one was just
+    // created) so the list picks up the new tournament and it gets selected,
+    // instead of staying stuck on the previously mounted selection.
+  }, [currentTournament, club.id]);
 
   const dropdownItems = tournaments.map((tournament) => ({
     label: tournament.name,

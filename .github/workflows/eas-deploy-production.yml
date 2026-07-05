@@ -1,0 +1,45 @@
+name: EAS Deploy to Google Play (Build + Submit)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Submit (production)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write Google Play service account key
+        # Path must match submit.production.android.serviceAccountKeyPath in eas.json.
+        # Read at command-invocation time by --auto-submit, so it must exist before the build step.
+        run: printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > google-play-service-account.json
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+
+      - name: Build and submit to Google Play
+        # Builds the production AAB, then auto-submits it using the "production" submit
+        # profile from eas.json once the build finishes. Waits so the submit result
+        # (success/failure) shows in this run's log. Add --no-wait to return immediately.
+        run: eas build --platform android --profile production --auto-submit --non-interactive
+
+      - name: Remove service account key
+        if: always()
+        run: rm -f google-play-service-account.json

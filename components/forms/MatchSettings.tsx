@@ -27,6 +27,7 @@ import Loader from "../Loader";
 import { Timestamp } from "@react-native-firebase/firestore";
 import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
+import { updateTournamentStandings } from "@/utils/updateTournamentStandings";
 type items = {
   label: string;
   value: string;
@@ -56,8 +57,14 @@ const MatchSettings = () => {
     setCurrentMatch(match);
     setOvers(match.overs.toString());
     const items: items[] = [
-      { label: `${match.team1} won`, value: match.team1 },
-      { label: `${match.team2} won`, value: match.team2 },
+      {
+        label: `${match.team1ShortName ?? match.team1} won`,
+        value: match.team1,
+      },
+      {
+        label: `${match.team2ShortName ?? match.team2} won`,
+        value: match.team2,
+      },
       { label: "Tied", value: "tied" },
       { label: "Draw", value: "draw" },
       { label: "No Result", value: "noResult" },
@@ -114,16 +121,35 @@ const MatchSettings = () => {
             if (matchStatus !== "abandoned") {
               await updatePlayerCareerStats(
                 playerMatchStats.playerMatchStats,
-                matchStatus === "completed" ? winner : ""
+                matchStatus === "completed" ? winner : "",
               );
               await updatePlayerTournamentStats(
                 playerMatchStats.playerMatchStats,
                 currentMatch.tournamentId,
                 currentMatch.clubId,
-                matchStatus === "completed" ? winner : ""
+                matchStatus === "completed" ? winner : "",
               );
             }
             await updateManOfTheMatch(currentMatch.matchId);
+          }
+
+          try {
+            await updateTournamentStandings(
+              currentMatch.tournamentId,
+              currentMatch.clubId,
+              {
+                ...currentMatch,
+                status: matchStatus,
+                winner:
+                  matchStatus === "completed"
+                    ? winner === currentMatch.team1
+                      ? "team1"
+                      : "team2"
+                    : undefined,
+              },
+            );
+          } catch (e) {
+            console.error("updateTournamentStandings failed", e);
           }
           await Updates.reloadAsync();
           Keyboard.dismiss();
@@ -145,7 +171,7 @@ const MatchSettings = () => {
             parseInt(overs) < currentMatch.currentScore.team1.totalOvers
           ) {
             alert(
-              `${currentMatch.currentScore.team1.totalOvers} overs have already been bowled. Overs cannot be less than that`
+              `${currentMatch.currentScore.team1.totalOvers} overs have already been bowled. Overs cannot be less than that`,
             );
             setLoading(false);
             return;
@@ -181,7 +207,12 @@ const MatchSettings = () => {
         { paddingTop: insets.top },
       ]}
     >
-      <ScrollView contentContainerStyle={[styles.scrollContainer, { paddingBottom: 60 + insets.bottom }]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          { paddingBottom: 60 + insets.bottom },
+        ]}
+      >
         <View style={[styles.settingItem, themeStyles.settingItem]}>
           <Text style={[styles.label, themeStyles.label]}>Change overs</Text>
           <TextInput
@@ -218,7 +249,13 @@ const MatchSettings = () => {
           </View>
         )}
       </ScrollView>
-      <View style={[styles.buttonContainer, themeStyles.buttonContainer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+      <View
+        style={[
+          styles.buttonContainer,
+          themeStyles.buttonContainer,
+          { paddingBottom: Math.max(insets.bottom, 16) },
+        ]}
+      >
         <Button
           textColor="white"
           buttonColor="#0c66e4"

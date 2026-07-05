@@ -205,6 +205,41 @@ async function mergeAndLoad(tableId, schema, newRows) {
   await writeTableTruncate(tableId, Array.from(byId.values()), schema);
 }
 
+// Column names currently in the BQ table, or null if the table doesn't exist.
+async function getTableColumns(tableId) {
+  try {
+    const [metadata] = await bigquery
+      .dataset(DATASET_ID)
+      .table(tableId)
+      .getMetadata();
+    return new Set((metadata.schema?.fields || []).map((f) => f.name));
+  } catch (e) {
+    if (e.code === 404 || (e.message || "").includes("Not found")) return null;
+    throw e;
+  }
+}
+
+// True when `schema` defines a column the live BQ table lacks (schema was
+// extended). Triggers a one-time full Firestore re-read for that table so
+// existing rows get the new column's real value instead of NULL. A missing /
+// brand-new table returns false (the !lastUpdated first-run path loads it
+// fully). Name-based only — type changes and renames are NOT detected and
+// still require FULL_REFRESH=true.
+async function schemaExtended(tableId, schema) {
+  const cols = await getTableColumns(tableId);
+  if (!cols) return false;
+  const added = schema.filter((f) => !cols.has(f.name)).map((f) => f.name);
+  if (added.length) {
+    console.log(
+      `  ${tableId}: schema extended (new column(s): ${added.join(
+        ", "
+      )}) → forcing full re-read to backfill.`
+    );
+    return true;
+  }
+  return false;
+}
+
 // ---------- Row builders ----------
 
 const emptyToNull = (v) => (v === "" || v === undefined ? null : v);
@@ -218,10 +253,11 @@ const formatDate = (val) => {
   return null;
 };
 
-// Fetches Firestore docs. In FULL_REFRESH mode (or first run), returns
-// everything. Otherwise filters on `updatedAt > lastUpdated`.
-async function fetchDocs(collectionName, lastUpdated) {
-  if (FULL_REFRESH || !lastUpdated) {
+// Fetches Firestore docs. When `forceFull` (FULL_REFRESH, first run, or a
+// detected schema extension) is set, returns everything. Otherwise filters on
+// `updatedAt > lastUpdated`.
+async function fetchDocs(collectionName, lastUpdated, forceFull) {
+  if (forceFull || !lastUpdated) {
     console.log(
       `Fetching ALL ${collectionName}${FULL_REFRESH ? " (full refresh)" : ""}...`
     );
@@ -240,15 +276,21 @@ async function fetchDocs(collectionName, lastUpdated) {
 
 async function migratePlayers() {
   console.log("Migrating players collection...");
-  const lastUpdated = await getLastUpdatedAt("Players");
-  const snapshot = await fetchDocs("players", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
     { name: "name", type: "STRING", mode: "NULLABLE" },
     { name: "clubId", type: "STRING", mode: "NULLABLE" },
+    // Preferred role ("BAT" | "BOWL"). Optional in the app, so older players
+    // have none and this stays null.
+    { name: "role", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("Players");
+  const forceFull =
+    FULL_REFRESH || !lastUpdated || (await schemaExtended("Players", schema));
+  const snapshot = await fetchDocs("players", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -256,19 +298,18 @@ async function migratePlayers() {
       id: doc.id,
       name: emptyToNull(data.name),
       clubId: emptyToNull(data.clubId),
+      role: emptyToNull(data.role),
       updatedAt: formatDate(data.updatedAt),
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("Players", rows, schema)
     : mergeAndLoad("Players", schema, rows));
 }
 
 async function migrateTournaments() {
   console.log("Migrating tournaments collection...");
-  const lastUpdated = await getLastUpdatedAt("Tournaments");
-  const snapshot = await fetchDocs("tournaments", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -280,6 +321,11 @@ async function migrateTournaments() {
     { name: "numberOfTeams", type: "INTEGER", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("Tournaments");
+  const forceFull =
+    FULL_REFRESH || !lastUpdated || (await schemaExtended("Tournaments", schema));
+  const snapshot = await fetchDocs("tournaments", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -295,15 +341,13 @@ async function migrateTournaments() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("Tournaments", rows, schema)
     : mergeAndLoad("Tournaments", schema, rows));
 }
 
 async function migrateTournamentStandings() {
   console.log("Migrating tournamentStandings collection...");
-  const lastUpdated = await getLastUpdatedAt("TournamentStandings");
-  const snapshot = await fetchDocs("tournamentStandings", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -323,6 +367,13 @@ async function migrateTournamentStandings() {
     { name: "nrr", type: "FLOAT", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("TournamentStandings");
+  const forceFull =
+    FULL_REFRESH ||
+    !lastUpdated ||
+    (await schemaExtended("TournamentStandings", schema));
+  const snapshot = await fetchDocs("tournamentStandings", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -346,15 +397,13 @@ async function migrateTournamentStandings() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("TournamentStandings", rows, schema)
     : mergeAndLoad("TournamentStandings", schema, rows));
 }
 
 async function migratePlayerTournamentStats() {
   console.log("Migrating PlayerTournamentStats collection...");
-  const lastUpdated = await getLastUpdatedAt("PlayerTournamentStats");
-  const snapshot = await fetchDocs("playerTournamentStats", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -386,6 +435,17 @@ async function migratePlayerTournamentStats() {
     { name: "clubId", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("PlayerTournamentStats");
+  const forceFull =
+    FULL_REFRESH ||
+    !lastUpdated ||
+    (await schemaExtended("PlayerTournamentStats", schema));
+  const snapshot = await fetchDocs(
+    "playerTournamentStats",
+    lastUpdated,
+    forceFull
+  );
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -421,15 +481,13 @@ async function migratePlayerTournamentStats() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("PlayerTournamentStats", rows, schema)
     : mergeAndLoad("PlayerTournamentStats", schema, rows));
 }
 
 async function migratePlayerMatchStats() {
   console.log("Migrating playerMatchStats collection...");
-  const lastUpdated = await getLastUpdatedAt("PlayerMatchStats");
-  const snapshot = await fetchDocs("playerMatchStats", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -446,9 +504,14 @@ async function migratePlayerMatchStats() {
     { name: "fours", type: "INTEGER", mode: "NULLABLE" },
     { name: "sixes", type: "INTEGER", mode: "NULLABLE" },
     { name: "strikeRate", type: "FLOAT", mode: "NULLABLE" },
+    { name: "average", type: "FLOAT", mode: "NULLABLE" },
     { name: "isOut", type: "BOOLEAN", mode: "NULLABLE" },
+    // Retired (hurt/out) — distinct from a normal dismissal. Absent on most
+    // rows, so defaults to false.
+    { name: "retired", type: "BOOLEAN", mode: "NULLABLE" },
 
     { name: "overs", type: "FLOAT", mode: "NULLABLE" },
+    { name: "ballsBowled", type: "INTEGER", mode: "NULLABLE" },
     { name: "maidens", type: "INTEGER", mode: "NULLABLE" },
     { name: "runsConceded", type: "INTEGER", mode: "NULLABLE" },
     { name: "wickets", type: "INTEGER", mode: "NULLABLE" },
@@ -464,6 +527,13 @@ async function migratePlayerMatchStats() {
 
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("PlayerMatchStats");
+  const forceFull =
+    FULL_REFRESH ||
+    !lastUpdated ||
+    (await schemaExtended("PlayerMatchStats", schema));
+  const snapshot = await fetchDocs("playerMatchStats", lastUpdated, forceFull);
 
   const rows = [];
   snapshot.docs.forEach((doc) => {
@@ -490,8 +560,11 @@ async function migratePlayerMatchStats() {
           fours: player.fours ?? 0,
           sixes: player.sixes ?? 0,
           strikeRate: player.strikeRate ?? 0.0,
+          average: player.average ?? 0.0,
           isOut: player.isOut ?? false,
+          retired: player.retired ?? false,
           overs: player.overs ?? 0.0,
+          ballsBowled: player.ballsBowled ?? 0,
           maidens: player.maidens ?? 0,
           runsConceded: player.runsConceded ?? 0,
           wickets: player.wickets ?? 0,
@@ -509,21 +582,24 @@ async function migratePlayerMatchStats() {
     }
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("PlayerMatchStats", rows, schema)
     : mergeAndLoad("PlayerMatchStats", schema, rows));
 }
 
 async function migrateClubs() {
   console.log("Migrating clubs collection...");
-  const lastUpdated = await getLastUpdatedAt("Clubs");
-  const snapshot = await fetchDocs("clubs", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
     { name: "name", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("Clubs");
+  const forceFull =
+    FULL_REFRESH || !lastUpdated || (await schemaExtended("Clubs", schema));
+  const snapshot = await fetchDocs("clubs", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -534,15 +610,13 @@ async function migrateClubs() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("Clubs", rows, schema)
     : mergeAndLoad("Clubs", schema, rows));
 }
 
 async function migrateTeams() {
   console.log("Migrating teams collection...");
-  const lastUpdated = await getLastUpdatedAt("Teams");
-  const snapshot = await fetchDocs("teams", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -550,8 +624,16 @@ async function migrateTeams() {
     { name: "teamInitials", type: "STRING", mode: "NULLABLE" },
     { name: "teamShortName", type: "STRING", mode: "NULLABLE" },
     { name: "clubId", type: "STRING", mode: "NULLABLE" },
+    // Soft-delete flag. Absent/true => active; false => disabled (hidden in the
+    // app but retained). Legacy docs have none, so this stays null (= active).
+    { name: "enabled", type: "BOOLEAN", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("Teams");
+  const forceFull =
+    FULL_REFRESH || !lastUpdated || (await schemaExtended("Teams", schema));
+  const snapshot = await fetchDocs("teams", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -564,19 +646,18 @@ async function migrateTeams() {
       // app's Team model default.
       teamShortName: emptyToNull(data.teamShortName ?? data.teamInitials),
       clubId: emptyToNull(data.clubId),
+      enabled: data.enabled ?? null,
       updatedAt: formatDate(data.updatedAt),
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("Teams", rows, schema)
     : mergeAndLoad("Teams", schema, rows));
 }
 
 async function migrateMatches() {
   console.log("Migrating matches collection...");
-  const lastUpdated = await getLastUpdatedAt("Matches");
-  const snapshot = await fetchDocs("matches", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -603,6 +684,11 @@ async function migrateMatches() {
     { name: "quickMatch", type: "BOOLEAN", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("Matches");
+  const forceFull =
+    FULL_REFRESH || !lastUpdated || (await schemaExtended("Matches", schema));
+  const snapshot = await fetchDocs("matches", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -637,15 +723,13 @@ async function migrateMatches() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("Matches", rows, schema)
     : mergeAndLoad("Matches", schema, rows));
 }
 
 async function migratePlayerCareerStats() {
   console.log("Migrating playerCareerStats collection...");
-  const lastUpdated = await getLastUpdatedAt("PlayerCareerStats");
-  const snapshot = await fetchDocs("playerCareerStats", lastUpdated);
 
   const schema = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -676,6 +760,13 @@ async function migratePlayerCareerStats() {
     { name: "runOuts", type: "INTEGER", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("PlayerCareerStats");
+  const forceFull =
+    FULL_REFRESH ||
+    !lastUpdated ||
+    (await schemaExtended("PlayerCareerStats", schema));
+  const snapshot = await fetchDocs("playerCareerStats", lastUpdated, forceFull);
 
   const rows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -710,7 +801,7 @@ async function migratePlayerCareerStats() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("PlayerCareerStats", rows, schema)
     : mergeAndLoad("PlayerCareerStats", schema, rows));
 }
@@ -733,8 +824,6 @@ async function buildTeamIdLookup() {
 
 async function migrateTeamPlayerMapping() {
   console.log("Migrating teamPlayerMapping collection...");
-  const lastUpdated = await getLastUpdatedAt("TeamPlayers");
-  const snapshot = await fetchDocs("teamPlayerMapping", lastUpdated);
 
   const teamIdLookup = await buildTeamIdLookup();
 
@@ -748,6 +837,11 @@ async function migrateTeamPlayerMapping() {
     { name: "playerName", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("TeamPlayers");
+  const forceFull =
+    FULL_REFRESH || !lastUpdated || (await schemaExtended("TeamPlayers", schema));
+  const snapshot = await fetchDocs("teamPlayerMapping", lastUpdated, forceFull);
 
   const rows = [];
   snapshot.docs.forEach((doc) => {
@@ -775,15 +869,13 @@ async function migrateTeamPlayerMapping() {
     }
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("TeamPlayers", rows, schema)
     : mergeAndLoad("TeamPlayers", schema, rows));
 }
 
 async function migrateMatchScores() {
   console.log("Migrating matchScores collection...");
-  const lastUpdated = await getLastUpdatedAt("MatchScores");
-  const snapshot = await fetchDocs("matchScores", lastUpdated);
 
   const schemaScores = [
     { name: "id", type: "STRING", mode: "REQUIRED" },
@@ -796,6 +888,13 @@ async function migrateMatchScores() {
     { name: "overSummary", type: "STRING", mode: "NULLABLE" },
     { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
   ];
+
+  const lastUpdated = await getLastUpdatedAt("MatchScores");
+  const forceFull =
+    FULL_REFRESH ||
+    !lastUpdated ||
+    (await schemaExtended("MatchScores", schemaScores));
+  const snapshot = await fetchDocs("matchScores", lastUpdated, forceFull);
 
   const matchScoresRows = snapshot.docs.map((doc) => {
     const data = doc.data();
@@ -812,7 +911,7 @@ async function migrateMatchScores() {
     };
   });
 
-  await (FULL_REFRESH || !lastUpdated
+  await (forceFull
     ? writeTableTruncate("MatchScores", matchScoresRows, schemaScores)
     : mergeAndLoad("MatchScores", schemaScores, matchScoresRows));
 
@@ -829,12 +928,43 @@ async function migrateBalls() {
   console.log("Migrating balls subcollection...");
   const lastBallUpdated = await getLastUpdatedAt("MatchScoreBalls");
 
+  const schemaBalls = [
+    { name: "id", type: "STRING", mode: "REQUIRED" },
+    { name: "ballId", type: "STRING", mode: "NULLABLE" },
+    { name: "matchScoreId", type: "STRING", mode: "NULLABLE" },
+    { name: "run", type: "INTEGER", mode: "NULLABLE" },
+    { name: "totalRun", type: "INTEGER", mode: "NULLABLE" },
+    { name: "isWicket", type: "BOOLEAN", mode: "NULLABLE" },
+    { name: "isNoBall", type: "BOOLEAN", mode: "NULLABLE" },
+    { name: "isWideBall", type: "BOOLEAN", mode: "NULLABLE" },
+    { name: "isOverEnd", type: "BOOLEAN", mode: "NULLABLE" },
+    { name: "extra", type: "INTEGER", mode: "NULLABLE" },
+    { name: "bowlerId", type: "STRING", mode: "NULLABLE" },
+    { name: "bowlerName", type: "STRING", mode: "NULLABLE" },
+    { name: "strikerId", type: "STRING", mode: "NULLABLE" },
+    { name: "strikerName", type: "STRING", mode: "NULLABLE" },
+    { name: "nonStrikerId", type: "STRING", mode: "NULLABLE" },
+    { name: "nonStrikerName", type: "STRING", mode: "NULLABLE" },
+    { name: "outType", type: "STRING", mode: "NULLABLE" },
+    // Id of the batter dismissed on this ball. Absent on non-wicket balls and
+    // on balls recorded before the dismissal feature, so stays null.
+    { name: "outBatterId", type: "STRING", mode: "NULLABLE" },
+    { name: "fielderId", type: "STRING", mode: "NULLABLE" },
+    { name: "fielderName", type: "STRING", mode: "NULLABLE" },
+    { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
+  ];
+
+  const forceFullBalls =
+    FULL_REFRESH ||
+    !lastBallUpdated ||
+    (await schemaExtended("MatchScoreBalls", schemaBalls));
+
   // Enumerate every parent we need to scan. On first run / full refresh
   // we go straight to Firestore; on incremental runs we read the parent
   // ids out of the BQ MatchScores table (free SELECT) to avoid a Firestore
   // full scan.
   let parentIds;
-  if (FULL_REFRESH || !lastBallUpdated) {
+  if (forceFullBalls) {
     const allParents = await db.collection("matchScores").get();
     parentIds = allParents.docs.map((d) => d.id);
   } else {
@@ -858,7 +988,7 @@ async function migrateBalls() {
 
   console.log(
     `Scanning balls under ${parentIds.length} matchScores parent(s)` +
-      (lastBallUpdated && !FULL_REFRESH
+      (lastBallUpdated && !forceFullBalls
         ? ` updated after ${lastBallUpdated.toISOString()}`
         : " (full)")
   );
@@ -872,7 +1002,7 @@ async function migrateBalls() {
       batchIds.map((pid) => {
         const ref = db.collection("matchScores").doc(pid).collection("balls");
         const q =
-          lastBallUpdated && !FULL_REFRESH
+          lastBallUpdated && !forceFullBalls
             ? ref.where("updatedAt", ">", lastBallUpdated)
             : ref;
         return q.get();
@@ -900,6 +1030,7 @@ async function migrateBalls() {
           nonStrikerId: b.nonStrikerBatter?.id || null,
           nonStrikerName: b.nonStrikerBatter?.name || null,
           outType: b.outType || null,
+          outBatterId: b.outBatterId || null,
           fielderId: b.fielder?.id || null,
           fielderName: b.fielder?.name || null,
           updatedAt: formatDate(b.updatedAt),
@@ -908,30 +1039,7 @@ async function migrateBalls() {
     });
   }
 
-  const schemaBalls = [
-    { name: "id", type: "STRING", mode: "REQUIRED" },
-    { name: "ballId", type: "STRING", mode: "NULLABLE" },
-    { name: "matchScoreId", type: "STRING", mode: "NULLABLE" },
-    { name: "run", type: "INTEGER", mode: "NULLABLE" },
-    { name: "totalRun", type: "INTEGER", mode: "NULLABLE" },
-    { name: "isWicket", type: "BOOLEAN", mode: "NULLABLE" },
-    { name: "isNoBall", type: "BOOLEAN", mode: "NULLABLE" },
-    { name: "isWideBall", type: "BOOLEAN", mode: "NULLABLE" },
-    { name: "isOverEnd", type: "BOOLEAN", mode: "NULLABLE" },
-    { name: "extra", type: "INTEGER", mode: "NULLABLE" },
-    { name: "bowlerId", type: "STRING", mode: "NULLABLE" },
-    { name: "bowlerName", type: "STRING", mode: "NULLABLE" },
-    { name: "strikerId", type: "STRING", mode: "NULLABLE" },
-    { name: "strikerName", type: "STRING", mode: "NULLABLE" },
-    { name: "nonStrikerId", type: "STRING", mode: "NULLABLE" },
-    { name: "nonStrikerName", type: "STRING", mode: "NULLABLE" },
-    { name: "outType", type: "STRING", mode: "NULLABLE" },
-    { name: "fielderId", type: "STRING", mode: "NULLABLE" },
-    { name: "fielderName", type: "STRING", mode: "NULLABLE" },
-    { name: "updatedAt", type: "TIMESTAMP", mode: "NULLABLE" },
-  ];
-
-  await (FULL_REFRESH || !lastBallUpdated
+  await (forceFullBalls
     ? writeTableTruncate("MatchScoreBalls", rows, schemaBalls)
     : mergeAndLoad("MatchScoreBalls", schemaBalls, rows));
 }

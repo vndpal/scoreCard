@@ -35,10 +35,11 @@ jobs:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
 
       - name: Build and submit to Google Play
-        # Builds the production AAB, then auto-submits it using the "production" submit
-        # profile from eas.json once the build finishes. Waits so the submit result
-        # (success/failure) shows in this run's log. Add --no-wait to return immediately.
-        run: eas build --platform android --profile production --auto-submit --non-interactive
+        # Queues the production AAB build with auto-submit and returns immediately
+        # (--no-wait). EAS builds and submits server-side, so this job finishes in
+        # minutes instead of waiting out multi-hour build queues (GitHub kills jobs
+        # after 6h). Track build/submit status on the EAS dashboard.
+        run: eas build --platform android --profile production --auto-submit --non-interactive --no-wait
 
       - name: Remove service account key
         if: always()

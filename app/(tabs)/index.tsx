@@ -20,6 +20,8 @@ import { playerMatchStats } from "@/types/playerMatchStats";
 import { playerStats } from "@/types/playerStats";
 import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useAppContext } from "@/context/AppContext";
+import { useCelebration } from "@/context/CelebrationContext";
+import { detectCelebrations } from "@/utils/detectCelebrations";
 import { updateManOfTheMatch } from "@/utils/updateManOfTheMatch";
 import { matchResult } from "@/types/matchResult";
 import MatchTimer from "@/components/MatchTimer";
@@ -140,6 +142,7 @@ export default function HomeScreen() {
 
   const { currentTheme, currentSettings, club, currentTournament } =
     useAppContext();
+  const { celebrate } = useCelebration();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -693,6 +696,50 @@ export default function HomeScreen() {
       setOutBatter(undefined);
       setOutType(undefined);
       setFielder(undefined);
+
+      // --- Celebrations (delight-only; wrapped so it can never break scoring) ---
+      if (currentSettings.celebrations) {
+        try {
+          const inningsScore = isFirstInning ? totalScore : scoreSecondInnings;
+          // playerMatchStats was mutated in place by updatePlayerMatchStats above
+          // (full matches only); an undefined runs total disables the batting
+          // milestones, which is exactly right for quick matches.
+          const striker = playerMatchStats?.find(
+            (p: playerStats) => p.playerId === scoreThisBall.strikerBatter?.id
+          );
+          const strikerRunsAfter = striker?.runs;
+          const strikerRunsBefore =
+            typeof strikerRunsAfter === "number"
+              ? strikerRunsAfter - scoreThisBall.run
+              : undefined;
+          const events = detectCelebrations({
+            scoreThisBall,
+            scoreThisOver,
+            inningsScore,
+            strikerRunsBefore,
+            strikerRunsAfter,
+            strikerName: scoreThisBall.strikerBatter?.name,
+            strikerBalls: striker?.ballsFaced,
+            strikerFours: striker?.fours,
+            strikerSixes: striker?.sixes,
+            bowlerId: scoreThisBall.bowler?.id,
+            bowlerName: scoreThisBall.bowler?.name,
+            // Pre-ball total is still in the render closure; local* holds the new total.
+            teamBefore: (isFirstInning
+              ? finalFirstInningsScore
+              : finalSecondInningsScore
+            ).totalRuns,
+            teamAfter: (isFirstInning
+              ? localFinalFirstInningsScore
+              : localFinalSecondInningsScore
+            ).totalRuns,
+            isOverEnd: scoreThisBall.isOverEnd,
+          });
+          if (events.length) celebrate(events);
+        } catch (e) {
+          console.error("detectCelebrations failed", e);
+        }
+      }
 
       // This block of code is to check if current over is completed
       if (isValidBall && totalBalls == 5) {

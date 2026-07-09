@@ -4,6 +4,7 @@ type settings = {
   autoUpdate: boolean;
   showMatchTimer: boolean;
   offlineMode: boolean;
+  celebrations: boolean;
   matchTime: { hours: number; minutes: number; seconds: number };
 };
 

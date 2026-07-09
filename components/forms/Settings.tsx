@@ -43,6 +43,7 @@ const Settings = () => {
   const [autoUpdate, setAutoUpdate] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
+  const [celebrations, setCelebrations] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -55,6 +56,7 @@ const Settings = () => {
         seconds: currentSettings?.matchTime?.seconds || 0,
       });
       setOfflineMode(currentSettings.offlineMode);
+      setCelebrations(currentSettings.celebrations);
     };
     fetchSettings();
   }, []);
@@ -126,6 +128,9 @@ const Settings = () => {
           break;
         case "autoUpdate":
           setAutoUpdate(value);
+          break;
+        case "celebrations":
+          setCelebrations(value);
           break;
         case "clearCache":
           handleClearCache();
@@ -272,6 +277,13 @@ const Settings = () => {
             value={autoUpdate}
             onValueChange={setAutoUpdate}
             settingKey="autoUpdate"
+          />
+          <SettingItem
+            title="Celebrations"
+            icon="sparkles-outline"
+            value={celebrations}
+            onValueChange={setCelebrations}
+            settingKey="celebrations"
           />
           <SettingItem
             title="Clear Cache"

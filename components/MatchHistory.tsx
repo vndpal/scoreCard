@@ -340,10 +340,11 @@ const MatchHistory = ({
     // Aggregate wins keyed by the immutable teamInitials so a renamed team stays
     // a single row. matches arrive newest-first, so the first snapshot we see for
     // a team is its most recent name — used purely as the display label.
-    const acc: Record<string, { name: string; wins: number }> = {};
+    const acc: Record<string, { initials: string; name: string; wins: number }> =
+      {};
     const ensure = (initials: string, name: string) => {
       if (!acc[initials]) {
-        acc[initials] = { name: name || initials, wins: 0 };
+        acc[initials] = { initials, name: name || initials, wins: 0 };
       }
     };
     filteredMatches?.forEach((match) => {
@@ -374,9 +375,12 @@ const MatchHistory = ({
   const [standingsRows, setStandingsRows] = useState<tournamentStanding[]>([]);
   const [standingsLoading, setStandingsLoading] = useState(false);
 
+  // Fetch the stored standings for any selected tournament — the multi-team
+  // table needs the full rows, and the two-team head-to-head uses them for the
+  // per-team NRR (NRR is computed/stored for every tournament, not just >2).
   useEffect(() => {
     let active = true;
-    if (!selectedTournament?.id || !isMultiTeam) {
+    if (!selectedTournament?.id) {
       setStandingsRows([]);
       setStandingsLoading(false);
       return;
@@ -395,7 +399,16 @@ const MatchHistory = ({
     return () => {
       active = false;
     };
-  }, [selectedTournament?.id, isMultiTeam]);
+  }, [selectedTournament?.id]);
+
+  // Team NRR keyed by the immutable teamInitials, for the head-to-head card.
+  const nrrByInitials = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    standingsRows.forEach((row) => {
+      map[row.teamInitials] = row.nrr;
+    });
+    return map;
+  }, [standingsRows]);
 
   return (
     <View
@@ -413,7 +426,10 @@ const MatchHistory = ({
             loading={standingsLoading}
           />
         ) : (
-          <TournamentStandings matchStandings={matchStandings} />
+          <TournamentStandings
+            matchStandings={matchStandings}
+            nrrByInitials={nrrByInitials}
+          />
         ))}
 
       <TournamentDropdown

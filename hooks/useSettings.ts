@@ -16,6 +16,7 @@ const defaultSettings: settings = {
   matchTime: { hours: 0, minutes: 0, seconds: 30 },
   autoUpdate: false,
   offlineMode: false,
+  celebrations: true,
 };
 
 export const useSettings = () => {

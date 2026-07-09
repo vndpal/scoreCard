@@ -3,20 +3,35 @@ import { View, Text, StyleSheet } from "react-native";
 import { useAppContext } from "@/context/AppContext";
 import { Ionicons } from "@expo/vector-icons";
 
+// Net Run Rate is stored with a leading sign so a glance reads +/- at once.
+const formatNrr = (nrr: number) => `${nrr > 0 ? "+" : ""}${nrr.toFixed(2)}`;
+
 const TournamentStandings = ({
   matchStandings,
+  nrrByInitials,
 }: {
-  matchStandings: { name: string; wins: number }[];
+  matchStandings: { initials: string; name: string; wins: number }[];
+  // Team NRR keyed by teamInitials. Absent for older tournaments with no
+  // stored standings, in which case the NRR line is simply hidden.
+  nrrByInitials?: Record<string, number>;
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
+
+  const team0 = matchStandings?.[0];
+  const team1 = matchStandings?.[1];
+  const nrr0 = team0 ? nrrByInitials?.[team0.initials] : undefined;
+  const nrr1 = team1 ? nrrByInitials?.[team1.initials] : undefined;
 
   return (
     <View style={themeStyles.container}>
       <View style={themeStyles.matchContainer}>
         <View style={themeStyles.teamContainer}>
-          <Text style={themeStyles.teamName}>{matchStandings?.[0]?.name}</Text>
-          <Text style={themeStyles.score}>{matchStandings?.[0]?.wins}</Text>
+          <Text style={themeStyles.teamName}>{team0?.name}</Text>
+          <Text style={themeStyles.score}>{team0?.wins}</Text>
+          {typeof nrr0 === "number" && (
+            <Text style={themeStyles.nrr}>NRR {formatNrr(nrr0)}</Text>
+          )}
         </View>
         <View style={themeStyles.centerContainer}>
           <View style={themeStyles.vsContainer}>
@@ -28,8 +43,11 @@ const TournamentStandings = ({
           </View>
         </View>
         <View style={themeStyles.teamContainer}>
-          <Text style={themeStyles.teamName}>{matchStandings?.[1]?.name}</Text>
-          <Text style={themeStyles.score}>{matchStandings?.[1]?.wins}</Text>
+          <Text style={themeStyles.teamName}>{team1?.name}</Text>
+          <Text style={themeStyles.score}>{team1?.wins}</Text>
+          {typeof nrr1 === "number" && (
+            <Text style={themeStyles.nrr}>NRR {formatNrr(nrr1)}</Text>
+          )}
         </View>
       </View>
     </View>
@@ -73,6 +91,13 @@ const darkStyles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     color: "#4dabf5",
+  },
+  nrr: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#8A8A8A",
+    marginTop: 4,
+    letterSpacing: 0.3,
   },
   centerContainer: {
     alignItems: "center",
@@ -129,6 +154,13 @@ const lightStyles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     color: "#1a73e8",
+  },
+  nrr: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#888888",
+    marginTop: 4,
+    letterSpacing: 0.3,
   },
   centerContainer: {
     alignItems: "center",

@@ -22,6 +22,8 @@ import { View, Image, ActivityIndicator, Button } from "react-native";
 import { getCrashlytics, log } from "@react-native-firebase/crashlytics";
 import { useUpdateCheck } from "@/hooks/useUpdateCheck";
 import { UpdateBanner } from "@/components/UpdateBanner";
+import { CelebrationProvider } from "@/context/CelebrationContext";
+import CelebrationOverlay from "@/components/celebrations/CelebrationOverlay";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -148,6 +150,7 @@ export default function RootLayout() {
           currentTournament={currentTournament}
           updateCurrentTournament={updateCurrentTournament}
         >
+          <CelebrationProvider>
           <View style={{ flex: 1 }}>
             <UpdateBanner
               isVisible={isUpdateAvailable}
@@ -280,7 +283,9 @@ export default function RootLayout() {
             )}
             {/* Temporary Crash Button for Testing */}
             {/* <Button title="Crash" onPress={() => crashlytics().crash()} /> */}
+            <CelebrationOverlay />
           </View>
+          </CelebrationProvider>
         </AppContextProvider>
       </PaperProvider>
     </ThemeProvider>

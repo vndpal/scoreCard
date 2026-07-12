@@ -1148,7 +1148,7 @@ const TeamLineUp: React.FC = () => {
     }
 
     setHasUnsavedChanges(false);
-    if (currentMatchId !== "") router.push("/");
+    if (currentMatchId !== "") router.replace("/");
     else router.back();
   };
 

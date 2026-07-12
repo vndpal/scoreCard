@@ -25,7 +25,6 @@ import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import Loader from "../Loader";
 import { Timestamp } from "@react-native-firebase/firestore";
-import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 import { updateTournamentStandings } from "@/utils/updateTournamentStandings";
 type items = {
@@ -95,7 +94,7 @@ const MatchSettings = () => {
             isFirstInning: !currentMatch.isFirstInning,
           });
           Keyboard.dismiss();
-          router.push("/");
+          router.back();
         } else {
           if (winner === "") {
             alert("Winner cannot be empty");
@@ -151,10 +150,9 @@ const MatchSettings = () => {
           } catch (e) {
             console.error("updateTournamentStandings failed", e);
           }
-          await Updates.reloadAsync();
           Keyboard.dismiss();
           setLoading(false);
-          router.push("/");
+          router.back();
         }
       } else {
         // overs change handling
@@ -180,7 +178,7 @@ const MatchSettings = () => {
 
         await Match.update(currentMatch.matchId, { overs: parseInt(overs) });
         Keyboard.dismiss();
-        router.push("/");
+        router.back();
         setLoading(false);
       }
     }

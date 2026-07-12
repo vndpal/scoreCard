@@ -242,7 +242,7 @@ export const CreateMatch = () => {
 
     await setItem(STORAGE_ITEMS.IS_NEW_MATCH, true);
     Keyboard.dismiss();
-    router.push("/");
+    router.back();
   };
 
   const formik = useFormik({

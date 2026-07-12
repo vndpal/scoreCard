@@ -35,7 +35,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Club } from "@/types/club";
 import MatchResult from "@/components/MatchResult";
 import { getMatchResultText } from "@/utils/getMatchResultText";
-import * as Updates from "expo-updates";
 import { updatePlayerTournamentStats } from "@/utils/updatePlayerTournamentStat";
 import { undoPlayerTournamentStats } from "@/utils/undoPlayerTournamentStats";
 import { recomputeTournamentStandings } from "@/utils/recomputeTournamentStandings";
@@ -442,6 +441,27 @@ export default function HomeScreen() {
     setIsFirstInning(true);
     setScorePerOver([]);
     setTotalBalls(0);
+    // Ball-entry flags and player selections carry over from whatever the
+    // previous match's screen instance last had them set to (this screen is
+    // reused across matches, not remounted) — reset everything a fresh mount
+    // would otherwise have started with.
+    setRun(0);
+    setIsDeclared(false);
+    setIsWicket(false);
+    setIsNoBall(false);
+    setIsWideBall(false);
+    setIsEntryDone(false);
+    setBatter1(undefined);
+    setBatter2(undefined);
+    setBowler(undefined);
+    setOutBatter(undefined);
+    setOutType(undefined);
+    setFielder(undefined);
+    setWicketModalVisible(false);
+    setPendingWicketSubmit(false);
+    setPickPlayerVisible(false);
+    setManOfTheMatch("");
+    setLastActivityDateTime(Timestamp.now());
   };
 
   const handleRunPress = (run: string) => {
@@ -825,7 +845,6 @@ export default function HomeScreen() {
           } catch (e) {
             console.error("updateTournamentStandings failed", e);
           }
-          await Updates.reloadAsync();
           return;
         }
       } else {
@@ -878,7 +897,6 @@ export default function HomeScreen() {
         } catch (e) {
           console.error("updateTournamentStandings failed", e);
         }
-        await Updates.reloadAsync();
       }
     } finally {
       setShowLoader(false);

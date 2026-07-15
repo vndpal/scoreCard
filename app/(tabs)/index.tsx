@@ -43,6 +43,13 @@ import Loader from "@/components/Loader";
 import { Tournament } from "@/firebase/models/Tournament";
 import ScoringControls from "@/components/ScoringControls";
 import WicketModal, { OutType, WicketResult } from "@/components/WicketModal";
+import {
+  activateKeepAwakeAsync,
+  deactivateKeepAwake,
+} from "expo-keep-awake";
+
+// Scopes our wake lock so it can't clash with other keep-awake consumers.
+const KEEP_AWAKE_LIVE_MATCH_TAG = "live-match";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -151,6 +158,19 @@ export default function HomeScreen() {
       console.log("error", error);
     }
   }, []);
+
+  // Keep the screen awake while a live match is in progress. This tab stays
+  // mounted for the whole session, so the lock holds anywhere in the app and
+  // is released when the match ends or the app is closed.
+  useEffect(() => {
+    if (match.status !== "live") {
+      return;
+    }
+    activateKeepAwakeAsync(KEEP_AWAKE_LIVE_MATCH_TAG).catch(() => {});
+    return () => {
+      deactivateKeepAwake(KEEP_AWAKE_LIVE_MATCH_TAG).catch(() => {});
+    };
+  }, [match.status]);
 
   const fetchMatch = async () => {
     try {

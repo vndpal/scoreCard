@@ -13,7 +13,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { playerStats } from "@/types/playerStats";
 import { player } from "@/types/player";
+import { scorePerInning } from "@/types/scorePerInnig";
+import { currentTotalScore } from "@/types/currentTotalScore";
 import { useAppContext } from "@/context/AppContext";
+import ScoreBoard from "@/components/ScoreBoard";
 import { Player } from "@/firebase/models/Player";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { MatchScore } from "@/firebase/models/MatchScores";
@@ -47,6 +50,14 @@ const MatchSummary = () => {
   const [dismissalMap, setDismissalMap] = useState<Map<string, DismissalInfo>>(
     new Map()
   );
+  const [team1Overs, setTeam1Overs] = useState<scorePerInning>([]);
+  const [team2Overs, setTeam2Overs] = useState<scorePerInning>([]);
+  const [team1Totals, setTeam1Totals] = useState<currentTotalScore | null>(
+    null
+  );
+  const [team2Totals, setTeam2Totals] = useState<currentTotalScore | null>(
+    null
+  );
   const [isPosting, setIsPosting] = useState(false);
 
   const { currentTheme } = useAppContext();
@@ -55,8 +66,21 @@ const MatchSummary = () => {
 
   useEffect(() => {
     (async () => {
-      const players = await Player.getAll();
-      const matchStats = await PlayerMatchStats.getByMatchId(matchId as string);
+      const [players, matchStats, matchDoc, inning1, inning2] =
+        await Promise.all([
+          Player.getAll(),
+          PlayerMatchStats.getByMatchId(matchId as string),
+          Match.getById(matchId as string),
+          MatchScore.getByMatchIdInningNumber(matchId as string, 1),
+          MatchScore.getByMatchIdInningNumber(matchId as string, 2),
+        ]);
+
+      // Over-by-over breakdown + innings totals for the ScoreBoard component
+      // (same data the live/index screen feeds it).
+      setTeam1Overs((inning1 ?? []).map((s) => s.overSummary));
+      setTeam2Overs((inning2 ?? []).map((s) => s.overSummary));
+      setTeam1Totals(matchDoc?.currentScore?.team1 ?? null);
+      setTeam2Totals(matchDoc?.currentScore?.team2 ?? null);
 
       if (matchStats && players) {
         const playersMap = new Map<string, string>();
@@ -66,7 +90,8 @@ const MatchSummary = () => {
         setPlayersMap(playersMap);
 
         try {
-          const dismissals = await fetchDismissalInfo(matchId as string);
+          // Reuse the innings already fetched above (no extra round-trip).
+          const dismissals = buildDismissalMap(inning1, inning2);
           setDismissalMap(dismissals);
         } catch (err) {
           console.log("Could not fetch dismissal info:", err);
@@ -121,18 +146,13 @@ const MatchSummary = () => {
     })();
   }, [matchId]);
 
-  const fetchDismissalInfo = async (
-    matchId: string
-  ): Promise<Map<string, DismissalInfo>> => {
+  const buildDismissalMap = (
+    ...innings: (MatchScore[] | null)[]
+  ): Map<string, DismissalInfo> => {
     const dismissals = new Map<string, DismissalInfo>();
 
     try {
-      for (let inning = 1; inning <= 2; inning++) {
-        const matchScores = await MatchScore.getByMatchIdInningNumber(
-          matchId,
-          inning
-        );
-
+      innings.forEach((matchScores) => {
         if (matchScores && Array.isArray(matchScores)) {
           matchScores.forEach((scoreData: any) => {
             if (scoreData.overSummary && Array.isArray(scoreData.overSummary)) {
@@ -157,9 +177,9 @@ const MatchSummary = () => {
             }
           });
         }
-      }
+      });
     } catch (err) {
-      console.log("Error fetching dismissals:", err);
+      console.log("Error building dismissals:", err);
     }
 
     return dismissals;
@@ -471,6 +491,31 @@ const MatchSummary = () => {
       {/* Team 2 - Bowling */}
       <Text style={styles.subHeader}>BOWLING</Text>
       <BowlingTable data={bowlingRecordsTeamB} teamColor="#334155" />
+
+      {/* Over-by-over (same component as the live/index screen) */}
+      {(team1Overs.length > 0 || team2Overs.length > 0) && (
+        <View style={styles.divider} />
+      )}
+      {team1Overs.length > 0 && (
+        <ScoreBoard
+          totalScore={team1Totals?.totalRuns ?? 0}
+          wickets={team1Totals?.totalWickets ?? 0}
+          overs={team1Totals?.totalOvers ?? 0}
+          balls={team1Totals?.totalBalls ?? 0}
+          scorePerInning={team1Overs}
+          teamName={team1 as string}
+        />
+      )}
+      {team2Overs.length > 0 && (
+        <ScoreBoard
+          totalScore={team2Totals?.totalRuns ?? 0}
+          wickets={team2Totals?.totalWickets ?? 0}
+          overs={team2Totals?.totalOvers ?? 0}
+          balls={team2Totals?.totalBalls ?? 0}
+          scorePerInning={team2Overs}
+          teamName={team2 as string}
+        />
+      )}
 
       {/* Fetch Man of the Match */}
       <TouchableOpacity

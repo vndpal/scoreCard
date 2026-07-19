@@ -3,7 +3,7 @@ import { match } from "@/types/match";
 import { getItem, setItem } from "@/utils/asyncStorage";
 import { updatePlayerCareerStats } from "@/utils/updatePlayerCareerStats";
 import { useRoute } from "@react-navigation/native";
-import { router } from "expo-router";
+import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -43,6 +43,14 @@ const MatchSettings = () => {
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
   const [loading, setLoading] = useState<boolean>(false);
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+
+  // Reset the stack to a brand-new home screen so it remounts and fetches
+  // fresh match data. router.back() would reveal the old stale screen, and
+  // router.push("/") would stack screens up (slowness issue #58).
+  const redirectToFreshHomeScreen = () => {
+    navigation.reset({ index: 0, routes: [{ name: "(tabs)" as never }] });
+  };
 
   useEffect(() => {
     fetchMatch();
@@ -94,7 +102,7 @@ const MatchSettings = () => {
             isFirstInning: !currentMatch.isFirstInning,
           });
           Keyboard.dismiss();
-          router.back();
+          redirectToFreshHomeScreen();
         } else {
           if (winner === "") {
             alert("Winner cannot be empty");
@@ -152,7 +160,7 @@ const MatchSettings = () => {
           }
           Keyboard.dismiss();
           setLoading(false);
-          router.back();
+          redirectToFreshHomeScreen();
         }
       } else {
         // overs change handling
@@ -178,7 +186,7 @@ const MatchSettings = () => {
 
         await Match.update(currentMatch.matchId, { overs: parseInt(overs) });
         Keyboard.dismiss();
-        router.back();
+        redirectToFreshHomeScreen();
         setLoading(false);
       }
     }

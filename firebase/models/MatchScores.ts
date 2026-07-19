@@ -70,7 +70,10 @@ export class MatchScore implements MatchScoresData {
         });
       })
     );
-    return matchScoresWithBalls.reverse();
+    // Without an explicit orderBy, Firestore returns docs in doc-ID string
+    // order, which puts over 10+ between overs 1 and 2. Sort numerically,
+    // newest over first — callers rely on [0] being the latest over.
+    return matchScoresWithBalls.sort((a, b) => b.overNumber - a.overNumber);
   }
 
   static async getById(id: string): Promise<MatchScore | null> {
@@ -167,12 +170,16 @@ export class MatchScore implements MatchScoresData {
     overNumber: number
   ): Promise<scorePerBall[]> {
     const overId = `${matchId}_${teamId}_${inningNumber}_${overNumber}`;
-    const ballsData = await firestoreService.getAllOrderby<any>(
+    const ballsData = await firestoreService.query<any>(
       `${COLLECTION_NAME}/${overId}/${BALLS_SUBCOLLECTION}`,
-      "__name__",
-      "asc",
       []
     );
+
+    // Ball docs are named ball_1, ball_2, … and string ordering misplaces
+    // ball_10+ (it sorts before ball_2), so sort by the numeric suffix,
+    // newest ball first — callers rely on [0] being the latest delivery.
+    const ballNumberOf = (id: string) =>
+      parseInt(String(id).split("_")[1], 10) || 0;
 
     return ballsData
       .map((ball) => ({
@@ -187,7 +194,7 @@ export class MatchScore implements MatchScoresData {
           ? { id: ball.bowler.id, name: ball.bowler.name }
           : undefined,
       }))
-      .reverse();
+      .sort((a, b) => ballNumberOf(b.id) - ballNumberOf(a.id));
   }
 
   static async updateBallScore(

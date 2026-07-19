@@ -28,10 +28,15 @@ export const firestoreService = {
     data: T
   ): Promise<void> => {
     try {
+      // Deliberately not awaited (offline support / responsiveness), but a
+      // rejection means the server refused the write and rolled the local
+      // cache back — log it so the failure isn't invisible.
       setDoc(doc(db, collectionName, id), {
         ...data,
         updatedAt: serverTimestamp(),
-      });
+      }).catch((error: any) =>
+        console.error("firestore create failed", collectionName, id, error)
+      );
     } catch (error: any) {
       console.log("error in creating doc", error);
     }
@@ -42,7 +47,10 @@ export const firestoreService = {
     data: T
   ): Promise<string> => {
     const docRef = doc(collection(db, collectionName));
-    setDoc(docRef, { ...data, updatedAt: serverTimestamp() });
+    setDoc(docRef, { ...data, updatedAt: serverTimestamp() }).catch(
+      (error: any) =>
+        console.error("firestore create failed", collectionName, error)
+    );
     return docRef.id;
   },
 
@@ -112,7 +120,10 @@ export const firestoreService = {
     updates: Record<string, any>
   ): Promise<void> => {
     const docRef = doc(db, collectionName, id);
-    updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
+    updateDoc(docRef, { ...updates, updatedAt: serverTimestamp() }).catch(
+      (error: any) =>
+        console.error("firestore update failed", collectionName, id, error)
+    );
   },
 
   upsert: async (
@@ -121,11 +132,16 @@ export const firestoreService = {
     updates: Record<string, any>
   ): Promise<void> => {
     const docRef = doc(db, collectionName, id);
-    setDoc(docRef, { ...updates, updatedAt: serverTimestamp() });
+    setDoc(docRef, { ...updates, updatedAt: serverTimestamp() }).catch(
+      (error: any) =>
+        console.error("firestore upsert failed", collectionName, id, error)
+    );
   },
 
   delete: async (collectionName: string, id: string): Promise<void> => {
-    deleteDoc(doc(db, collectionName, id));
+    deleteDoc(doc(db, collectionName, id)).catch((error: any) =>
+      console.error("firestore delete failed", collectionName, id, error)
+    );
   },
 
   query: async <T>(

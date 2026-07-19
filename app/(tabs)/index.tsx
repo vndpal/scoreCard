@@ -1,6 +1,6 @@
 import { StyleSheet, View, TouchableOpacity, Text, Alert } from "react-native";
 import ScoreBoard from "@/components/ScoreBoard";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { scorePerBall } from "@/types/scorePerBall";
 import { scorePerOver } from "@/types/scorePerOver";
 import { scorePerInning } from "@/types/scorePerInnig";
@@ -31,6 +31,10 @@ import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 import { MatchScore } from "@/firebase/models/MatchScores";
 import { undoPlayerCareerStats } from "@/utils/undoPlayerCareerStats";
+import {
+  rebuildPlayerMatchStats,
+  removeNewestBall,
+} from "@/utils/rebuildPlayerMatchStats";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Club } from "@/types/club";
 import MatchResult from "@/components/MatchResult";
@@ -137,6 +141,9 @@ export default function HomeScreen() {
   );
   const [manOfTheMatch, setManOfTheMatch] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  // Guards against a second undo running while one is in flight (stacked
+  // confirmation alerts would otherwise undo the same ball twice).
+  const undoInProgressRef = useRef(false);
   const [possibleRuns, setPossibleRuns] = useState<string[]>([
     "0",
     "1",
@@ -1097,98 +1104,32 @@ export default function HomeScreen() {
     }
   };
 
-  const undoPlayerStatsUpdate = async (scoreThisBall: scorePerBall) => {
-    const playerMatchStatsLocalState = playerMatchStats;
-
-    if (playerMatchStatsLocalState && playerMatchStatsLocalState.length > 0) {
-      const batterIndex = playerMatchStatsLocalState.findIndex(
-        (playerStats: playerStats) =>
-          playerStats.playerId == scoreThisBall.strikerBatter?.id
-      );
-
-      if (batterIndex > -1) {
-        playerMatchStatsLocalState[batterIndex].runs -= scoreThisBall.run;
-        playerMatchStatsLocalState[batterIndex].ballsFaced -=
-          scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
-        playerMatchStatsLocalState[batterIndex].fours -=
-          scoreThisBall.run == 4 ? 1 : 0;
-        playerMatchStatsLocalState[batterIndex].sixes -=
-          scoreThisBall.run == 6 ? 1 : 0;
-        playerMatchStatsLocalState[batterIndex].strikeRate =
-          (playerMatchStatsLocalState[batterIndex].runs /
-            playerMatchStatsLocalState[batterIndex].ballsFaced) *
-          100;
-        if (scoreThisBall.isWicket) {
-          // Clear the dismissed batter — which may be the non-striker on a
-          // run-out — not just the striker. Falls back to the striker for
-          // legacy balls recorded before outBatterId existed.
-          const outId =
-            scoreThisBall.outBatterId || scoreThisBall.strikerBatter?.id;
-          const outIdx = playerMatchStatsLocalState.findIndex(
-            (p: playerStats) => p.playerId == outId
-          );
-          if (outIdx > -1) {
-            playerMatchStatsLocalState[outIdx].isOut = false;
-          }
-        }
-      }
-      const bowlerIndex = playerMatchStatsLocalState.findIndex(
-        (playerStats: playerStats) =>
-          playerStats.playerId == scoreThisBall.bowler?.id
-      );
-      if (bowlerIndex > -1) {
-        playerMatchStatsLocalState[bowlerIndex].runsConceded -=
-          scoreThisBall.totalRun;
-
-        if (scoreThisBall.isOverEnd) {
-          playerMatchStatsLocalState[bowlerIndex].overs -= 1;
-          playerMatchStatsLocalState[bowlerIndex].ballsBowled = 5;
-        } else {
-          playerMatchStatsLocalState[bowlerIndex].ballsBowled -=
-            scoreThisBall.isNoBall || scoreThisBall.isWideBall ? 0 : 1;
-        }
-        playerMatchStatsLocalState[bowlerIndex].extras -= scoreThisBall.extra;
-        // Mirror the forward path: run-outs never credited the bowler.
-        playerMatchStatsLocalState[bowlerIndex].wickets -=
-          scoreThisBall.isWicket && scoreThisBall.outType !== "runout" ? 1 : 0;
-        playerMatchStatsLocalState[bowlerIndex].foursConceded -=
-          scoreThisBall.run == 4 ? 1 : 0;
-        playerMatchStatsLocalState[bowlerIndex].sixesConceded -=
-          scoreThisBall.run == 6 ? 1 : 0;
-        playerMatchStatsLocalState[bowlerIndex].bowlingEconomy =
-          playerMatchStatsLocalState[bowlerIndex].runsConceded /
-          (playerMatchStatsLocalState[bowlerIndex].ballsBowled > 0
-            ? playerMatchStatsLocalState[bowlerIndex].ballsBowled / 6
-            : 1);
-      }
-
-      // Reverse the fielding credit recorded for this ball.
-      if (scoreThisBall.isWicket && scoreThisBall.fielder?.id) {
-        const fielderIndex = playerMatchStatsLocalState.findIndex(
-          (playerStats: playerStats) =>
-            playerStats.playerId == scoreThisBall.fielder?.id
-        );
-        if (fielderIndex > -1) {
-          const f = playerMatchStatsLocalState[fielderIndex];
-          if (scoreThisBall.outType == "caught") {
-            f.catches = (f.catches || 0) - 1;
-          } else if (scoreThisBall.outType == "stumped") {
-            f.stumpings = (f.stumpings || 0) - 1;
-          } else if (scoreThisBall.outType == "runout") {
-            f.runOuts = (f.runOuts || 0) - 1;
-          }
-        }
-      }
-
-      setPlayerMatchStats(playerMatchStatsLocalState);
-
-      await PlayerMatchStats.update(match.matchId, {
-        playerMatchStats: playerMatchStatsLocalState,
-      });
+  // Rebuilds all player stats from the balls that remain after the undo,
+  // instead of decrementing the stored figures — decrements could drift
+  // (double-run undo, half-applied failures) into impossible values like
+  // "0 overs, -5 balls", and nothing ever reconciled them with the balls.
+  const undoRebuildPlayerStats = async (
+    postUndoTeam1: scorePerInning,
+    postUndoTeam2: scorePerInning
+  ) => {
+    if (!playerMatchStats || playerMatchStats.length == 0) {
+      return;
     }
+    const rebuilt = rebuildPlayerMatchStats(
+      playerMatchStats,
+      postUndoTeam1,
+      postUndoTeam2
+    );
+    setPlayerMatchStats(rebuilt);
+    await PlayerMatchStats.update(match.matchId, {
+      playerMatchStats: rebuilt,
+    });
   };
 
   const handleUndoSubmit = () => {
+    if (undoInProgressRef.current) {
+      return;
+    }
     Alert.alert(
       "Undo Confirmation",
       "Are you sure you want to undo the last ball?",
@@ -1205,6 +1146,13 @@ export default function HomeScreen() {
   };
 
   const undoAction = async () => {
+    // Ref-based guard: confirmation alerts can stack under rapid tapping and
+    // each OK would re-run undo against the same pre-undo state, undoing the
+    // same ball twice. The ref is immune to render timing, unlike showLoader.
+    if (undoInProgressRef.current) {
+      return;
+    }
+    undoInProgressRef.current = true;
     try {
       setShowLoader(true);
       setIsLoading(true);
@@ -1232,7 +1180,10 @@ export default function HomeScreen() {
         }
 
         if (!match.quickMatch) {
-          await undoPlayerStatsUpdate(currentMatchTeam1Score[0][0]);
+          await undoRebuildPlayerStats(
+            removeNewestBall(currentMatchTeam1Score),
+            currentMatchTeam2Score
+          );
         }
 
         if (!isFirstInning) {
@@ -1265,7 +1216,10 @@ export default function HomeScreen() {
             await undoPlayerCareerStats(match.matchId);
             await undoPlayerTournamentStats(match.matchId);
           }
-          await undoPlayerStatsUpdate(currentMatchTeam2Score[0][0]);
+          await undoRebuildPlayerStats(
+            currentMatchTeam1Score,
+            removeNewestBall(currentMatchTeam2Score)
+          );
         }
 
         const wasDecisive = match.status !== "live";
@@ -1305,7 +1259,17 @@ export default function HomeScreen() {
         }
       }
       await fetchMatch();
+    } catch (error) {
+      // Without this, a failure here was invisible: the ball survived in the
+      // DB while in-memory stats were already changed, and the next tap
+      // undid the same ball again.
+      console.error("undoAction failed", error);
+      Alert.alert(
+        "Undo failed",
+        "Something went wrong while undoing the last ball. Please try again."
+      );
     } finally {
+      undoInProgressRef.current = false;
       setShowLoader(false);
       setIsLoading(false);
     }

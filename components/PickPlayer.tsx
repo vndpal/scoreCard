@@ -51,9 +51,14 @@ const PickPlayer: React.FC<PickPlayerProps> = ({
 
   // Batsmen who were declared (retired not out) and are eligible to return.
   // Derived from the prop so it is unaffected by the in-effect reassignment below.
-  const returningPlayerIds = new Set(
-    remainingPlayers.filter((p) => p.retired).map((p) => p.playerId)
-  );
+  // Only relevant when picking a batsman — a declared batsman may resurface in the
+  // bowler picker (e.g. bowling in the next innings), where "Returning" is meaningless.
+  const returningPlayerIds =
+    playerType === "Batsman"
+      ? new Set(
+          remainingPlayers.filter((p) => p.retired).map((p) => p.playerId)
+        )
+      : new Set<string>();
 
   useEffect(() => {
     (async () => {

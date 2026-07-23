@@ -553,6 +553,102 @@ export default function HomeScreen() {
     setWicketModalVisible(false);
   };
 
+  // --- "All out?" handlers (squad exhausted; full matches only) -----------
+  // Shown automatically once the last available batsman is out. First innings
+  // -> end the innings (same effect as declaring from Match Settings). Second
+  // innings -> end the match. Tapping "No" just dismisses and leaves the wicket
+  // in place so the scorer can undo it / bring back a retired batsman.
+  const promptAllOutFirstInnings = () => {
+    Alert.alert(
+      "All out?",
+      "The batting side has no batsmen left. End the innings?",
+      [
+        { text: "No", style: "cancel" },
+        { text: "Yes, end innings", onPress: () => endFirstInningsAllOut() },
+      ]
+    );
+  };
+
+  const endFirstInningsAllOut = async () => {
+    // Mirror of the overs-based first-innings transition, but for a mid-over
+    // all-out we must also reset the current-over buffers so the second innings
+    // starts fresh. No navigation (in-screen transition, same as overs path).
+    setScorePerOver([]);
+    setTotalBalls(0);
+    setBowler(undefined);
+    setBatter1(undefined);
+    setBatter2(undefined);
+    setIsFirstInning(false);
+    await Match.update(match.matchId, { isFirstInning: false });
+  };
+
+  const promptAllOutSecondInnings = (
+    winner: "team1" | "team2",
+    matchStatus: matchResult,
+    localFirst: currentTotalScore,
+    localSecond: currentTotalScore
+  ) => {
+    Alert.alert(
+      "All out?",
+      "The batting side has no batsmen left. End the match?",
+      [
+        { text: "No", style: "cancel" },
+        {
+          text: "Yes, end match",
+          onPress: () =>
+            endMatchAllOut(winner, matchStatus, localFirst, localSecond),
+        },
+      ]
+    );
+  };
+
+  const endMatchAllOut = async (
+    winner: "team1" | "team2",
+    matchStatus: matchResult,
+    localFirst: currentTotalScore,
+    localSecond: currentTotalScore
+  ) => {
+    // Identical side-effects to the existing second-innings end path.
+    setMatch({ ...match, winner: winner, status: matchStatus });
+    await Match.update(match.matchId, {
+      status: matchStatus,
+      winner: winner,
+      endDateTime: Timestamp.now(),
+    });
+
+    if (!match.quickMatch) {
+      const winningTeam =
+        matchStatus === "completed"
+          ? winner === "team1"
+            ? match.team1
+            : match.team2
+          : "";
+      await updatePlayerCareerStats(playerMatchStats, winningTeam);
+      await updatePlayerTournamentStats(
+        playerMatchStats,
+        match.tournamentId,
+        match.clubId,
+        winningTeam
+      );
+      const manOfTheMatch = await updateManOfTheMatch(match.matchId);
+      setManOfTheMatch(manOfTheMatch);
+    }
+    // Standings are a derived table; keep this light and never let it block.
+    try {
+      await updateTournamentStandings(match.tournamentId, match.clubId, {
+        ...match,
+        status: matchStatus,
+        winner: matchStatus === "completed" ? winner : undefined,
+        currentScore: {
+          team1: localFirst,
+          team2: localSecond,
+        },
+      });
+    } catch (e) {
+      console.error("updateTournamentStandings failed", e);
+    }
+  };
+
   // Fielders are the bowling side. In the first innings team1 bats / team2
   // bowls; reversed in the second. Includes the current bowler (caught & bowled
   // / bowler-effected run-outs).
@@ -591,6 +687,9 @@ export default function HomeScreen() {
       }
       //logic for player pick end
       setIsEntryDone(false);
+      // Set true when this ball also ends the innings/match via overs or chase,
+      // so the "All out?" prompt below doesn't double-fire.
+      let inningsEndedThisBall = false;
       const extra = (isNoBall ? 1 : 0) + (isWideBall ? 1 : 0);
       const totalRun = run + extra;
       let scoreSecondInningsLocalState;
@@ -653,6 +752,24 @@ export default function HomeScreen() {
 
       if (!match.quickMatch) {
         await updatePlayerMatchStats(scoreThisBall);
+      }
+
+      // Squad-exhaustion check: after this wicket commits (updatePlayerMatchStats
+      // mutates playerMatchStats in place, so isOut is already set), is there any
+      // batsman left to come in? Exclude the pair currently at the crease
+      // (batter1/batter2 closure values = the pre-clear pair) so a last man who
+      // just arrived with 0 balls faced isn't mis-counted as still available.
+      let noBatsmenLeft = false;
+      if (!match.quickMatch && isWicket) {
+        const battingTeam = isFirstInning ? match.team1 : match.team2;
+        const eligibleBatsmen = playerMatchStats.filter(
+          (x: playerStats) =>
+            x.team === battingTeam &&
+            x.playerId !== batter1?.id &&
+            x.playerId !== batter2?.id &&
+            ((x.isOut === false && x.ballsFaced === 0) || x.retired === true)
+        );
+        noBatsmenLeft = eligibleBatsmen.length === 0;
       }
 
       const scoreThisOver: scorePerOver = [scoreThisBall, ...scorePerOver];
@@ -798,6 +915,7 @@ export default function HomeScreen() {
           finalFirstInningsScore.totalOvers + 1 == match.overs
         ) {
           console.log("First Inning Completed");
+          inningsEndedThisBall = true;
           setIsFirstInning(false);
           setBowler(undefined);
           setBatter1(undefined);
@@ -884,6 +1002,7 @@ export default function HomeScreen() {
         finalFirstInningsScore.totalRuns
       ) {
         console.log("Second Inning Completed");
+        inningsEndedThisBall = true;
         let winner: "team1" | "team2" | undefined = "team2";
         setMatch({
           ...match,
@@ -923,6 +1042,37 @@ export default function HomeScreen() {
           });
         } catch (e) {
           console.error("updateTournamentStandings failed", e);
+        }
+      }
+
+      // Squad exhausted and the innings didn't already end via overs/chase this
+      // ball -> ask to end the innings (1st) or match (2nd).
+      if (!match.quickMatch && isWicket && noBatsmenLeft && !inningsEndedThisBall) {
+        if (isFirstInning) {
+          promptAllOutFirstInnings();
+        } else {
+          // Mirror the existing second-innings result logic, using the LOCAL
+          // final scores (state setters are async; locals already include this
+          // ball's runs). The batting side can't win by being bowled out.
+          let winner: "team1" | "team2" = "team1";
+          let matchStatus: matchResult = "completed";
+          if (
+            localFinalSecondInningsScore.totalRuns >
+            localFinalFirstInningsScore.totalRuns
+          ) {
+            winner = "team2";
+          } else if (
+            localFinalSecondInningsScore.totalRuns ===
+            localFinalFirstInningsScore.totalRuns
+          ) {
+            matchStatus = "tied";
+          }
+          promptAllOutSecondInnings(
+            winner,
+            matchStatus,
+            localFinalFirstInningsScore,
+            localFinalSecondInningsScore
+          );
         }
       }
     } finally {

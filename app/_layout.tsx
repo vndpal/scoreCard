@@ -232,6 +232,13 @@ export default function RootLayout() {
                   }}
                 />
                 <Stack.Screen
+                  name="editMatch"
+                  options={{
+                    headerTitle: "Edit match",
+                    animation: "slide_from_right",
+                  }}
+                />
+                <Stack.Screen
                   name="playerRecords"
                   options={{
                     headerTitle: "Player stats",

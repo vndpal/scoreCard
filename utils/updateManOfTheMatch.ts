@@ -6,25 +6,37 @@ import { playerStats } from "@/types/playerStats";
 import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { Match } from "@/firebase/models/Match";
 
+/**
+ * Picks the man of the match (highest points) from an in-memory playerStats
+ * array. Pure — no Firestore. Used by updateManOfTheMatch and by the completed
+ * match player-swap, which scores the freshly rebuilt stats without a re-read.
+ */
+export const computeManOfTheMatch = (stats: playerStats[]): string => {
+  let maxPoints = 0;
+  let manOfTheMatch = "";
+  stats.forEach((playerStats: playerStats) => {
+    const points = calculateMathPoints(playerStats);
+    if (points > maxPoints) {
+      maxPoints = points;
+      manOfTheMatch = playerStats.playerId;
+    }
+  });
+  return manOfTheMatch;
+};
+
 export const updateManOfTheMatch = async (matchId: string): Promise<string> => {
   try {
     const match: Match | null = await Match.getById(matchId);
     const playerMatchStat: playerMatchStats | null =
       await PlayerMatchStats.getByMatchId(matchId);
-    let maxPoints = 0;
-    let manOfTheMatch = "";
     if (
       match &&
       playerMatchStat &&
       playerMatchStat.playerMatchStats.length > 0
     ) {
-      playerMatchStat.playerMatchStats.forEach((playerStats: playerStats) => {
-        const points = calculateMathPoints(playerStats);
-        if (points > maxPoints) {
-          maxPoints = points;
-          manOfTheMatch = playerStats.playerId;
-        }
-      });
+      const manOfTheMatch = computeManOfTheMatch(
+        playerMatchStat.playerMatchStats
+      );
       await Match.update(matchId, { manOfTheMatch: manOfTheMatch });
       return manOfTheMatch;
     }

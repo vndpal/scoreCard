@@ -34,6 +34,7 @@ import {
   PlayerStrengthStats,
   computeTeamStrength,
   computeBalance,
+  balanceTeamsRandom,
 } from "@/utils/teamBalance";
 import { team } from "@/types/team";
 import teams from "@/interfaces/teams";
@@ -1011,27 +1012,34 @@ const TeamLineUp: React.FC = () => {
     showToast(`Moved ${moving.name} → ${toTeam.teamName}`);
   };
 
-  const randomizeTeams = () => {
-    if (currentMatchId) return;
+  const handleBalanceTeams = () => {
+    if (currentMatchId || !team1 || !team2) return;
+    const result = balanceTeamsRandom(
+      team1Players,
+      team2Players,
+      playerStatsMap,
+      activePlayerIds,
+    );
+    if (!result.changed) {
+      showToast("Not enough players to balance");
+      return;
+    }
     setIsShuffling(true);
     setHasUnsavedChanges(true);
     setTimeout(() => {
-      const pool = [...allPlayers];
-      for (let i = pool.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-      }
-      const half = Math.ceil(pool.length / 2);
-      setTeam1Players(pool.slice(0, half));
-      setTeam2Players(pool.slice(half));
-      setAvailablePlayers([]);
-      // Reset captains for both teams (no auto-assign)
+      setTeam1Players(result.team1);
+      setTeam2Players(result.team2);
+      // Clear any captain who ended up off their team (mirrors swapPlayer).
       const next = { ...captains };
-      if (team1) delete next[team1.teamInitials];
-      if (team2) delete next[team2.teamInitials];
+      const t1Ids = new Set(result.team1.map((p) => p.id));
+      const t2Ids = new Set(result.team2.map((p) => p.id));
+      const cap1 = next[team1.teamInitials];
+      const cap2 = next[team2.teamInitials];
+      if (cap1 && !t1Ids.has(cap1)) delete next[team1.teamInitials];
+      if (cap2 && !t2Ids.has(cap2)) delete next[team2.teamInitials];
       setCaptains(next);
       persistCaptains(next);
-      showToast("Teams randomized");
+      showToast("Teams balanced");
     }, 300);
     setTimeout(() => setIsShuffling(false), 1300);
   };
@@ -1340,7 +1348,7 @@ const TeamLineUp: React.FC = () => {
           <View style={styles.actionBar}>
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TouchableOpacity
-                onPress={randomizeTeams}
+                onPress={handleBalanceTeams}
                 disabled={
                   isShuffling || !!currentMatchId || allPlayers.length === 0
                 }
@@ -1352,8 +1360,12 @@ const TeamLineUp: React.FC = () => {
                     styles.disabled,
                 ]}
               >
-                <Ionicons name="shuffle" size={14} color={PALETTE.ink} />
-                <Text style={styles.secondaryText}>Randomize</Text>
+                <Ionicons
+                  name="swap-horizontal"
+                  size={14}
+                  color={PALETTE.ink}
+                />
+                <Text style={styles.secondaryText}>Balance</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setTeamSelectionVisible(true)}

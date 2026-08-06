@@ -11,6 +11,18 @@ interface AppContextType {
   applySettingsChanges: (settings: settings) => void;
   currentTournament: string;
   updateCurrentTournament: (tournament: string) => void;
+  /**
+   * Id of the match that was already live when the app cold-started, or null.
+   * Computed once during launch and never updated — it only decides which
+   * screen the app lands on.
+   */
+  liveMatchIdOnLaunch: string | null;
+  /**
+   * True once the user has explicitly asked for the scoring screen. Lives in
+   * memory only, so the next cold start lands on the viewer again.
+   */
+  entryMode: boolean;
+  setEntryMode: (value: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -32,6 +44,9 @@ export const AppContextProvider: React.FC<{
   applySettingsChanges: (settings: settings) => void;
   currentTournament: string;
   updateCurrentTournament: (tournament: string) => void;
+  liveMatchIdOnLaunch: string | null;
+  entryMode: boolean;
+  setEntryMode: (value: boolean) => void;
   children: React.ReactNode;
 }> = ({
   children,
@@ -43,6 +58,9 @@ export const AppContextProvider: React.FC<{
   updateClub,
   currentTournament,
   updateCurrentTournament,
+  liveMatchIdOnLaunch,
+  entryMode,
+  setEntryMode,
 }) => {
   return (
     <AppContext.Provider
@@ -55,6 +73,9 @@ export const AppContextProvider: React.FC<{
         updateClub,
         currentTournament,
         updateCurrentTournament,
+        liveMatchIdOnLaunch,
+        entryMode,
+        setEntryMode,
       }}
     >
       {children}

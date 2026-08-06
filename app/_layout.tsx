@@ -15,8 +15,10 @@ import { MD3DarkTheme, MD3LightTheme, PaperProvider } from "react-native-paper";
 import { useMaterial3Theme } from "@pchmn/expo-material3-theme";
 import { useSettings } from "@/hooks/useSettings";
 import { Club } from "@/firebase/models/Club";
+import { Match } from "@/firebase/models/Match";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getItem } from "@/utils/asyncStorage";
 import { Tournament } from "@/firebase/models/Tournament";
 import { View, Image, ActivityIndicator, Button } from "react-native";
 import { getCrashlytics, log } from "@react-native-firebase/crashlytics";
@@ -54,6 +56,15 @@ export default function RootLayout() {
 
   const [currentTournament, setCurrentTournament] = useState<string>("");
 
+  // Decides the landing screen: when a match is already live at cold start the
+  // app opens the read-only viewer instead of the scoring screen. Computed once
+  // here and never refreshed; `entryMode` is the one-way escape hatch and it
+  // resets on the next launch.
+  const [liveMatchIdOnLaunch, setLiveMatchIdOnLaunch] = useState<string | null>(
+    null,
+  );
+  const [entryMode, setEntryMode] = useState(false);
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -80,14 +91,40 @@ export default function RootLayout() {
           // Get saved club
           const club = await AsyncStorage.getItem(STORAGE_ITEMS.USER_CLUB);
           if (club) {
-            setClub(JSON.parse(club));
-            const currentTournament = await Tournament.getByStatus(
-              "ongoing",
-              JSON.parse(club).id,
-            );
+            const parsedClub = JSON.parse(club);
+            setClub(parsedClub);
+
+            // Run alongside the tournament lookup so launch costs the same one
+            // round trip it did before. `getLatestMatch` swallows its own
+            // errors, but guard anyway — a failure here must never block
+            // startup, it just means landing on the scoring screen as usual.
+            const [currentTournament, isNewMatch, latestMatch] =
+              await Promise.all([
+                Tournament.getByStatus("ongoing", parsedClub.id),
+                // Must go through the parsing helper: the flag is written with
+                // JSON.stringify, so a raw read yields the string "false" —
+                // truthy, and the gate would never fire.
+                getItem(STORAGE_ITEMS.IS_NEW_MATCH),
+                Match.getLatestMatch(parsedClub.id).catch((error) => {
+                  console.error("Error detecting live match on launch:", error);
+                  return null;
+                }),
+              ]);
 
             if (currentTournament) {
               setCurrentTournament(currentTournament[0].id);
+            }
+
+            // A live match means this launch lands on the read-only viewer.
+            // Skipped while IS_NEW_MATCH is set — that flag marks a create/toss
+            // flow in progress, which owns navigation until the scoring screen
+            // clears it.
+            if (
+              !isNewMatch &&
+              latestMatch?.status === "live" &&
+              latestMatch.matchId
+            ) {
+              setLiveMatchIdOnLaunch(latestMatch.matchId);
             }
           }
         } catch (error) {
@@ -149,6 +186,9 @@ export default function RootLayout() {
           updateClub={updateClub}
           currentTournament={currentTournament}
           updateCurrentTournament={updateCurrentTournament}
+          liveMatchIdOnLaunch={liveMatchIdOnLaunch}
+          entryMode={entryMode}
+          setEntryMode={setEntryMode}
         >
           <CelebrationProvider>
           <View style={{ flex: 1 }}>
@@ -230,6 +270,10 @@ export default function RootLayout() {
                     headerTitle: "Match summary",
                     animation: "slide_from_right",
                   }}
+                />
+                <Stack.Screen
+                  name="liveScore"
+                  options={{ headerShown: false }}
                 />
                 <Stack.Screen
                   name="editMatch"

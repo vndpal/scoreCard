@@ -13,6 +13,7 @@ const ScoreBoard = ({
   teamName,
   isLiveMatch = false,
   isActiveInning = false,
+  showSummary = true,
 }: {
   totalScore: Number;
   wickets: Number;
@@ -22,25 +23,29 @@ const ScoreBoard = ({
   teamName: string;
   isLiveMatch?: boolean;
   isActiveInning?: boolean;
+  /** Hide the leading score block when the screen already shows the total. */
+  showSummary?: boolean;
 }) => {
   const { currentTheme } = useAppContext();
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
 
   return (
     <View style={[styles.container, themeStyles.container]}>
-      <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
-        <Text style={[styles.scoreText, themeStyles.scoreText]}>
-          {totalScore.toString()}/{wickets.toString()}
-        </Text>
-        <View style={styles.scoreDetailsRow}>
-          <Text style={[styles.teamNameText, themeStyles.teamNameText]}>
-            {teamName}
+      {showSummary && (
+        <View style={[styles.scoreContainer, themeStyles.scoreContainer]}>
+          <Text style={[styles.scoreText, themeStyles.scoreText]}>
+            {totalScore.toString()}/{wickets.toString()}
           </Text>
-          <Text style={[styles.oversText, themeStyles.oversText]}>
-            {overs.toString()}.{balls.toString()}
-          </Text>
+          <View style={styles.scoreDetailsRow}>
+            <Text style={[styles.teamNameText, themeStyles.teamNameText]}>
+              {teamName}
+            </Text>
+            <Text style={[styles.oversText, themeStyles.oversText]}>
+              {overs.toString()}.{balls.toString()}
+            </Text>
+          </View>
         </View>
-      </View>
+      )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.inningsContainer}>
           {scorePerInning.map((over, index) => {

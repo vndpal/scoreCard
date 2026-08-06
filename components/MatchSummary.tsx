@@ -22,39 +22,20 @@ import { PlayerMatchStats } from "@/firebase/models/PlayerMatchStats";
 import { MatchScore } from "@/firebase/models/MatchScores";
 import { Match } from "@/firebase/models/Match";
 import { getMatchResultText } from "@/utils/getMatchResultText";
+import {
+  makeTheme,
+  Theme,
+  SectionTitle,
+  InningsCard,
+} from "@/components/scorecard/ScorecardTables";
+import {
+  DismissalInfo,
+  buildDismissalMap,
+  makeGetDismissalStatus,
+} from "@/utils/dismissals";
 
 const MAN_OF_THE_MATCH_API_URL =
   "https://score-card-api-py.vercel.app/api/man-of-the-match";
-
-interface DismissalInfo {
-  playerId: string;
-  bowlerName: string;
-  outType?: string;
-  fielderName?: string;
-}
-
-// --- Theme tokens -----------------------------------------------------------
-// "Scorebook" palette: warm paper + ink, a charcoal scoreboard panel, and a
-// single claret accent (cricket-ball / county-cap red) used sparingly. One
-// hue on the whole page — everything else is ink on paper.
-const makeTheme = (isDark: boolean) => ({
-  screen: isDark ? "#15130f" : "#e6e3dc",
-  surface: isDark ? "#211d17" : "#fbfaf6",
-  ink: isDark ? "#efeae0" : "#1c1815",
-  inkSoft: isDark ? "#b0a897" : "#57514a",
-  inkFaint: isDark ? "#79736a" : "#8c867b",
-  rule: isDark ? "#332e25" : "#d9d4ca",
-  accent: isDark ? "#cd5b56" : "#8f2f37", // claret / cricket leather
-  accentSoft: isDark ? "rgba(205,91,86,0.14)" : "rgba(143,47,55,0.08)",
-  // Scoreboard panel (the hero) — a warm charcoal in both themes.
-  panel: isDark ? "#100e0a" : "#211c16",
-  panelInk: "#f3eee2",
-  panelInkSoft: "#c6bcac",
-  panelRule: "rgba(243,238,226,0.10)",
-  btn: isDark ? "#38322a" : "#221d17",
-});
-
-type Theme = ReturnType<typeof makeTheme>;
 
 const MatchSummary = () => {
   const { matchId, team1, team2 } = useLocalSearchParams();
@@ -122,7 +103,11 @@ const MatchSummary = () => {
 
         try {
           // Reuse the innings already fetched above (no extra round-trip).
-          const dismissals = buildDismissalMap(inning1, inning2);
+          // buildDismissalMap takes plain ball arrays so it stays firebase-free.
+          const dismissals = buildDismissalMap(
+            (inning1 ?? []).map((s) => s.overSummary),
+            (inning2 ?? []).map((s) => s.overSummary)
+          );
           setDismissalMap(dismissals);
         } catch (err) {
           console.log("Could not fetch dismissal info:", err);
@@ -171,64 +156,7 @@ const MatchSummary = () => {
     })();
   }, [matchId]);
 
-  const buildDismissalMap = (
-    ...innings: (MatchScore[] | null)[]
-  ): Map<string, DismissalInfo> => {
-    const dismissals = new Map<string, DismissalInfo>();
-
-    try {
-      innings.forEach((matchScores) => {
-        if (matchScores && Array.isArray(matchScores)) {
-          matchScores.forEach((scoreData: any) => {
-            if (scoreData.overSummary && Array.isArray(scoreData.overSummary)) {
-              scoreData.overSummary.forEach((ball: any) => {
-                if (ball.isWicket) {
-                  // Prefer the explicit out batter (covers run-outs of the
-                  // non-striker); fall back to the striker for older balls.
-                  const playerId =
-                    ball.outBatterId?.toString() ||
-                    ball.strikerBatter?.id?.toString() ||
-                    "";
-                  if (!playerId) return;
-                  const bowlerName = ball.bowler?.name || "Unknown";
-                  dismissals.set(playerId, {
-                    playerId,
-                    bowlerName,
-                    outType: ball.outType,
-                    fielderName: ball.fielder?.name,
-                  });
-                }
-              });
-            }
-          });
-        }
-      });
-    } catch (err) {
-      console.log("Error building dismissals:", err);
-    }
-
-    return dismissals;
-  };
-
-  const getDismissalStatus = (stat: playerStats): string => {
-    const d = dismissalMap.get(stat.playerId);
-    if (!d) return "not out";
-    switch (d.outType) {
-      case "caught":
-        return d.fielderName
-          ? `c ${d.fielderName} b ${d.bowlerName}`
-          : `c & b ${d.bowlerName}`;
-      case "stumped":
-        return d.fielderName
-          ? `st ${d.fielderName} b ${d.bowlerName}`
-          : `st b ${d.bowlerName}`;
-      case "runout":
-        return d.fielderName ? `run out (${d.fielderName})` : "run out";
-      case "bowled":
-      default:
-        return `b ${d.bowlerName}`;
-    }
-  };
+  const getDismissalStatus = makeGetDismissalStatus(dismissalMap);
 
   // Builds the full match payload (match meta + player scorecard + ball-by-ball)
   // expected by the external API.
@@ -554,12 +482,15 @@ const MatchSummary = () => {
         </View>
       )}
 
-      {/* ---- Innings scorecards ---- */}
+      {/* ---- Innings scorecards ----
+           An innings card pairs a team's batting with the *opposition's*
+           bowling/fielding: team1 batted against team2's bowlers, and vice
+           versa. */}
       <InningsCard
         team={team1 as string}
         totals={team1Totals}
         batting={battingRecordsTeamA}
-        bowling={bowlingRecordsTeamA}
+        bowling={bowlingRecordsTeamB}
         c={c}
         playersMap={playersMap}
         getDismissalStatus={getDismissalStatus}
@@ -568,7 +499,7 @@ const MatchSummary = () => {
         team={team2 as string}
         totals={team2Totals}
         batting={battingRecordsTeamB}
-        bowling={bowlingRecordsTeamB}
+        bowling={bowlingRecordsTeamA}
         c={c}
         playersMap={playersMap}
         getDismissalStatus={getDismissalStatus}
@@ -687,253 +618,6 @@ const HeroTeamRow = ({
         ({totals?.totalOvers ?? 0}.{totals?.totalBalls ?? 0})
       </Text>
     </View>
-  </View>
-);
-
-// --- Section title ----------------------------------------------------------
-const SectionTitle = ({ text, c }: { text: string; c: Theme }) => (
-  <View style={styles.sectionTitleRow}>
-    <View style={[styles.sectionTick, { backgroundColor: c.accent }]} />
-    <Text style={[styles.sectionTitle, { color: c.inkSoft }]}>
-      {text.toUpperCase()}
-    </Text>
-  </View>
-);
-
-// --- Innings card (team strip -> batting -> bowling) ------------------------
-const InningsCard = ({
-  team,
-  totals,
-  batting,
-  bowling,
-  c,
-  playersMap,
-  getDismissalStatus,
-}: {
-  team: string;
-  totals: currentTotalScore | null;
-  batting: playerStats[];
-  bowling: playerStats[];
-  c: Theme;
-  playersMap: Map<string, string>;
-  getDismissalStatus: (s: playerStats) => string;
-}) => (
-  <View style={[styles.card, { backgroundColor: c.surface, borderColor: c.rule }]}>
-    {/* Team strip */}
-    <View style={styles.inningsHeader}>
-      <View style={[styles.accentBar, { backgroundColor: c.accent }]} />
-      <Text style={[styles.inningsTeam, { color: c.ink }]} numberOfLines={1}>
-        {team}
-      </Text>
-      <Text style={[styles.inningsTotal, { color: c.ink }]}>
-        {totals?.totalRuns ?? 0}
-        <Text style={{ color: c.inkSoft }}>/{totals?.totalWickets ?? 0}</Text>
-        <Text style={[styles.inningsOvers, { color: c.inkFaint }]}>
-          {"  "}({totals?.totalOvers ?? 0}.{totals?.totalBalls ?? 0})
-        </Text>
-      </Text>
-    </View>
-
-    <TableLabel text="Batting" c={c} />
-    <BattingTable
-      data={batting}
-      totals={totals}
-      c={c}
-      playersMap={playersMap}
-      getDismissalStatus={getDismissalStatus}
-    />
-
-    <TableLabel text="Bowling" c={c} />
-    <BowlingTable data={bowling} c={c} playersMap={playersMap} />
-  </View>
-);
-
-const TableLabel = ({ text, c }: { text: string; c: Theme }) => (
-  <Text style={[styles.tableLabel, { color: c.inkFaint }]}>
-    {text.toUpperCase()}
-  </Text>
-);
-
-// --- Batting table ----------------------------------------------------------
-const BattingTable = ({
-  data,
-  totals,
-  c,
-  playersMap,
-  getDismissalStatus,
-}: {
-  data: playerStats[];
-  totals: currentTotalScore | null;
-  c: Theme;
-  playersMap: Map<string, string>;
-  getDismissalStatus: (s: playerStats) => string;
-}) => (
-  <View>
-    <View style={[styles.headRow, { borderBottomColor: c.rule }]}>
-      <Text style={[styles.hCellName, { color: c.inkFaint }]}>BATTER</Text>
-      <Text style={[styles.hCell, { color: c.inkFaint }]}>R</Text>
-      <Text style={[styles.hCell, { color: c.inkFaint }]}>B</Text>
-      <Text style={[styles.hCellSm, { color: c.inkFaint }]}>4s</Text>
-      <Text style={[styles.hCellSm, { color: c.inkFaint }]}>6s</Text>
-      <Text style={[styles.hCellWide, { color: c.inkFaint }]}>SR</Text>
-    </View>
-
-    {data.length === 0 ? (
-      <Text style={[styles.emptyRow, { color: c.inkFaint }]}>
-        No batting recorded
-      </Text>
-    ) : (
-      data.map((row, idx) => {
-        const isTop = idx === 0 && row.runs > 0;
-        const label = getDismissalStatus(row);
-        // A team member with no runs and no balls, not recorded as out, never
-        // actually batted — show "did not bat" rather than "not out".
-        const didNotBat =
-          label === "not out" && row.ballsFaced === 0 && row.runs === 0;
-        const displayLabel = didNotBat ? "did not bat" : label;
-        return (
-          <View
-            key={idx}
-            style={[styles.dataRow, { borderBottomColor: c.rule }]}
-          >
-            <View style={styles.nameCell}>
-              <Text
-                style={[
-                  styles.playerName,
-                  { color: c.ink },
-                  isTop && { color: c.accent, fontWeight: "700" },
-                ]}
-                numberOfLines={1}
-              >
-                {playersMap.get(row.playerId) || row.playerId}
-              </Text>
-              <Text
-                style={[styles.dismissal, { color: c.inkFaint }]}
-                numberOfLines={1}
-              >
-                {displayLabel}
-              </Text>
-            </View>
-            <Text style={[styles.numCell, styles.numBold, { color: c.ink }]}>
-              {row.runs}
-            </Text>
-            <Text style={[styles.numCell, { color: c.inkSoft }]}>
-              {row.ballsFaced}
-            </Text>
-            <Text style={[styles.numCellSm, { color: c.inkSoft }]}>
-              {row.fours}
-            </Text>
-            <Text style={[styles.numCellSm, { color: c.inkSoft }]}>
-              {row.sixes}
-            </Text>
-            <Text style={[styles.numCellWide, { color: c.inkSoft }]}>
-              {row.strikeRate ? row.strikeRate.toFixed(0) : "0"}
-            </Text>
-          </View>
-        );
-      })
-    )}
-
-    {/* Total row (authoritative innings score) */}
-    {!!totals && (
-      <View style={[styles.totalRow, { borderTopColor: c.rule }]}>
-        <Text style={[styles.totalLabel, { color: c.inkSoft }]}>Total</Text>
-        <Text style={[styles.totalValue, { color: c.ink }]}>
-          {totals.totalRuns}/{totals.totalWickets}
-          <Text style={[styles.totalOvers, { color: c.inkFaint }]}>
-            {"  "}({totals.totalOvers}.{totals.totalBalls} ov)
-          </Text>
-        </Text>
-      </View>
-    )}
-  </View>
-);
-
-// --- Bowling table ----------------------------------------------------------
-const BowlingTable = ({
-  data,
-  c,
-  playersMap,
-}: {
-  data: playerStats[];
-  c: Theme;
-  playersMap: Map<string, string>;
-}) => (
-  <View>
-    <View style={[styles.headRow, { borderBottomColor: c.rule }]}>
-      <Text style={[styles.hCellName, { color: c.inkFaint }]}>BOWLER</Text>
-      <Text style={[styles.hCell, { color: c.inkFaint }]}>O</Text>
-      <Text style={[styles.hCellSm, { color: c.inkFaint }]}>M</Text>
-      <Text style={[styles.hCell, { color: c.inkFaint }]}>R</Text>
-      <Text style={[styles.hCellSm, { color: c.inkFaint }]}>W</Text>
-      <Text style={[styles.hCellWide, { color: c.inkFaint }]}>ECON</Text>
-    </View>
-
-    {data.length === 0 ? (
-      <Text style={[styles.emptyRow, { color: c.inkFaint }]}>
-        No bowling recorded
-      </Text>
-    ) : (
-      data.map((row, idx) => {
-        const didBowl = row.overs > 0 || row.ballsBowled > 0;
-        const legalBalls = row.overs * 6 + row.ballsBowled;
-        const econ = legalBalls > 0 ? row.runsConceded / (legalBalls / 6) : 0;
-        const oversLabel =
-          row.ballsBowled > 0
-            ? `${row.overs}.${row.ballsBowled}`
-            : `${row.overs}`;
-        const fielding = [
-          row.catches ? `${row.catches} ct` : "",
-          row.stumpings ? `${row.stumpings} st` : "",
-          row.runOuts ? `${row.runOuts} ro` : "",
-        ]
-          .filter(Boolean)
-          .join(" · ");
-        const isTop = idx === 0 && row.wickets > 0;
-        return (
-          <View
-            key={idx}
-            style={[styles.dataRow, { borderBottomColor: c.rule }]}
-          >
-            <View style={styles.nameCell}>
-              <Text
-                style={[
-                  styles.playerName,
-                  { color: c.ink },
-                  isTop && { color: c.accent, fontWeight: "700" },
-                ]}
-                numberOfLines={1}
-              >
-                {playersMap.get(row.playerId) || row.playerId}
-              </Text>
-              {!!fielding && (
-                <Text
-                  style={[styles.dismissal, { color: c.inkFaint }]}
-                  numberOfLines={1}
-                >
-                  {fielding}
-                </Text>
-              )}
-            </View>
-            <Text style={[styles.numCell, { color: c.inkSoft }]}>
-              {didBowl ? oversLabel : "–"}
-            </Text>
-            <Text style={[styles.numCellSm, { color: c.inkSoft }]}>
-              {didBowl ? row.maidens || 0 : "–"}
-            </Text>
-            <Text style={[styles.numCell, { color: c.inkSoft }]}>
-              {didBowl ? row.runsConceded : "–"}
-            </Text>
-            <Text style={[styles.numCellSm, styles.numBold, { color: c.ink }]}>
-              {didBowl ? row.wickets : "–"}
-            </Text>
-            <Text style={[styles.numCellWide, { color: c.inkSoft }]}>
-              {didBowl ? econ.toFixed(1) : "–"}
-            </Text>
-          </View>
-        );
-      })
-    )}
   </View>
 );
 
@@ -1087,181 +771,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 2,
     fontVariant: ["tabular-nums"],
-  },
-
-  // ---- Section title ----
-  sectionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 22,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  sectionTick: {
-    width: 12,
-    height: 2,
-    borderRadius: 1,
-  },
-  sectionTitle: {
-    fontSize: 11.5,
-    fontWeight: "800",
-    letterSpacing: 1.6,
-  },
-
-  // ---- Innings card ----
-  card: {
-    marginTop: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    padding: 14,
-  },
-  inningsHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  accentBar: {
-    width: 3,
-    height: 18,
-    borderRadius: 2,
-    marginRight: 10,
-  },
-  inningsTeam: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  inningsTotal: {
-    fontSize: 17,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-  inningsOvers: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  // ---- Table label ----
-  tableLabel: {
-    fontSize: 10.5,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-    marginTop: 10,
-    marginBottom: 2,
-    marginLeft: 2,
-  },
-
-  // ---- Tables ----
-  headRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 2,
-    borderBottomWidth: 1,
-  },
-  dataRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 2,
-    borderBottomWidth: 1,
-  },
-  nameCell: {
-    flex: 3.4,
-    paddingRight: 6,
-  },
-  playerName: {
-    fontSize: 13.5,
-    fontWeight: "600",
-    letterSpacing: 0.2,
-  },
-  dismissal: {
-    fontSize: 10.5,
-    fontWeight: "500",
-    marginTop: 2,
-  },
-  hCellName: {
-    flex: 3.4,
-    fontSize: 9.5,
-    fontWeight: "800",
-    letterSpacing: 0.6,
-  },
-  hCell: {
-    flex: 1.1,
-    fontSize: 9.5,
-    fontWeight: "800",
-    textAlign: "right",
-    letterSpacing: 0.4,
-  },
-  hCellSm: {
-    flex: 0.9,
-    fontSize: 9.5,
-    fontWeight: "800",
-    textAlign: "right",
-    letterSpacing: 0.4,
-  },
-  hCellWide: {
-    flex: 1.4,
-    fontSize: 9.5,
-    fontWeight: "800",
-    textAlign: "right",
-    letterSpacing: 0.4,
-  },
-  numCell: {
-    flex: 1.1,
-    fontSize: 13,
-    fontWeight: "500",
-    textAlign: "right",
-    fontVariant: ["tabular-nums"],
-  },
-  numCellSm: {
-    flex: 0.9,
-    fontSize: 13,
-    fontWeight: "500",
-    textAlign: "right",
-    fontVariant: ["tabular-nums"],
-  },
-  numCellWide: {
-    flex: 1.4,
-    fontSize: 13,
-    fontWeight: "500",
-    textAlign: "right",
-    fontVariant: ["tabular-nums"],
-  },
-  numBold: {
-    fontWeight: "800",
-  },
-  emptyRow: {
-    fontSize: 12,
-    fontStyle: "italic",
-    paddingVertical: 12,
-    textAlign: "center",
-  },
-  totalRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 9,
-    paddingHorizontal: 2,
-    borderTopWidth: 1.5,
-    marginTop: 1,
-  },
-  totalLabel: {
-    fontSize: 11.5,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  totalValue: {
-    fontSize: 15,
-    fontWeight: "800",
-    fontVariant: ["tabular-nums"],
-  },
-  totalOvers: {
-    fontSize: 12,
-    fontWeight: "600",
   },
 
   // ---- Over by over ----

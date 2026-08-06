@@ -12,6 +12,13 @@
         "APP_ENV": "development"
       }
     },
+    "development-apk": {
+      "extends": "development",
+      "developmentClient": false,
+      "android": {
+        "buildType": "apk"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "android": {

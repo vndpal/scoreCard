@@ -53,7 +53,7 @@ type items = {
 
 export const CreateMatch = () => {
   const [teams, setTeams] = useState<items[]>([]);
-  const { currentTheme, club } = useAppContext();
+  const { currentTheme, club, setEntryMode } = useAppContext();
   const [tournament, setTournament] = useState<tournament>();
   const [showSnackbar, setShowSnackbar] = useState(false);
   const themeStyles = currentTheme === "dark" ? darkStyles : lightStyles;
@@ -241,6 +241,10 @@ export const CreateMatch = () => {
     }
 
     await setItem(STORAGE_ITEMS.IS_NEW_MATCH, true);
+    // Creating a match means scoring it. Without this, a session that launched
+    // into the live viewer would drop back onto the viewer — still showing the
+    // *previous* match — instead of the new match's scoring screen.
+    setEntryMode(true);
     Keyboard.dismiss();
     router.back();
   };

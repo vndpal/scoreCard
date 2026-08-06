@@ -51,11 +51,33 @@ import {
   activateKeepAwakeAsync,
   deactivateKeepAwake,
 } from "expo-keep-awake";
+import LiveScore from "@/components/LiveScore";
 
 // Scopes our wake lock so it can't clash with other keep-awake consumers.
 const KEEP_AWAKE_LIVE_MATCH_TAG = "live-match";
 
-export default function HomeScreen() {
+/**
+ * The Scorecard tab is one of two screens: the read-only live viewer, or the
+ * ball-entry screen below.
+ *
+ * When a match was already live at launch the session opens on the viewer and
+ * `HomeScreen` stays unmounted — so its full match fetch never runs — until the
+ * user asks to score. Choosing by *render* rather than by navigation is
+ * deliberate: this route used to redirect to `/liveScore`, which meant coming
+ * back to this tab swapped a mounted navigator out for a `<Redirect>` and
+ * crashed Fabric ("addViewAt … child already has a parent"). It also means the
+ * viewer keeps the real tab bar, and switching to scoring is just a re-render.
+ */
+export default function ScorecardTab() {
+  const { liveMatchIdOnLaunch, entryMode } = useAppContext();
+
+  if (liveMatchIdOnLaunch && !entryMode) {
+    return <LiveScore embedded />;
+  }
+  return <HomeScreen />;
+}
+
+function HomeScreen() {
   const router = useRouter();
 
   const [run, setRun] = useState(0);

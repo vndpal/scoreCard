@@ -12,7 +12,6 @@ import MenuScreen from "./menu";
 import { BackHandler, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_ITEMS } from "@/constants/StorageItems";
-import { useAppContext } from "@/context/AppContext";
 import { Club } from "@/firebase/models/Club";
 
 export default function TabLayout() {
@@ -70,6 +69,11 @@ export default function TabLayout() {
   const showMenu = () => setMenuVisible(true);
   const hideMenu = () => setMenuVisible(false);
 
+  // Deliberately no route gate here: whether the Scorecard tab shows the live
+  // viewer or the ball-entry screen is decided by render, inside `index.tsx`.
+  // Returning a <Redirect> from this layout in place of <Tabs> tears the mounted
+  // navigator out mid tab-transition and crashes Fabric with
+  // "addViewAt … The specified child already has a parent".
   return (
     <>
       <Tabs
